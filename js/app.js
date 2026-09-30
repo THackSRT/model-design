@@ -44,7 +44,7 @@
   ];
 
   const KEY = 'atelier-mod001-v2';
-  const TABS = ['croquis', 'vues', 'avatar', 'taille', 'patrons', 'coupe', 'fiche'];
+  const TABS = ['mannequin', 'croquis', 'vues', 'patrons', 'coupe', 'fiche'];
   const $ = (id) => document.getElementById(id);
   const fmt = (v, d = 1) => G.fmt(v, d);
 
@@ -52,7 +52,8 @@
     return {
       size: 'M', client: { name: '', sex: 'homme' },
       m: Object.assign({}, COMMON, SIZES.homme.M, MORPH0.homme), s: Object.assign({}, STYLE0),
-      tab: 'croquis', zoom: 5, fabricW: 150, v3: { linesVues: false, dress: false, linesAvatar: true },
+      tab: 'mannequin', zoom: 5, fabricW: 150, v3: { linesVues: false, dress: false, linesAvatar: true },
+      mh: { age: 30, african: 1, asian: 0, caucasian: 0, muscle: 'auto', style: 'trait', rings: true },
     };
   }
   let state = fresh();
@@ -62,8 +63,9 @@
       const f = fresh();
       state = Object.assign(f, saved, {
         m: Object.assign(f.m, saved.m), s: Object.assign(f.s, saved.s),
-        client: Object.assign(f.client, saved.client), v3: Object.assign(f.v3, saved.v3),
+        client: Object.assign(f.client, saved.client), v3: Object.assign(f.v3, saved.v3), mh: Object.assign(f.mh, saved.mh),
       });
+      if (!TABS.includes(state.tab)) state.tab = 'mannequin';
     }
   } catch (e) { /* stockage indisponible */ }
   const bodyM = () => Object.assign({ sex: state.client.sex }, state.m);
@@ -106,8 +108,28 @@
       Object.assign(state.m, SIZES[state.client.sex][size], MORPH0[state.client.sex]);
       sync(); render();
     }));
-    [['t-lines-vues', 'linesVues'], ['t-dress', 'dress'], ['t-lines-avatar', 'linesAvatar']].forEach(([id, k]) =>
+    [['t-lines-vues', 'linesVues']].forEach(([id, k]) =>
       $(id).addEventListener('change', (e) => { state.v3[k] = e.target.checked; save(); render3D(); }));
+    $('mq-age').addEventListener('change', (e) => { const v = parseFloat(e.target.value); state.mh.age = isFinite(v) ? Math.min(90, Math.max(16, v)) : 30; sync(); render(); });
+    for (const k of ['african', 'asian', 'caucasian']) $('mq-' + k).addEventListener('change', (e) => { state.mh[k] = parseFloat(e.target.value); render(); });
+    $('mq-muscle').addEventListener('change', (e) => { state.mh.muscle = e.target.value; render(); });
+    $('mq-rings').addEventListener('change', (e) => { state.mh.rings = e.target.checked; save(); renderMannequin(); });
+    document.querySelectorAll('[data-mqstyle]').forEach((b) => b.addEventListener('click', () => { state.mh.style = b.dataset.mqstyle; sync(); save(); renderMannequin(); }));
+    $('mq-svg').addEventListener('click', () => {
+      const svg = Viewer3D.available() && mqFit ? Viewer3D.silhouetteSVG(`Mannequin ${state.client.sex} · ${clientLabel()} · ${sizeLabel()}`) : null;
+      if (!svg) return toast('Le mannequin n’est pas encore prêt');
+      const text = '<?xml version="1.0" encoding="UTF-8"?>\n' + svg;
+      if (!embedded) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' }));
+        a.download = 'mannequin-silhouettes.svg';
+        document.body.appendChild(a); a.click(); a.remove();
+        toast('Silhouettes enregistrées (SVG, cotes en cm)');
+      } else {
+        try { navigator.clipboard.writeText(text).then(() => toast('SVG des silhouettes copié'), () => fallbackCopy(text, () => toast('SVG des silhouettes copié'))); }
+        catch (e) { fallbackCopy(text, () => toast('SVG des silhouettes copié')); }
+      }
+    });
     $('style-ctrls').innerHTML = STYLE_CTRLS.map(([k, label, min, max, step]) => `
       <div class="slider"><label for="s-${k}">${label}</label><output id="o-${k}" for="s-${k}"></output>
         <input type="range" id="s-${k}" min="${min}" max="${max}" step="${step}"></div>`).join('');
@@ -146,7 +168,12 @@
     $('row-bust').hidden = state.client.sex !== 'femme';
     if (document.activeElement !== $('c-name')) $('c-name').value = state.client.name;
     document.querySelectorAll('.seg-b[data-sex]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sex === state.client.sex)));
-    $('t-lines-vues').checked = state.v3.linesVues; $('t-dress').checked = state.v3.dress; $('t-lines-avatar').checked = state.v3.linesAvatar;
+    $('t-lines-vues').checked = state.v3.linesVues;
+    $('mq-age').value = state.mh.age;
+    for (const k of ['african', 'asian', 'caucasian']) $('mq-' + k).value = state.mh[k];
+    $('mq-muscle').value = state.mh.muscle;
+    $('mq-rings').checked = state.mh.rings;
+    document.querySelectorAll('[data-mqstyle]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mqstyle === state.mh.style)));
     STYLE_CTRLS.forEach(([k, , , , , unit]) => { $('s-' + k).value = state.s[k]; $('o-' + k).textContent = fmt(state.s[k]) + unit; });
     $('c-fabric').value = state.s.fabric; $('c-accent').value = state.s.accent; $('c-shoe').value = state.s.shoe;
     $('t-texture').checked = !!state.s.texture; $('t-shoes').checked = !!state.s.shoes; $('t-body').checked = state.s.showBody !== false;
@@ -159,7 +186,7 @@
     $('zoom').value = state.zoom; $('zoom-out').textContent = fmt(state.zoom) + ' px/cm';
     $('fabric-w').value = state.fabricW;
     const labels = { croquis: 'croquis', patrons: 'patrons', coupe: 'plan de coupe', fiche: 'fiche' };
-    const is3D = state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille';
+    const is3D = state.tab === 'vues' || state.tab === 'mannequin';
     $('btn-copy').textContent = is3D ? "Copier l'image des vues" : state.tab === 'fiche' ? 'Copier le SVG des patrons' : `Copier le SVG (${labels[state.tab]})`;
     $('btn-download').textContent = is3D ? 'Télécharger les vues (PNG)' : state.tab === 'croquis' ? 'Télécharger le croquis' : state.tab === 'coupe' ? 'Télécharger le plan de coupe' : 'Télécharger les patrons 1:1';
   }
@@ -371,7 +398,7 @@
   }
 
   function render3D() {
-    if (state.tab !== 'vues' && state.tab !== 'avatar') return;
+    if (state.tab !== 'vues') return;
     cancelAnimationFrame(raf3D);
     raf3D = requestAnimationFrame(() => {
       if (!ensure3D()) return;
@@ -396,50 +423,80 @@
     });
   }
 
-  function renderAvatarTables(rows) {
-    const m = state.m;
-    const L = body3.L;
-    const client = [
-      ['Client', clientLabel()], ['Morphologie', state.client.sex === 'femme' ? 'Femme' : 'Homme'],
-      ['Stature', fmt(m.stature) + ' cm'], ['Carrure (épaule à épaule)', fmt(L.shoulderHalf * 2) + ' cm'],
-      ['Poitrine / taille / bassin', `${fmt(m.chest)} / ${fmt(m.waist)} / ${fmt(m.hip)} cm`],
-      ['Hauteur de taille', fmt(L.waist) + ' cm'], ['Hauteur d’entrejambe', fmt(L.crotch) + ' cm'],
-      ['Bras / poignet', `${fmt(m.bicep)} / ${fmt(m.wrist)} cm`],
-      ['Cuisse / genou / mollet / cheville', `${fmt(m.thigh)} / ${fmt(m.knee)} / ${fmt(m.calf)} / ${fmt(m.ankle)} cm`],
-    ];
-    $('client-table').innerHTML = client.map(([a, b]) => `<tr><td>${a}</td><td class="n">${esc(b)}</td></tr>`).join('');
-    $('fit-table').innerHTML = fitTableRows(rows);
+  /* ---------- Mannequin réaliste (MakeHuman) ---------- */
+
+  let mqKey = '', mqFit = null, mqTimer = 0, mqShownKey = '';
+  const MQ_ROWS = [['stature', 'Stature'], ['neck', 'Tour de cou'], ['chest', 'Tour de poitrine'], ['waist', 'Tour de taille'],
+    ['hip', 'Tour de bassin'], ['bicep', 'Tour de bras'], ['wrist', 'Tour de poignet'], ['thigh', 'Tour de cuisse'],
+    ['knee', 'Tour de genou'], ['calf', 'Tour de mollet'], ['ankle', 'Tour de cheville'], ['crotch', 'Hauteur d’entrejambe']];
+
+  function mannequinGeometry(fit) {
+    const mh = MH.mannequinHead(fit.pos, fit.measured.rings.neck);
+    const posed = MH.pose(mh.pos, 9);
+    const g = MH.renderGeometry(posed.pos, mh.drop);
+    const rings = [];
+    for (const [k, r] of Object.entries(fit.measured.rings)) {
+      const pts = MH.ringPoints(r);
+      const arm = k === 'bicep' || k === 'wrist';
+      rings.push(arm ? pts.map(posed.rot.L) : pts);
+      if (r.side) {
+        const mir = pts.map(([x, y, z]) => [-x, y, z]);
+        rings.push(arm ? mir.map(posed.rot.R) : mir);
+      }
+    }
+    return { positions: g.positions, normals: g.normals, uvs: g.uvs, index: g.index, extra: [mh.head], rings: state.mh.rings ? rings : [], stature: state.m.stature };
   }
+
+  function renderMannequin() {
+    if (state.tab !== 'mannequin') return;
+    const status = $('mq-status');
+    if (!Viewer3D.available() || !window.MH) { status.textContent = 'La vue 3D a besoin de three.js et de WebGL.'; return; }
+    const m = bodyM();
+    const p = { sex: state.client.sex, age: state.mh.age, african: state.mh.african, asian: state.mh.asian, caucasian: state.mh.caucasian,
+      muscle: state.mh.muscle === 'auto' ? undefined : +state.mh.muscle, belly: m.belly, seat: m.seat };
+    const key = JSON.stringify([m, p]);
+    clearTimeout(mqTimer);
+    mqTimer = setTimeout(async () => {
+      try {
+        if (!MH.ready()) status.textContent = 'Chargement du mannequin…';
+        await MH.load();
+        if (key !== mqKey) {
+          status.textContent = 'Ajustement du mannequin aux mesures…';
+          await new Promise((r) => setTimeout(r, 20));
+          const t0 = performance.now();
+          mqFit = MH.fit(m, p);
+          mqFit.ms = performance.now() - t0;
+          mqKey = key;
+        }
+        if (!ensure3D()) return;
+        Viewer3D.attach($('mq-host'), $('mq-labels'));
+        Viewer3D.setOptions({ duo: false, lines: state.mh.rings });
+        Viewer3D.showMannequin(mannequinGeometry(mqFit), state.mh.style);
+        dirty3D = true; // la vue « tenue » devra être reconstruite
+        const f = mqFit;
+        const target = (k) => (k === 'crotch' ? Body.landmarks(m).crotch : m[k]);
+        $('mq-table').innerHTML = MQ_ROWS.map(([k, label]) => {
+          const d = f.measured[k] - target(k);
+          const cls = Math.abs(d) < 0.6 ? 'gap-ok' : Math.abs(d) < 2 ? 'gap-warn' : 'gap-bad';
+          return `<tr><td>${label}</td><td class="n">${fmt(target(k))}</td><td class="n">${fmt(f.measured[k])}</td><td class="n ${cls}">${d >= 0 ? '+' : '−'}${fmt(Math.abs(d))}</td></tr>`;
+        }).join('');
+        status.textContent = `Mannequin ${state.client.sex} ajusté en ${Math.round(f.ms)} ms · corpulence ${Math.round(f.weight * 100)} % · musculature ${Math.round(f.muscle * 100)} %` +
+          (f.worst > 0.6 ? ` · écart maximal ${fmt(f.worst)} cm (mesures hors de portée du maillage)` : ' · toutes les mesures à moins de 6 mm');
+      } catch (e) {
+        console.error(e);
+        status.textContent = 'Impossible de construire le mannequin : ' + e.message;
+      }
+    }, MH.ready() ? 60 : 0);
+  }
+
   function fitTableRows(rows) {
     const cls = { confort: 'ok', juste: 'warn', 'serré': 'bad' };
     return rows.map((r) => `<tr><td>${r.zone}</td><td class="n">${fmt(r.body)}</td><td class="n">${fmt(r.garment)}</td>
       <td class="n">${r.ease >= 0 ? '+' : '−'}${fmt(Math.abs(r.ease))}</td><td><span class="st ${cls[r.status]}">${r.status}</span></td></tr>`).join('');
   }
   function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-  /* ---------- Trouver ma taille ---------- */
-
-  let finder = null;
-  function renderSizeFinder() {
-    if (finder) return requestAnimationFrame(() => finder.refresh());
-    finder = SizeFinder.mount($('sizefinder'), {
-      product: {
-        name: MODEL.name, order: Catalog.SIZE_ORDER, style: state.s,
-        sizesFor: (sex) => Object.fromEntries(Catalog.SIZE_ORDER.map((sz) => [sz, Catalog.sizeMeasures(sex, sz)])),
-      },
-      onApply: (est, best) => {
-        state.client.sex = est.m.sex;
-        const keep = { tunicLength: state.m.tunicLength, sleeveLength: state.m.sleeveLength, ease: state.m.ease, sideSlit: state.m.sideSlit, hemCirc: state.m.hemCirc };
-        Object.assign(state.m, Catalog.sizeMeasures(est.m.sex, best), est.m, keep);
-        delete state.m.sex;
-        state.size = null; state.tab = 'avatar';
-        sync(); render();
-        toast('Mesures estimées reportées : ajustez-les après la prise de mesures réelle');
-      },
-    });
-  }
-
   function refreshClientText() {
-    if (state.tab === 'avatar' && body3) renderAvatarTables(Garment3D.fitCheck(body3, pat3, state.m));
+    if (state.tab === 'mannequin' && body3) $('fit-table').innerHTML = fitTableRows(Garment3D.fitCheck(body3, pat3, state.m));
     if (state.tab === 'fiche') renderTech();
   }
 
@@ -455,15 +512,14 @@
     }
     dirty3D = true;
     renderCroquis();
-    if (state.tab === 'avatar') renderAvatarTables(rows);
-    if (state.tab === 'taille') renderSizeFinder();
+    if (state.tab === 'mannequin') { $('fit-table').innerHTML = fitTableRows(rows); renderMannequin(); }
     if (state.tab === 'patrons') renderPatterns();
     if (state.tab === 'coupe') renderMarker();
     if (state.tab === 'fiche') renderTech(rows);
     render3D();
     save();
   }
-  window.addEventListener('resize', () => { if (state.tab === 'vues' || state.tab === 'avatar') render3D(); });
+  window.addEventListener('resize', () => { if (state.tab === 'vues') render3D(); if (state.tab === 'mannequin') renderMannequin(); });
 
   /* ---------- Exports ---------- */
 
@@ -479,7 +535,7 @@
     return `${MODEL.ref.toLowerCase()}-${state.tab === 'croquis' ? 'croquis' : state.tab === 'coupe' ? 'plan-de-coupe' : 'patrons-1-1'}-${s}.svg`;
   }
   function copySVG() {
-    if (state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille') return copyPNG();
+    if (state.tab === 'vues' || state.tab === 'mannequin') return copyPNG();
     const svg = '<?xml version="1.0" encoding="UTF-8"?>\n' + currentSVG();
     const done = () => toast('SVG copié — collez-le dans Illustrator, Inkscape ou Figma');
     try {
@@ -495,7 +551,7 @@
     ta.remove();
     ok ? done() : toast('Copie refusée par le navigateur');
   }
-  function viewsTitle() { return `${MODEL.ref} · ${state.tab === 'avatar' && !state.v3.dress ? 'Avatar' : MODEL.name} · ${clientLabel()} · taille ${sizeLabel()}`; }
+  function viewsTitle() { return `${state.tab === 'mannequin' ? 'Mannequin' : MODEL.ref + ' · ' + MODEL.name} · ${clientLabel()} · ${sizeLabel()}`; }
   function copyPNG() {
     const cv = Viewer3D.available() && Viewer3D.snapshot(viewsTitle());
     if (!cv) return toast('La vue 3D n’est pas disponible');
@@ -508,11 +564,11 @@
     }, 'image/png');
   }
   function downloadSVG() {
-    if (state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille') {
+    if (state.tab === 'vues' || state.tab === 'mannequin') {
       const cv = Viewer3D.available() && Viewer3D.snapshot(viewsTitle());
       if (!cv) return toast('La vue 3D n’est pas disponible');
       const a = document.createElement('a');
-      const name = `${MODEL.ref.toLowerCase()}-${state.tab === 'avatar' ? 'avatar' : 'vues'}-${(state.size || 'sur-mesure').toLowerCase()}.png`;
+      const name = `${MODEL.ref.toLowerCase()}-${state.tab === 'mannequin' ? 'mannequin' : 'vues'}-${(state.size || 'sur-mesure').toLowerCase()}.png`;
       a.href = cv.toDataURL('image/png'); a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       return toast('Fichier ' + name + ' enregistré');

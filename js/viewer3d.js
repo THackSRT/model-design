@@ -88,9 +88,19 @@
     });
   }
 
+  /* Passe « profondeur » : les contours naissent des ruptures de profondeur (silhouettes, recouvrements). */
+  function depthMat() {
+    return new THREE.ShaderMaterial({
+      vertexShader: 'varying float vZ; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vZ = -mv.z; gl_Position = projectionMatrix * mv; }',
+      fragmentShader: 'varying float vZ; void main(){ float d = clamp((vZ - 400.0) / 400.0, 0.0, 1.0) * 255.0; gl_FragColor = vec4(floor(d) / 255.0, fract(d), 0.0, 1.0); }',
+      side: THREE.DoubleSide,
+    });
+  }
+
   function addMesh(group, geom, mat) {
     const mesh = new THREE.Mesh(geom, mat);
     mesh.userData.colorMat = mat;
+    mesh.userData.depthMat = depthMat();
     mesh.userData.normalMat = normalMat(mat.alphaTest ? mat.map : null);
     group.add(mesh);
     return mesh;
@@ -265,6 +275,40 @@
   }
 
   /* Reconstruit corps + vêtement. data = { body, pat, m, s } */
+  /*
+   * Mannequin réaliste (MakeHuman) : data = { positions, normals, uvs, index, rings: [[x,y,z]…], stature }
+   * style : 'trait' (croquis 2D, corps blanc et contours) ou 'volume' (mannequin de couture ombré).
+   */
+  V.showMannequin = function (data, style) {
+    if (!ready) return;
+    model = null;
+    stature = data.stature;
+    clear(bodyGroup); clear(garmentGroup); clear(linesGroup);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+    g.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
+    g.setIndex(new THREE.BufferAttribute(data.index, 1));
+    const vol = style === 'volume';
+    // trait : dessin pur (aplat blanc, seuls les contours comptent) ; volume : mannequin de couture ombré
+    const mat = vol ? new THREE.MeshStandardMaterial({ color: 0xe3d6c8, roughness: 0.85, metalness: 0 }) : new THREE.MeshBasicMaterial({ color: 0xffffff });
+    addMesh(bodyGroup, g, mat);
+    for (const x of data.extra || []) {
+      const gx = new THREE.BufferGeometry();
+      gx.setAttribute('position', new THREE.BufferAttribute(x.positions, 3));
+      gx.setIndex(new THREE.BufferAttribute(x.index, 1));
+      gx.computeVertexNormals();
+      addMesh(bodyGroup, gx, mat);
+    }
+    const lm = new THREE.LineDashedMaterial({ color: vol ? 0x6d4c3d : 0x8c959c, dashSize: 1.1, gapSize: 0.8 });
+    for (const ring of data.rings || []) {
+      const geo = new THREE.BufferGeometry().setFromPoints(ring.concat([ring[0]]).map((p) => new THREE.Vector3(p[0], p[1], p[2])));
+      const line = new THREE.Line(geo, lm); line.computeLineDistances(); linesGroup.add(line);
+    }
+    V.setOptions({ garment: false, edge: vol ? 0.7 : 0.92, edgeMode: 'depth' });
+    V.render();
+  };
+
   V.update = function (data) {
     if (!ready) return;
     model = data;
@@ -304,7 +348,7 @@
         addMesh(garmentGroup, geometryFromRings(loftRings(lo), null, lo.capStart, lo.capEnd), shoe);
       }
     }
-    V.setOptions({});
+    V.setOptions({ edge: 0.92, edgeMode: 'normal' });
     V.render();
     return { tunicIssues: tu.issues, sleeveTight: sleeves.some((x) => x.tight), legIssues: legs.some((x) => x.issues.length) };
   };
@@ -322,17 +366,24 @@
       quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
       quadScene = new THREE.Scene();
       quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-        uniforms: { tColor: { value: null }, tNormal: { value: null }, texel: { value: new THREE.Vector2() }, ink: { value: new THREE.Color(0x2f3439) } },
+        uniforms: { tColor: { value: null }, tNormal: { value: null }, texel: { value: new THREE.Vector2() }, ink: { value: new THREE.Color(0x2f3439) }, strength: { value: 0.92 }, mode: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
         fragmentShader: [
-          'uniform sampler2D tColor; uniform sampler2D tNormal; uniform vec2 texel; uniform vec3 ink; varying vec2 vUv;',
+          'uniform sampler2D tColor; uniform sampler2D tNormal; uniform vec2 texel; uniform vec3 ink; uniform float strength; uniform int mode; varying vec2 vUv;',
+          'float D(float x, float y){ vec4 t = texture2D(tNormal, vUv + vec2(x, y) * texel); return (t.r * 255.0 + t.g) / 255.0 * 400.0; }',
           'vec3 N(float x, float y){ return texture2D(tNormal, vUv + vec2(x, y) * texel).rgb; }',
           'void main(){',
           '  vec3 gx = -N(-1.,-1.) - 2.*N(-1.,0.) - N(-1.,1.) + N(1.,-1.) + 2.*N(1.,0.) + N(1.,1.);',
           '  vec3 gy = -N(-1.,-1.) - 2.*N(0.,-1.) - N(1.,-1.) + N(-1.,1.) + 2.*N(0.,1.) + N(1.,1.);',
           '  float e = smoothstep(1.35, 2.1, length(gx) + length(gy));',
+          '  if (mode == 1) {',
+          '    float c0 = D(0.,0.);',
+          '    float lap = max(abs(D(1.,0.) + D(-1.,0.) - 2.*c0), abs(D(0.,1.) + D(0.,-1.) - 2.*c0));',
+          '    lap = max(lap, max(abs(D(1.,1.) + D(-1.,-1.) - 2.*c0), abs(D(1.,-1.) + D(-1.,1.) - 2.*c0)) * 0.7);',
+          '    e = smoothstep(1.2, 3.0, lap);',
+          '  }',
           '  vec3 c = texture2D(tColor, vUv).rgb;',
-          '  gl_FragColor = vec4(mix(c, ink, e * 0.92), 1.0);',
+          '  gl_FragColor = vec4(mix(c, ink, e * strength), 1.0);',
           '}',
         ].join('\n'),
         depthTest: false, depthWrite: false,
@@ -341,9 +392,11 @@
     }
   }
 
-  function swapMaterials(normal) {
+  function swapMaterials(kind) {
     for (const g of [bodyGroup, garmentGroup]) {
-      g.traverse((o) => { if (o.isMesh && o.userData.colorMat) o.material = normal ? o.userData.normalMat : o.userData.colorMat; });
+      g.traverse((o) => {
+        if (o.isMesh && o.userData.colorMat) o.material = kind === 'normal' ? o.userData.normalMat : kind === 'depth' ? o.userData.depthMat : o.userData.colorMat;
+      });
     }
   }
 
@@ -365,13 +418,14 @@
     camera.position.set(0, stature * 0.5, 600); camera.lookAt(0, stature * 0.5, 0);
     camera.updateProjectionMatrix();
 
+    const edgeKind = opts.edgeMode === 'depth' ? 'depth' : 'normal';
     const pass = (rt, normal) => {
-      swapMaterials(normal);
+      swapMaterials(normal ? edgeKind : 'color');
       linesGroup.visible = !normal && !!opts.lines;
       rt.scissorTest = false;
       rt.viewport.set(0, 0, W, Hh);
       renderer.setRenderTarget(rt);
-      renderer.setClearColor(normal ? 0x000000 : 0xffffff, 1);
+      renderer.setClearColor(normal && edgeKind === 'normal' ? 0x000000 : 0xffffff, 1);
       renderer.clear();
       rt.scissorTest = true;
       views.forEach((v, i) => {
@@ -384,12 +438,14 @@
     };
     pass(rtColor, false);
     pass(rtNormal, true);
-    swapMaterials(false);
+    swapMaterials('color');
     linesGroup.visible = !!opts.lines;
 
     renderer.setRenderTarget(null);
     quad.material.uniforms.tColor.value = rtColor.texture;
     quad.material.uniforms.tNormal.value = rtNormal.texture;
+    quad.material.uniforms.strength.value = opts.edge ?? 0.92;
+    quad.material.uniforms.mode.value = edgeKind === 'depth' ? 1 : 0;
     quad.material.uniforms.texel.value.set(Math.max(1, pr * 0.8) / W, Math.max(1, pr * 0.8) / Hh);
     renderer.setViewport(0, 0, cw, vh);
     renderer.render(quadScene, quadCam);
@@ -398,6 +454,120 @@
       labelsEl.innerHTML = views.map((v) => `<span>${offset ? v.label + ' ' + (offset > 0 ? '+' : '−') + Math.round(Math.abs(offset) * 180 / Math.PI) + '°' : v.label}</span>`).join('');
     }
   };
+
+  /*
+   * Silhouettes vectorielles (SVG, en cm) des vues affichées : rendu d'un masque haute définition
+   * par vue, contours par « marching squares », puis simplification (Douglas-Peucker).
+   */
+  V.silhouetteSVG = function (title) {
+    if (!ready) return null;
+    const views = currentViews();
+    const PXCM = 4;                                  // 4 px par cm
+    const spanY = stature * 1.07, spanX = spanY * 0.42;
+    const w = Math.round(spanX * PXCM), h = Math.round(spanY * PXCM);
+    const rt = new THREE.WebGLRenderTarget(w, h);
+    const cam = camera.clone();
+    cam.left = -spanX / 2; cam.right = spanX / 2; cam.top = spanY / 2; cam.bottom = -spanY / 2;
+    cam.updateProjectionMatrix();
+    const flat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    const vis = { g: garmentGroup.visible, l: linesGroup.visible };
+    linesGroup.visible = false;
+    const buf = new Uint8Array(w * h * 4);
+    const paths = [];
+    views.forEach((v, i) => {
+      root.rotation.y = v.angle + offset;
+      scene.overrideMaterial = flat;
+      renderer.setRenderTarget(rt);
+      renderer.setClearColor(0x000000, 1);
+      rt.scissorTest = false; rt.viewport.set(0, 0, w, h);
+      renderer.clear();
+      renderer.render(scene, cam);
+      scene.overrideMaterial = null;
+      renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf);
+      const M = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : buf[4 * ((h - 1 - y) * w + x)] > 127 ? 1 : 0);
+      const loops = marching(M, w, h).map((l) => rdp(l, 0.6)).filter((l) => l.length > 3);
+      const ox = i * (spanX + 6);
+      const d = loops.map((l) => 'M' + l.map(([x, y]) => `${(ox + x / PXCM).toFixed(2)} ${(y / PXCM).toFixed(2)}`).join('L') + 'Z').join('');
+      paths.push({ d, label: v.label, cx: ox + spanX / 2 });
+    });
+    renderer.setRenderTarget(null);
+    rt.dispose(); flat.dispose();
+    garmentGroup.visible = vis.g; linesGroup.visible = vis.l;
+    V.render();
+    const W = views.length * (spanX + 6) - 6, H = spanY + 12;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W.toFixed(1)}cm" height="${H.toFixed(1)}cm" viewBox="0 0 ${W.toFixed(2)} ${H.toFixed(2)}">
+<title>${esc(title)}</title>
+<rect width="100%" height="100%" fill="#fff"/>
+${paths.map((p) => `<path d="${p.d}" fill="none" stroke="#2f3439" stroke-width="0.25" stroke-linejoin="round" fill-rule="evenodd"/>
+<text x="${p.cx.toFixed(2)}" y="${(spanY + 7).toFixed(2)}" font-family="IBM Plex Mono, monospace" font-size="2.6" text-anchor="middle" fill="#5a6367">${esc(p.label.toUpperCase())}</text>`).join('\n')}
+<text x="0" y="${(spanY + 11).toFixed(2)}" font-family="IBM Plex Sans, Arial, sans-serif" font-size="2.4" fill="#1b1f22">${esc(title)} — échelle 1:1 (unités en cm)</text>
+</svg>`;
+  };
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  /* Contours d'un masque binaire : segments « marching squares » chaînés en boucles fermées. */
+  function marching(M, w, h) {
+    const segs = new Map();
+    const key = (x, y) => x * 4 + ',' + y * 4;
+    const add = (a, b) => { const k = key(a[0], a[1]); if (!segs.has(k)) segs.set(k, []); segs.get(k).push(b); };
+    for (let y = -1; y < h; y++) {
+      for (let x = -1; x < w; x++) {
+        const tl = M(x, y), tr = M(x + 1, y), br = M(x + 1, y + 1), bl = M(x, y + 1);
+        const c = tl * 8 + tr * 4 + br * 2 + bl;
+        if (c === 0 || c === 15) continue;
+        const T = [x + 0.5, y], Rr = [x + 1, y + 0.5], Bm = [x + 0.5, y + 1], Lf = [x, y + 0.5];
+        const S = {
+          1: [[Lf, Bm]], 2: [[Bm, Rr]], 3: [[Lf, Rr]], 4: [[Rr, T]], 5: [[Lf, T], [Rr, Bm]], 6: [[Bm, T]], 7: [[Lf, T]],
+          8: [[T, Lf]], 9: [[T, Bm]], 10: [[T, Rr], [Bm, Lf]], 11: [[T, Rr]], 12: [[Rr, Lf]], 13: [[Rr, Bm]], 14: [[Bm, Lf]],
+        }[c];
+        for (const [a, b] of S) add(a, b);
+      }
+    }
+    // chaînage non orienté : chaque point est relié à ses deux voisins
+    const adj = new Map();
+    const link = (ka, pb, kb) => { if (!adj.has(ka)) adj.set(ka, []); adj.get(ka).push([kb, pb]); };
+    const pt = new Map();
+    for (const [ka, list] of segs) {
+      const pa = ka.split(',').map((v) => +v / 4);
+      pt.set(ka, pa);
+      for (const pb of list) { const kb = key(pb[0], pb[1]); pt.set(kb, pb); link(ka, pb, kb); link(kb, pa, ka); }
+    }
+    const used = new Set();
+    const loops = [];
+    for (const k0 of adj.keys()) {
+      if (used.has(k0)) continue;
+      const loop = [pt.get(k0)];
+      used.add(k0);
+      let prev = null, cur = k0;
+      for (let guard = 0; guard < 500000; guard++) {
+        const nx = adj.get(cur).find(([k]) => k !== prev && !used.has(k)) || null;
+        if (!nx) break;
+        prev = cur; cur = nx[0];
+        used.add(cur); loop.push(nx[1]);
+      }
+      if (loop.length > 8) loops.push(loop);
+    }
+    return loops;
+  }
+
+  /* Simplification Douglas-Peucker. */
+  function rdp(pts, eps) {
+    if (pts.length < 3) return pts;
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const stack = [[0, pts.length - 1]];
+    while (stack.length) {
+      const [a, b] = stack.pop();
+      const [ax, ay] = pts[a], [bx, by] = pts[b];
+      const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+      let md = 0, mi = -1;
+      for (let i = a + 1; i < b; i++) {
+        const d = Math.abs((pts[i][0] - ax) * dy - (pts[i][1] - ay) * dx) / L;
+        if (d > md) { md = d; mi = i; }
+      }
+      if (md > eps && mi > 0) { keep[mi] = 1; stack.push([a, mi], [mi, b]); }
+    }
+    return pts.filter((_, i) => keep[i]);
+  }
 
   /* Image PNG de la planche, avec légendes. */
   V.snapshot = function (title) {

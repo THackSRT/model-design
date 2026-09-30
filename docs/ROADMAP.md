@@ -3,6 +3,22 @@
 Objectif final : un **moteur de création de design assisté par IA**, livré en application web,
 qui va de l'idée (photo, texte, croquis) jusqu'aux patrons prêts à couper.
 
+## 0. Priorité actuelle : mannequins 2D, 2,5D et 3D → vêtement 3D reconstruit depuis les patrons
+
+1. **Mannequin 3D réaliste (fait)** : MakeHuman (CC0) ajusté aux mesures du client, tête lisse de
+   mannequin de vitrine, bras abaissés.
+2. **Mannequin 2D (fait)** : vues trait (contours seuls) et silhouettes SVG à l'échelle, générées depuis
+   le même mannequin 3D ; elles serviront de gabarit pour les croquis.
+3. **2,5D (à valider)** : vues 2D accompagnées de cartes de profondeur et de normales calculées sur le
+   mannequin 3D, pour poser motifs et tissus en 2D avec un rendu du volume (plis d'ombre, déformation
+   des motifs sur les courbes) sans passer par la simulation complète.
+4. **Patron → vêtement 3D** : placer les pièces de patron autour du mannequin, les coudre virtuellement
+   (paires de coutures, crans) et simuler le tombé du tissu (masse-ressort / dynamique à positions,
+   collisions avec le mannequin). Les motifs se posent alors directement sur les pièces à plat (UV =
+   patron) et se retrouvent au bon endroit sur le vêtement 3D.
+5. **Retouches** : modifier le patron (longueurs, largeurs, pinces, encolure) et voir le vêtement 3D se
+   mettre à jour ; bibliothèque de motifs et placement sur les pièces.
+
 ## 1. Principe directeur : l'IA propose, le moteur garantit
 
 Ne pas demander à une IA de dessiner directement des patrons : la géométrie générée serait

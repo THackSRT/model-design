@@ -6,7 +6,6 @@
 <title>Atelier Kaftan Chevrons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/sizefinder.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Mise en page : établi de tailleur — panneau de mesures à gauche, feuille de travail (papier patron) à droite. */
@@ -178,6 +177,13 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 .views-canvas:active { cursor: grabbing; }
 .views-labels { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #5a6367; padding: 6px 0 4px; }
 .pane a { color: var(--accent); }
+.mq-bar { align-items: flex-end; }
+.flabel { font-size: 12px; color: var(--muted); }
+.mq-mix { display: flex; gap: 10px; flex-wrap: wrap; }
+.mq-mix label { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.mq-mix input { width: 90px; }
+select.text { padding: 5px 8px; }
+.gap-ok { color: var(--ok); } .gap-warn { color: var(--warn); } .gap-bad { color: var(--bad); }
 .h3 { margin: 0 0 10px; font: 700 15px var(--f-display); font-stretch: 88%; text-transform: uppercase; letter-spacing: .08em; }
 .st { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 8px; border-radius: 99px; }
 .st.ok { background: var(--ok-bg); color: var(--ok); }
@@ -253,16 +259,42 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 
     <main class="view">
       <nav class="tabs" role="tablist" aria-label="Vues">
+        <button role="tab" id="tab-mannequin" aria-controls="pane-mannequin" type="button">Mannequin</button>
         <button role="tab" id="tab-croquis" aria-controls="pane-croquis" type="button">Croquis</button>
         <button role="tab" id="tab-vues" aria-controls="pane-vues" type="button">Vues 3D</button>
-        <button role="tab" id="tab-avatar" aria-controls="pane-avatar" type="button">Avatar client</button>
-        <button role="tab" id="tab-taille" aria-controls="pane-taille" type="button">Trouver ma taille</button>
         <button role="tab" id="tab-patrons" aria-controls="pane-patrons" type="button">Patrons</button>
         <button role="tab" id="tab-coupe" aria-controls="pane-coupe" type="button">Plan de coupe</button>
         <button role="tab" id="tab-fiche" aria-controls="pane-fiche" type="button">Fiche technique</button>
       </nav>
 
-      <section class="pane" id="pane-croquis" role="tabpanel" aria-labelledby="tab-croquis">
+      <section class="pane" id="pane-mannequin" role="tabpanel" aria-labelledby="tab-mannequin">
+        <div class="toolbar mq-bar">
+          <div class="field"><label for="mq-age">Âge</label><div class="num" style="width:96px"><input id="mq-age" type="number" min="16" max="90" step="1"><span>ans</span></div></div>
+          <div class="field mq-origin"><span class="flabel">Morphotype</span>
+            <div class="mq-mix">
+              <label><span>Afrique</span><input type="range" id="mq-african" min="0" max="1" step="0.05"></label>
+              <label><span>Asie</span><input type="range" id="mq-asian" min="0" max="1" step="0.05"></label>
+              <label><span>Europe</span><input type="range" id="mq-caucasian" min="0" max="1" step="0.05"></label>
+            </div>
+          </div>
+          <div class="field"><label for="mq-muscle">Musculature</label>
+            <select id="mq-muscle" class="text"><option value="auto">automatique</option><option value="0">faible</option><option value="0.25">légère</option><option value="0.5">moyenne</option><option value="0.75">marquée</option><option value="1">forte</option></select></div>
+          <div class="field"><span class="flabel">Rendu</span>
+            <div class="seg" role="group" aria-label="Rendu"><button type="button" class="seg-b" data-mqstyle="trait">Trait 2D</button><button type="button" class="seg-b" data-mqstyle="volume">Volume 3D</button></div></div>
+          <label class="toggle"><input type="checkbox" id="mq-rings"> Lignes de mesure</label>
+          <button type="button" class="btn" id="mq-svg">Silhouettes 2D (SVG)</button>
+        </div>
+        <div class="sheet views-sheet"><div class="views-host" id="mq-host"></div><div class="views-labels" id="mq-labels"></div></div>
+        <p class="status" id="mq-status">Chargement du mannequin…</p>
+        <div class="cols" style="margin-top:14px">
+          <div><h3 class="h3">Mesures : cible et mannequin</h3><div class="tbl-wrap"><table><thead><tr><th>Mesure</th><th>Client</th><th>Mannequin</th><th>Écart</th></tr></thead><tbody id="mq-table"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">Tours mesurés sur le maillage comme au mètre ruban (enveloppe de la section). Maillage de base : MakeHuman, licence CC0.</p></div>
+          <div><h3 class="h3">Contrôle d'aisance du modèle</h3><div class="tbl-wrap"><table><thead><tr><th>Zone</th><th>Corps</th><th>Vêtement</th><th>Aisance</th><th></th></tr></thead><tbody id="fit-table"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">Aisance = tour du vêtement fini − tour du corps.</p></div>
+        </div>
+      </section>
+
+      <section class="pane" id="pane-croquis" role="tabpanel" aria-labelledby="tab-croquis" hidden>
         <div class="croquis-wrap">
           <figure class="sheet ref-sheet" id="ref-fig" style="margin:0">
             <img src="references/modele-kaftan-chevrons.png" alt="Photo du modèle de référence" onerror="document.getElementById('ref-fig').hidden=true">
@@ -284,27 +316,6 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
         </div>
         <div class="sheet views-sheet"><div class="views-host" id="views-host"></div><div class="views-labels" id="views-labels"></div></div>
         <p class="status" id="views-status"></p>
-      </section>
-
-      <section class="pane" id="pane-avatar" role="tabpanel" aria-labelledby="tab-avatar" hidden>
-        <div class="toolbar">
-          <label class="toggle"><input type="checkbox" id="t-dress"> Habiller l'avatar</label>
-          <label class="toggle"><input type="checkbox" id="t-lines-avatar"> Lignes de construction</label>
-          <p class="hint">L'avatar est recalculé à partir des mesures du panneau : chaque tour de poitrine, de taille, de cuisse… est respecté au millimètre.</p>
-        </div>
-        <div class="sheet views-sheet"><div class="views-host" id="avatar-host"></div><div class="views-labels" id="avatar-labels"></div></div>
-        <div class="cols" style="margin-top:20px">
-          <div><h3 class="h3">Fiche client</h3><div class="tbl-wrap"><table><tbody id="client-table"></tbody></table></div></div>
-          <div><h3 class="h3">Contrôle d'aisance du modèle</h3><div class="tbl-wrap"><table><thead><tr><th>Zone</th><th>Corps</th><th>Vêtement</th><th>Aisance</th><th></th></tr></thead><tbody id="fit-table"></tbody></table></div>
-            <p class="hint" style="margin-top:8px">Aisance = tour du vêtement fini − tour du corps.</p></div>
-        </div>
-      </section>
-
-      <section class="pane" id="pane-taille" role="tabpanel" aria-labelledby="tab-taille" hidden>
-        <div class="toolbar">
-          <p class="hint">Le client répond à 7 questions ; ses mesures sont estimées, la taille du modèle qui lui va le mieux est recommandée zone par zone, et son avatar porte la taille choisie. <a href="boutique.html">Voir l'intégration dans une boutique en ligne</a>.</p>
-        </div>
-        <div id="sizefinder"></div>
       </section>
 
       <section class="pane" id="pane-patrons" role="tabpanel" aria-labelledby="tab-patrons" hidden>
@@ -340,6 +351,8 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>')</script>
+<script src="js/mh-data.js"></script>
+<script src="js/mh.js"></script>
 <script src="js/anthro-model.js"></script>
 <script src="js/catalog.js"></script>
 <script src="js/mannequin-data.js"></script>
@@ -349,9 +362,6 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 <script src="js/body.js"></script>
 <script src="js/garment.js"></script>
 <script src="js/viewer3d.js"></script>
-<script src="js/estimate.js"></script>
-<script src="js/recommend.js"></script>
-<script src="js/sizefinder.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
