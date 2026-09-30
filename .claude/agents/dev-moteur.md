@@ -14,7 +14,7 @@ Méthode :
 
 1. `core/` reste pur et déterministe : ni entrée-sortie, ni horloge, ni hasard, ni FastAPI, ni Pydantic, ni
    contrats (vérifié par import-linter). Millimètres partout ; conversions dans `spec/`.
-2. Un nouveau moteur naît de `pnpm gen engine <nom>`, puis `uv sync --all-packages`.
+2. Un nouveau moteur naît de `pnpm gen engine <nom>`, puis `uv sync --all-packages --all-groups`.
 3. Tests : unitaires, propriétés (Hypothesis) sur des mesures plausibles, API. Les références golden
    (`tests/golden`) ne se mettent à jour qu'avec l'instruction explicite de l'orchestrateur ; si ta tâche les
    change, arrête-toi et signale-le dans « Points ouverts ».

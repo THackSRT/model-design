@@ -29,7 +29,7 @@ try {
   const created = run();
   console.log(`Créé :\n${created.map((f) => `  ${f}`).join('\n')}`);
   console.log(
-    'Ensuite : pnpm install (ou uv sync --all-packages), pnpm contracts:gen, puis pnpm check.',
+    'Ensuite : pnpm install (ou uv sync --all-packages --all-groups), pnpm contracts:gen, puis pnpm check.',
   );
 } catch (error) {
   console.error(error.message);

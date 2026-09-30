@@ -26,7 +26,7 @@ des tâches entre sous-agents (`docs/demarrer/orchestration.md`).
 ## Commandes
 
 ```bash
-pnpm setup                 # pnpm install + uv sync --all-packages
+pnpm run setup             # pnpm install + uv sync --all-packages --all-groups (`pnpm setup` seul est une commande de pnpm)
 pnpm check                 # contrats à jour + lint + types + tests de tous les projets (obligatoire avant de rendre la main)
 pnpm check:affected        # idem, seulement les projets touchés depuis main
 pnpm contracts:gen         # régénère les types TS et les modèles Python après une modification de contracts/

@@ -13,7 +13,7 @@ patronage (Python) ; le mannequin MakeHuman est ajusté aux mesures dans le navi
 Prérequis : Node 22, pnpm 10, [uv](https://docs.astral.sh/uv/) (Python 3.12 installé par uv), Docker.
 
 ```bash
-pnpm setup      # dépendances TypeScript et Python
+pnpm run setup  # dépendances TypeScript et Python
 pnpm check      # contrats, lint, types, tests de tous les projets
 ```
 

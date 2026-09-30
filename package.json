@@ -20,7 +20,7 @@
     "dev:infra": "docker compose -f platform/docker-compose.yml up -d",
     "stack:up": "docker compose -f platform/docker-compose.yml --profile app up -d --build",
     "stack:down": "docker compose -f platform/docker-compose.yml --profile app down",
-    "setup": "pnpm install && uv sync --all-packages",
+    "setup": "pnpm install && uv sync --all-packages --all-groups",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {

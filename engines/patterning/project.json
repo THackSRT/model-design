@@ -6,7 +6,7 @@
   "targets": {
     "lint": {
       "command": "uv run ruff check engines/patterning && uv run ruff format --check engines/patterning && uv run lint-imports --config engines/patterning/.importlinter",
-      "options": { "cwd": "{workspaceRoot}" }
+      "options": { "cwd": "{workspaceRoot}", "env": { "PYTHONUTF8": "1" } }
     },
     "typecheck": {
       "command": "uv run mypy engines/patterning/src",

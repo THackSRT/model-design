@@ -50,6 +50,6 @@ Vérification : pnpm check:affected
 
 - Les règles de lint et d'architecture donnent la correction dans leur message.
 - Chaque projet expose les mêmes commandes : `lint`, `typecheck`, `test` (et `build`, `dev` quand ils existent).
-- Un environnement reproductible démarre en une commande : `pnpm setup`, puis `pnpm stack:up` pour toute la pile.
+- Un environnement reproductible démarre en une commande : `pnpm run setup`, puis `pnpm stack:up` pour toute la pile.
 - `pnpm check:affected` reste rapide (quelques dizaines de secondes) : un retour lent pousse à contourner la
   vérification.
