@@ -70,7 +70,6 @@ export const fakeMannequin = (): MannequinEngine => ({
       normals: new Float32Array(9),
       index: Uint32Array.of(0, 1, 2),
     },
-    head: { positions: new Float32Array(9), index: Uint32Array.of(0, 1, 2) },
     measuredMm: { chest: 880 },
   }),
 });

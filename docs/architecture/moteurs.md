@@ -20,7 +20,7 @@ Il transforme un jeu de mesures en corps 3D fidèle, puis en vues 2D. Le prototy
 2. **Complétion** : les mesures manquantes sont estimées par régression (stature, poids, âge, silhouette), en attendant les données réelles des ateliers.
 3. **Composition du corps** : maillage MakeHuman (CC0) déformé par les cibles de sexe, âge, morphotype, corpulence et musculature.
 4. **Ajustement** : chaque tour est mesuré comme au mètre ruban (section du maillage, enveloppe convexe) et corrigé par les cibles de mensuration jusqu'à l'écart visé.
-5. **Pose et finition** : squelette et peau pour la posture, tête de mannequin lisse.
+5. **Pose et finition** : squelette et peau pour la posture, visage de mannequin sans traits (tête naturelle, yeux, nez et bouche effacés).
 6. **Sorties** : avatar glTF (maillage + squelette), tableau cible / obtenu, silhouettes SVG à l'échelle, cartes de profondeur et de normales pour la 2,5D, fichier de mesures pour le patronage.
 
 ## 5.2 Moteur de Patronage
