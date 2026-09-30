@@ -23,6 +23,7 @@
   --sheet-grid: #e2e7ee;
   --sheet-grid-strong: #c9d2df;
   --shadow: 0 1px 2px rgba(20, 30, 40, .06), 0 8px 24px rgba(20, 30, 40, .06);
+  --ok: #1f6b45; --ok-bg: #dcefe3; --warn: #8a5a00; --warn-bg: #f7e9c8; --bad: #a3321f; --bad-bg: #f6dcd6;
   --f-display: 'Archivo', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
   --f-body: 'IBM Plex Sans', 'Segoe UI', Roboto, Arial, sans-serif;
   --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -34,6 +35,7 @@
     --accent: #8da6ff; --accent-ink: #0e1322; --accent-soft: #232c45; --mark: #e58a76;
     --sheet: #f6f6f2; --sheet-grid: #e0e4ea; --sheet-grid-strong: #c6cfdc;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
     color-scheme: dark;
   }
 }
@@ -42,6 +44,7 @@
   --accent: #8da6ff; --accent-ink: #0e1322; --accent-soft: #232c45; --mark: #e58a76;
   --sheet: #f6f6f2; --sheet-grid: #e0e4ea; --sheet-grid-strong: #c6cfdc;
   --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -163,6 +166,21 @@ ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
 ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 .pill { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
 .warn { border-left: 3px solid var(--mark); padding: 8px 12px; background: var(--panel); font-size: 13px; }
+.text { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 6px 8px; font-size: 13px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 7px; padding: 2px; gap: 2px; background: var(--bg); }
+.seg-b { border: 0; border-radius: 5px; padding: 5px 8px; background: transparent; cursor: pointer; font: 600 13px var(--f-display); font-stretch: 92%; color: var(--muted); }
+.seg-b[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.views-sheet { padding: 12px 8px 8px; }
+.views-host { width: 100%; min-height: 200px; }
+.views-canvas { display: block; width: 100%; height: auto; cursor: grab; touch-action: pan-y; }
+.views-canvas:active { cursor: grabbing; }
+.views-labels { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #5a6367; padding: 6px 0 4px; }
+.h3 { margin: 0 0 10px; font: 700 15px var(--f-display); font-stretch: 88%; text-transform: uppercase; letter-spacing: .08em; }
+.st { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 8px; border-radius: 99px; }
+.st.ok { background: var(--ok-bg); color: var(--ok); }
+.st.warn { background: var(--warn-bg); color: var(--warn); }
+.st.bad { background: var(--bad-bg); color: var(--bad); }
+.nogl { padding: 40px 20px; text-align: center; color: #5a6367; }
 .toast {
   position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
   background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 13px;
@@ -204,9 +222,17 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
   </header>
 
   <div class="work">
-    <aside class="panel" aria-label="Paramètres du modèle">
-      <fieldset id="fs-tunic"><legend>Mesures — tunique (cm)</legend><div class="grid2" id="meas-tunic"></div></fieldset>
-      <fieldset id="fs-pants"><legend>Mesures — pantalon (cm)</legend><div class="grid2" id="meas-pants"></div></fieldset>
+    <aside class="panel" aria-label="Paramètres du client et du modèle">
+      <fieldset><legend>Client</legend>
+        <div class="field"><label for="c-name">Nom du client</label><input class="text" id="c-name" type="text" autocomplete="off" placeholder="ex. Moussa Diallo"></div>
+        <div class="seg" role="group" aria-label="Morphologie">
+          <button type="button" class="seg-b" data-sex="homme">Homme</button>
+          <button type="button" class="seg-b" data-sex="femme">Femme</button>
+        </div>
+      </fieldset>
+      <fieldset><legend>Mesures du corps (cm)</legend><div class="grid2" id="meas-body"></div></fieldset>
+      <fieldset><legend>Silhouette</legend><div id="morph-ctrls" style="display:grid;gap:8px"></div></fieldset>
+      <fieldset><legend>Modèle — longueurs et aisances (cm)</legend><div class="grid2" id="meas-garment"></div></fieldset>
       <fieldset><legend>Couleurs</legend>
         <div class="row"><label for="c-fabric">Tissu principal</label><input type="color" id="c-fabric"></div>
         <div class="row"><label for="c-accent">Chevrons et passepoils</label><input type="color" id="c-accent"></div>
@@ -225,6 +251,8 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
     <main class="view">
       <nav class="tabs" role="tablist" aria-label="Vues">
         <button role="tab" id="tab-croquis" aria-controls="pane-croquis" type="button">Croquis</button>
+        <button role="tab" id="tab-vues" aria-controls="pane-vues" type="button">Vues 3D</button>
+        <button role="tab" id="tab-avatar" aria-controls="pane-avatar" type="button">Avatar client</button>
         <button role="tab" id="tab-patrons" aria-controls="pane-patrons" type="button">Patrons</button>
         <button role="tab" id="tab-coupe" aria-controls="pane-coupe" type="button">Plan de coupe</button>
         <button role="tab" id="tab-fiche" aria-controls="pane-fiche" type="button">Fiche technique</button>
@@ -242,6 +270,29 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
             <dl id="croquis-facts"></dl>
             <p class="hint">Le croquis suit les proportions allongées du mannequin de mode. Les cotes réelles sont celles des patrons.</p>
           </div>
+        </div>
+      </section>
+
+      <section class="pane" id="pane-vues" role="tabpanel" aria-labelledby="tab-vues" hidden>
+        <div class="toolbar">
+          <label class="toggle"><input type="checkbox" id="t-lines-vues"> Lignes de construction</label>
+          <p class="hint">Glisser sur les vues pour tourner, double-clic pour revenir aux quatre vues standard.</p>
+        </div>
+        <div class="sheet views-sheet"><div class="views-host" id="views-host"></div><div class="views-labels" id="views-labels"></div></div>
+        <p class="status" id="views-status"></p>
+      </section>
+
+      <section class="pane" id="pane-avatar" role="tabpanel" aria-labelledby="tab-avatar" hidden>
+        <div class="toolbar">
+          <label class="toggle"><input type="checkbox" id="t-dress"> Habiller l'avatar</label>
+          <label class="toggle"><input type="checkbox" id="t-lines-avatar"> Lignes de construction</label>
+          <p class="hint">L'avatar est recalculé à partir des mesures du panneau : chaque tour de poitrine, de taille, de cuisse… est respecté au millimètre.</p>
+        </div>
+        <div class="sheet views-sheet"><div class="views-host" id="avatar-host"></div><div class="views-labels" id="avatar-labels"></div></div>
+        <div class="cols" style="margin-top:20px">
+          <div><h3 class="h3">Fiche client</h3><div class="tbl-wrap"><table><tbody id="client-table"></tbody></table></div></div>
+          <div><h3 class="h3">Contrôle d'aisance du modèle</h3><div class="tbl-wrap"><table><thead><tr><th>Zone</th><th>Corps</th><th>Vêtement</th><th>Aisance</th><th></th></tr></thead><tbody id="fit-table"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">Aisance = tour du vêtement fini − tour du corps.</p></div>
         </div>
       </section>
 
@@ -276,10 +327,15 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>')</script>
 <script src="js/mannequin-data.js"></script>
 <script src="js/geom.js"></script>
 <script src="js/pattern.js"></script>
 <script src="js/croquis.js"></script>
+<script src="js/body.js"></script>
+<script src="js/garment.js"></script>
+<script src="js/viewer3d.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
