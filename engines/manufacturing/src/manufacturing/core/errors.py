@@ -1,0 +1,15 @@
+"""Erreurs métier du cœur : le `kind` est le suffixe du type RFC 9457 porté par l'API."""
+
+OPEN_CONTOUR = "open-contour"
+UNKNOWN_EDGE = "unknown-edge"
+ALLOWANCE_ON_FOLD = "allowance-on-fold"
+CUT_LINE_SELF_INTERSECTS = "cut-line-self-intersects"
+
+
+class ManufacturingError(Exception):
+    """Entrée inutilisable ; le détail cite des identifiants, jamais de coordonnées."""
+
+    def __init__(self, kind: str, detail: str) -> None:
+        super().__init__(f"{kind}: {detail}")
+        self.kind = kind
+        self.detail = detail
