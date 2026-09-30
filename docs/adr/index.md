@@ -15,3 +15,6 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0006](0006-local-d-abord.md)                 | Local d'abord, zéro dépense                                                | Acceptée             |
 | [0007](0007-orchestration-des-modeles.md)     | Orchestration des agents : Opus décide, Sonnet construit, Haiku exécute    | Acceptée             |
 | [0008](0008-client-nats.md)                   | Client NATS : `@nats-io/jetstream` et `@nats-io/transport-node`            | Acceptée             |
+| [0009](0009-moteur-de-fabrication.md)         | Moteur de fabrication : géométrie et exports écrits par le moteur          | Acceptée             |
+| [0010](0010-integration-garmentcode.md)       | Intégration de GarmentCode : tracés réécrits en Python pur                 | Acceptée             |
+| [0011](0011-messages-icu.md)                  | Messages ICU : `intl-messageformat` (FormatJS)                             | Acceptée             |
