@@ -21,7 +21,7 @@
     "stack:up": "docker compose -f platform/docker-compose.yml --profile app up -d --build",
     "stack:down": "docker compose -f platform/docker-compose.yml --profile app down",
     "setup": "pnpm install && uv sync --all-packages --all-groups",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+    "prepare": "node tools/install-git-hooks.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
