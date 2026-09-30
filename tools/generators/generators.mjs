@@ -1,6 +1,6 @@
 // Gabarits copiés avec remplacement des noms. Chaque générateur rend la liste des fichiers créés.
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const TEMPLATES = join(dirname(fileURLToPath(import.meta.url)), 'templates');
@@ -8,6 +8,8 @@ const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 const pascal = (kebab) => kebab.replace(/(^|-)(\w)/g, (_, __, c) => c.toUpperCase());
 const snake = (kebab) => kebab.replace(/-/g, '_');
+/** Chemin relatif en séparateurs `/` : il finit dans des contrats et des messages, quel que soit le poste. */
+const relativePosix = (from, to) => relative(from, to).split(sep).join('/');
 
 function assertName(name, what) {
   if (!name || !KEBAB.test(name))
@@ -45,7 +47,7 @@ function instantiate(root, template, target, name) {
     mkdirSync(dirname(out), { recursive: true });
     writeFileSync(out, replace(readFileSync(file, 'utf8')));
   }
-  return files.map(({ out }) => relative(root, out));
+  return files.map(({ out }) => relativePosix(root, out));
 }
 
 export function generateService(root, name) {
@@ -91,7 +93,7 @@ export function generateEvent(root, eventName, producer = 'à-renseigner') {
   const text = readFileSync(asyncapi, 'utf8')
     .replace(
       'channels:\n',
-      `channels:\n  ${channel}:\n    address: ${eventName}\n    messages:\n      ${channel}:\n        name: ${eventName}\n        payload:\n          $ref: '../schemas/events/${relative(join(root, 'contracts/schemas/events'), join(root, file))}'\n`,
+      `channels:\n  ${channel}:\n    address: ${eventName}\n    messages:\n      ${channel}:\n        name: ${eventName}\n        payload:\n          $ref: '../schemas/events/${relativePosix(join(root, 'contracts/schemas/events'), join(root, file))}'\n`,
     )
     .replace(
       'operations:\n',

@@ -12,6 +12,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -150,8 +151,9 @@ async function generate(outRoot) {
   await generateOpenApiTypes(outRoot);
   generatePython(outRoot);
   // Configuration explicite : en mode --check, la sortie est écrite hors du dépôt.
+  // Prettier lancé par Node lui-même : `npx` est un script .cmd sous Windows, introuvable sans shell.
   const prettier = [
-    'prettier',
+    createRequire(import.meta.url).resolve('prettier/bin/prettier.cjs'),
     '--config',
     join(ROOT, '.prettierrc.json'),
     '--ignore-path',
@@ -159,7 +161,7 @@ async function generate(outRoot) {
     '--log-level',
     'warn',
   ];
-  execFileSync('npx', [...prettier, '--write', join(outRoot, TS_OUT)], {
+  execFileSync(process.execPath, [...prettier, '--write', join(outRoot, TS_OUT)], {
     cwd: ROOT,
     stdio: 'inherit',
   });

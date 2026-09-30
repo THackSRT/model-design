@@ -31,6 +31,10 @@ src = ["py/*/src", "engines/*/src", "engines/*"]
 target-version = "py312"
 extend-exclude = ["prototype", "**/generated", "engines/mannequin/tools"]
 
+[tool.ruff.format]
+# LF sur tous les postes, comme `.gitattributes` (datamodel-codegen écrit en CRLF sous Windows).
+line-ending = "lf"
+
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "C90", "PL", "RUF"]
 ignore = ["PLR2004"]

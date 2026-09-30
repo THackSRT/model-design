@@ -17,7 +17,7 @@ Tout se fait en local, sans service payant ([ADR 0006](../adr/0006-local-d-abord
 ```bash
 git clone <dépôt> atelier && cd atelier
 corepack enable
-pnpm setup      # pnpm install + uv sync --all-packages ; active aussi le hook git pre-push
+pnpm run setup  # pnpm install + uv sync --all-packages --all-groups ; active aussi le hook git pre-push
 pnpm check      # formatage, contrats, lint, types, tests, documentation
 ```
 

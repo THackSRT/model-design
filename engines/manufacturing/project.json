@@ -6,7 +6,7 @@
   "targets": {
     "lint": {
       "command": "uv run ruff check engines/manufacturing && uv run ruff format --check engines/manufacturing && uv run lint-imports --config engines/manufacturing/.importlinter",
-      "options": { "cwd": "{workspaceRoot}" }
+      "options": { "cwd": "{workspaceRoot}", "env": { "PYTHONUTF8": "1" } }
     },
     "typecheck": {
       "command": "uv run mypy engines/manufacturing/src",

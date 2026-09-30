@@ -34,7 +34,7 @@ départ la forme attendue.
 
 1. ADR : entrées, sorties, temps visé, besoin de GPU, licences des bibliothèques et des poids.
 2. `pnpm gen engine <nom>` : `core/`, `spec/`, `api/`, `main.py`, Dockerfile, test de santé ; le moteur est
-   ajouté à l'espace uv. Puis `uv sync --all-packages`.
+   ajouté à l'espace uv. Puis `uv sync --all-packages --all-groups`.
 3. Décrire l'entrée et la sortie en JSON Schema (et les événements `<nom>.completed` / `<nom>.failed` pour un
    moteur lourd), puis `pnpm contracts:gen`.
 4. Coder le cœur pur et ses tests de propriétés, puis les adaptateurs ; fixer les premières références golden

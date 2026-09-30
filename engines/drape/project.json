@@ -6,7 +6,7 @@
   "targets": {
     "lint": {
       "command": "uv run ruff check engines/drape && uv run ruff format --check engines/drape && uv run lint-imports --config engines/drape/.importlinter",
-      "options": { "cwd": "{workspaceRoot}" }
+      "options": { "cwd": "{workspaceRoot}", "env": { "PYTHONUTF8": "1" } }
     },
     "typecheck": {
       "command": "uv run mypy engines/drape/src",

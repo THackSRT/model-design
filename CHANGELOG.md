@@ -25,6 +25,14 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Stockage objet local : SeaweedFS remplace MinIO, qui ne publie plus d'images depuis octobre 2025.
 - L'intégration continue GitHub devient facultative (lancement manuel).
 - Nx Cloud (offre gratuite) connecté : le cache des tâches est partagé entre les postes.
+- L'installation se lance par `pnpm run setup` (`pnpm setup` seul est une commande de pnpm) et installe aussi
+  le groupe Python `docs`.
+
+### Corrigé
+
+- `pnpm check` passe sous Windows : fins de ligne LF imposées (`.gitattributes`, ruff), Prettier lancé sans
+  `npx` par le générateur de contrats, UTF-8 pour import-linter, chemins `/` dans les générateurs
+  (`$ref` des événements), vérification des jetons sans course entre `test` et `typecheck`.
 
 ## [0.1.0] — 2026-09-30 — Architecture initiale
 

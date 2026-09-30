@@ -1,0 +1,3 @@
+# LF partout, quel que soit le poste : Prettier, ruff et le générateur de contrats écrivent en LF.
+* text=auto eol=lf
+*.mhz binary
