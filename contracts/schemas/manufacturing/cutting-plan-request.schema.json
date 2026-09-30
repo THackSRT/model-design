@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/manufacturing/cutting-plan-request.schema.json",
+  "title": "CuttingPlanRequest",
+  "description": "Demande de plan de coupe : les vêtements à couper (une spécification et un nombre d'exemplaires chacun), la finition et le tissu. Millimètres.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["garments", "fabric"],
+  "properties": {
+    "garments": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/GarmentToCut"
+      }
+    },
+    "finishing": {
+      "$ref": "./finishing-options.schema.json"
+    },
+    "fabric": {
+      "$ref": "#/$defs/FabricLayout"
+    },
+    "spacingMm": {
+      "type": "integer",
+      "description": "Écart minimal entre deux pièces.",
+      "minimum": 0,
+      "maximum": 50,
+      "default": 5
+    }
+  },
+  "$defs": {
+    "GarmentToCut": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "spec"],
+      "properties": {
+        "label": {
+          "$ref": "./size-label.schema.json",
+          "description": "Taille ou repère du vêtement, reporté sur chaque placement."
+        },
+        "spec": {
+          "$ref": "../garment-spec.schema.json"
+        },
+        "count": {
+          "type": "integer",
+          "description": "Nombre d'exemplaires du vêtement.",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 1
+        }
+      }
+    },
+    "FabricLayout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fabricWidthMm"],
+      "properties": {
+        "fabricWidthMm": {
+          "type": "integer",
+          "description": "Laize, lisières comprises.",
+          "minimum": 300,
+          "maximum": 3200
+        },
+        "layout": {
+          "type": "string",
+          "description": "single : tissu à plat, une épaisseur (les pièces sur pliure sont dépliées). folded : tissu plié en deux dans le droit fil, deux épaisseurs (une pièce placée donne une paire symétrique ; une pièce sur pliure pose son bord de pliure sur la pliure du tissu).",
+          "enum": ["single", "folded"],
+          "default": "folded"
+        },
+        "direction": {
+          "$ref": "#/$defs/FabricDirection"
+        },
+        "selvedgeMarginMm": {
+          "type": "integer",
+          "description": "Marge laissée le long de chaque lisière.",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 10
+        }
+      }
+    },
+    "FabricDirection": {
+      "type": "string",
+      "description": "Sens du tissu. one-way : tissu à sens (velours, motif orienté), toutes les pièces dans le même sens. two-way : une pièce peut être tournée de 180°.",
+      "enum": ["one-way", "two-way"],
+      "default": "two-way"
+    }
+  }
+}

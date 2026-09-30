@@ -1,0 +1,149 @@
+openapi: 3.1.0
+info:
+  title: Moteur de production atelier
+  version: 1.0.0
+  description: >
+    Moteur sans état qui rend un patron utilisable en atelier : pièces de coupe (valeurs de couture,
+    crans, droit fil, pliure), gradation, plan de coupe et exports à l'échelle 1:1. Entrée : une
+    spécification de patron (GarmentSpec, mm). Déterministe : mêmes entrées, même version, même
+    résultat, octet pour octet pour les exports. Seuls les services l'appellent (ADR 0009).
+servers:
+  - url: http://localhost:3202
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: Le moteur répond.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, engineVersion]
+                properties:
+                  status: { type: string, enum: [ok] }
+                  engineVersion: { type: string }
+  /v1/cut-patterns:
+    post:
+      operationId: createCutPattern
+      summary: Calculer les pièces de coupe d'un patron
+      description: >
+        Ajoute les valeurs de couture bord par bord, place les crans, le droit fil et la pliure.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CutPatternRequest' }
+      responses:
+        '200':
+          description: Les pièces de coupe.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CutPattern' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/graded-patterns:
+    post:
+      operationId: createGradedPattern
+      summary: Grader un patron à partir d'une spécification par taille
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GradedPatternRequest' }
+      responses:
+        '200':
+          description: Les pièces de coupe de chaque taille et les écarts de gradation.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GradedPattern' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/cutting-plans:
+    post:
+      operationId: createCuttingPlan
+      summary: Calculer un plan de coupe
+      description: >
+        Imbrication simple et déterministe (ADR 0009), synchrone tant qu'elle reste sous la seconde
+        pour les bornes du contrat. Une version en tâche (NATS) viendra avec une imbrication plus fine.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CuttingPlanRequest' }
+      responses:
+        '200':
+          description: Le plan de coupe, le métrage et l'efficience.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CuttingPlan' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/exports:
+    post:
+      operationId: createExport
+      summary: Exporter les pièces de coupe (SVG 1:1, PDF A4 tuilé, DXF-AAMA)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExportRequest' }
+      responses:
+        '200':
+          description: >
+            Le fichier, dans le type de contenu du format demandé : image/svg+xml (svg),
+            application/pdf (pdf-a4-tiled), image/vnd.dxf (dxf-aama).
+          headers:
+            Content-Disposition:
+              description: >
+                attachment; filename="<garment.type>[-<sizeLabel>].<svg|pdf|dxf>", construit par le
+                moteur à partir de valeurs contrôlées, jamais d'un texte libre.
+              schema: { type: string }
+          content:
+            image/svg+xml:
+              schema: { type: string }
+            application/pdf:
+              schema: { type: string, contentMediaType: application/pdf }
+            image/vnd.dxf:
+              schema: { type: string }
+        '422': { $ref: '#/components/responses/Problem' }
+components:
+  responses:
+    Problem:
+      description: >
+        Entrées conformes au schéma mais impossibles à traiter, au format RFC 9457. Types stables :
+        /problems/unknown-edge (bord ou pièce cité inconnu), /problems/allowance-on-fold (valeur de
+        couture demandée sur une pliure), /problems/notch-outside-edge (cran au-delà du bord),
+        /problems/open-contour (contour de pièce non fermé), /problems/fold-edge-missing (pièce sur
+        pliure sans bord de rôle fold), /problems/cut-line-self-intersects (valeurs
+        de couture trop grandes pour une courbe), /problems/sizes-mismatch (tailles sans les mêmes
+        pièces ni les mêmes bords, ou taille de base absente), /problems/fold-not-on-grain (pliure non
+        parallèle au droit fil sur tissu plié), /problems/piece-wider-than-fabric (pièce plus large que
+        la laize utile), /problems/too-many-pieces (plus de 500 placements),
+        /problems/export-format-unavailable (format pas encore livré par cette version du moteur). Une
+        requête hors schéma
+        reçoit la réponse 422 de validation de FastAPI.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, description: 'Identifiant stable, ex. /problems/unknown-edge' }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+    CutPatternRequest:
+      $ref: '../schemas/manufacturing/cut-pattern-request.schema.json'
+    CutPattern:
+      $ref: '../schemas/manufacturing/cut-pattern.schema.json'
+    GradedPatternRequest:
+      $ref: '../schemas/manufacturing/graded-pattern-request.schema.json'
+    GradedPattern:
+      $ref: '../schemas/manufacturing/graded-pattern.schema.json'
+    CuttingPlanRequest:
+      $ref: '../schemas/manufacturing/cutting-plan-request.schema.json'
+    CuttingPlan:
+      $ref: '../schemas/manufacturing/cutting-plan.schema.json'
+    ExportRequest:
+      $ref: '../schemas/manufacturing/export-request.schema.json'

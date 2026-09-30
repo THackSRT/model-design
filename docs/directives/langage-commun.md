@@ -14,6 +14,11 @@ terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'i
 | Modèle, version de modèle                                                | `Design`, `DesignVersion`                       | designs                        |
 | Patron (spécification), pièce, bord, couture, cran                       | `GarmentSpec`, `Panel`, `Edge`, `Seam`, `Notch` | designs                        |
 | Droit fil, laize, métrage                                                | `grainline`, `fabricWidthMm`, `fabricLengthMm`  | designs, production            |
+| Pièce de coupe, ligne de coupe, ligne de couture, cran tracé             | `CutPiece`, `cutLine`, `seamLine`, `NotchMark`  | moteur manufacturing           |
+| Valeur de couture                                                        | `seamAllowance`, `allowanceMm`                  | moteur manufacturing           |
+| Taille, gradation, écart de gradation                                    | `SizeLabel`, `GradedPattern`, `gradeRules`      | moteur manufacturing           |
+| Plan de coupe, placement, efficience                                     | `CuttingPlan`, `Placement`, `efficiency`        | moteur manufacturing           |
+| Tissu plié ou à plat, sens du tissu, lisière                             | `layout`, `FabricDirection`, `selvedge`         | moteur manufacturing           |
 | Commande client, étape                                                   | `Order`, `OrderStage`                           | orders                         |
 | Tâche                                                                    | `Task`                                          | production                     |
 | Dépôt de matière                                                         | `MaterialDeposit`                               | workshop-stock                 |

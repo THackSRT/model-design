@@ -75,7 +75,7 @@ pnpm nx run @atelier/studio:dev                                     # studio, ht
 - Modifier du code généré ou une référence golden (`engines/*/tests/golden`) sans instruction explicite.
 - Désactiver ou affaiblir un test ou une règle (`eslint-disable`, `# type: ignore`, `.skip`) sans ADR.
 - Importer le code d'un autre service, lire sa base, modifier ses migrations.
-- Ajouter une dépendance sans ADR ; licences permises : MIT, Apache 2.0, BSD, ISC, CC0, Unlicense (ADR 0008).
+- Ajouter une dépendance sans ADR ; licences permises : MIT, Apache 2.0, BSD, ISC, CC0, Unlicense (ADR 0008), PSF-2.0 (ADR 0009).
 - Écrire un secret, une donnée réelle de client ou une mesure réelle dans le code, les tests ou les journaux.
 - Modifier `prototype/`.
 
