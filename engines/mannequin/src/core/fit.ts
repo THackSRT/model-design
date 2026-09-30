@@ -1,11 +1,11 @@
 /*
  * Ajustement aux mesures du client : corpulence et musculature (fit-macro.ts), puis mensurations une
  * par une (sécante), enfin mise à l'échelle et pieds au sol.
- * Repères de hauteur (entrejambe) : à reprendre du prototype (tâche 1.13), pas encore ajustés ici.
+ * Entrejambe (facultatif) : paire `upperleg` réglée par sécante dans la même boucle, comme le prototype.
  */
 import { bounds } from './geometry.js';
 import { type FitContext, macroFor, searchMacro, sweepWeight } from './fit-macro.js';
-import { circumference, measure } from './measure.js';
+import { circumference, crotchHeight, measure } from './measure.js';
 import { applyPair } from './morph.js';
 import type {
   MakeHumanFit,
@@ -48,6 +48,7 @@ function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorpho
   return {
     model,
     stature: m.stature,
+    crotch: m.crotch ?? 0,
     goal,
     targets: FIT_KEYS.filter((k) => goal(k) > 0),
     base: {
@@ -97,11 +98,33 @@ function secantStep(
   vals[k] = Math.max(-MAX_PAIR, Math.min(MAX_PAIR, v));
 }
 
+/** Une étape de sécante sur la paire `upperleg` : règle la hauteur d'entrejambe (cm). */
+export function crotchStep(
+  ctx: FitContext,
+  macroPos: Float32Array,
+  vals: Record<string, number>,
+): void {
+  const get = (v: number): number => {
+    vals['upperleg'] = v;
+    const pos = compose(ctx, macroPos, vals);
+    const b = bounds(pos);
+    return (crotchHeight(ctx.model, pos, b.minY) * ctx.stature) / (b.maxY - b.minY);
+  };
+  const v0 = vals['upperleg'] || 0;
+  const c0 = get(v0);
+  // Pas d'essai vers l'intérieur de la plage : à la borne haute, on essaie en dessous.
+  const v1 = v0 + 0.3 > 1 ? v0 - 0.3 : v0 + 0.3;
+  const slope = (get(v1) - c0) / (v1 - v0 || 1e-6);
+  const v = Math.abs(slope) > 1e-3 ? v0 + (ctx.crotch - c0) / slope : v0;
+  vals['upperleg'] = Math.max(-1, Math.min(1, v));
+}
+
 /** Mensurations une par une (plusieurs tours de sécante). */
 function measureFit(ctx: FitContext, macroPos: Float32Array): Omit<Solution, 'weight' | 'muscle'> {
   const vals: Record<string, number> = {};
   for (let round = 0; round < ROUNDS; round++) {
     for (const k of ctx.targets) secantStep(ctx, macroPos, vals, k);
+    if (ctx.crotch > 0) crotchStep(ctx, macroPos, vals);
   }
   const pos = compose(ctx, macroPos, vals);
   return { pos, vals, meas: measure(ctx.model, pos, ctx.stature) };

@@ -64,6 +64,7 @@ export function renderGeometry(
     normals[3 * i + 1] = (N[j + 1] as number) / l;
     normals[3 * i + 2] = (N[j + 2] as number) / l;
   }
-  const index = drop ? keepTriangles(data, drop) : data.tris;
-  return { positions, normals, uvs: data.uv, index };
+  // Tableaux neufs : le modèle en cache ne doit jamais être exposé (l'appelant peut les transférer).
+  const index = drop ? keepTriangles(data, drop) : data.tris.slice();
+  return { positions, normals, uvs: data.uv.slice(), index };
 }
