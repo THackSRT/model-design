@@ -26,6 +26,5 @@ export async function createHttpApp(options: HttpAppOptions): Promise<INestAppli
 
   const app = await NestFactory.create(DesignsHttpModule, { logger: false });
   app.useGlobalFilters(new ProblemFilter(options.logger));
-  app.enableShutdownHooks();
   return app;
 }

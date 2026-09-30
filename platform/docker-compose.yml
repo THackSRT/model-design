@@ -67,10 +67,12 @@ services:
       DATABASE_URL: postgres://atelier:atelier-dev@postgres:5432/designs
       MIGRATE_ON_START: 'true'
       PATTERNING_URL: http://patterning:8000
+      NATS_URL: nats://nats:4222
     ports: ['3101:3101']
     depends_on:
       postgres: { condition: service_healthy }
       patterning: { condition: service_healthy }
+      nats: { condition: service_started }
 
   studio:
     profiles: [app]

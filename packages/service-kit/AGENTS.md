@@ -13,7 +13,7 @@ publiées avec l'heure de l'horloge. `runOnce()` traite un lot ; `start(interval
 boucle. Garanties : au moins une fois ; `id` du CloudEvent = id de la ligne = `Nats-Msg-Id` (déduplication
 JetStream) ; au premier échec le lot s'arrête, la ligne fautive et les suivantes restent non publiées ; journaux
 avec id et type seulement. `JetStreamPublisher` (`@atelier/service-kit/nats`) publie sur le sujet égal au `type`
-(ex. `design.versioned`) ; le flux JetStream est créé par l'infrastructure, pas par le relais. L'adaptateur
+(ex. `design.versioned`) ; le flux est déclaré par le service producteur au démarrage avec `ensureStream(connection, { name, subjects })` (idempotent : crée le flux en stockage fichier, ou aligne ses sujets ; échoue si JetStream refuse la mise à jour), pas par le relais. `connectNats(url, name)` ouvre la connexion (reconnexion sans limite ; `@nats-io/transport-node` est une dépendance de service-kit, les services ne l'importent pas). `describeStream`, `lastStreamEvent` et `deleteStreamEvent` sont des aides d'inspection pour les tests d'intégration des services. L'adaptateur
 PostgreSQL d'`OutboxStore` vit dans chaque service. Client : ADR 0008. Un `runOnce()` appelé à la main pendant que la boucle tourne peut publier deux fois ; la
 déduplication JetStream (fenêtre du flux) le couvre, les consommateurs restent idempotents.
 

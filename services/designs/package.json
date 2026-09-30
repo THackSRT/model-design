@@ -10,9 +10,18 @@
     "lint": "eslint .",
     "test": "vitest run",
     "dev": "node --watch --env-file-if-exists=.env dist/main.js",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "nx": {
+    "targets": {
+      "test:integration": {
+        "dependsOn": [
+          "^build"
+        ],
+        "cache": false
+      }
+    },
     "tags": [
       "type:service",
       "scope:designs"
