@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.nx/
+.vite/
+*.tsbuildinfo
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.env
+.env.*
+!.env.example
+.check/

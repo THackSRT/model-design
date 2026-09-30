@@ -1,0 +1,24 @@
+{
+  "name": "drape",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "tags": ["type:engine", "lang:python"],
+  "targets": {
+    "lint": {
+      "command": "uv run ruff check engines/drape && uv run ruff format --check engines/drape && uv run lint-imports --config engines/drape/.importlinter",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "typecheck": {
+      "command": "uv run mypy engines/drape/src",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "test": {
+      "command": "uv run pytest engines/drape/tests",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "dev": {
+      "command": "uv run uvicorn drape.main:app --reload",
+      "options": { "cwd": "{workspaceRoot}" }
+    }
+  }
+}

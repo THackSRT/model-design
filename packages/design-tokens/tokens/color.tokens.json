@@ -1,0 +1,16 @@
+{
+  "color": {
+    "$type": "color",
+    "surface": { "$value": "#faf8f5", "$description": "Fond de l'application" },
+    "surface-raised": { "$value": "#ffffff" },
+    "ink": { "$value": "#1f1d1a", "$description": "Texte principal" },
+    "ink-muted": { "$value": "#6b665e" },
+    "line": { "$value": "#ddd6cc" },
+    "accent": { "$value": "#b4532a", "$description": "Action principale (terre cuite)" },
+    "accent-ink": { "$value": "#ffffff" },
+    "danger": { "$value": "#b42318" },
+    "pattern-stroke": { "$value": "#1f1d1a" },
+    "pattern-fill": { "$value": "#f3ede4" },
+    "mannequin": { "$value": "#e9e4dc" }
+  }
+}

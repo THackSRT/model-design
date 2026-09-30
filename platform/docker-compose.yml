@@ -1,0 +1,35 @@
+# Infrastructure locale de développement : `pnpm dev:infra`.
+# Mêmes briques qu'en production (architecture, section 12) : PostgreSQL, NATS JetStream, Valkey, stockage S3.
+name: atelier
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: atelier
+      POSTGRES_PASSWORD: atelier-dev
+      POSTGRES_DB: designs
+    ports: ['5432:5432']
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U atelier']
+      interval: 5s
+  nats:
+    image: nats:2.11
+    command: ['--jetstream', '--store_dir', '/data', '--http_port', '8222']
+    ports: ['4222:4222', '8222:8222']
+    volumes: [nats:/data]
+  valkey:
+    image: valkey/valkey:8
+    ports: ['6379:6379']
+  minio:
+    image: minio/minio:latest
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: atelier
+      MINIO_ROOT_PASSWORD: atelier-dev
+    ports: ['9000:9000', '9001:9001']
+    volumes: [minio:/data]
+volumes:
+  postgres:
+  nats:
+  minio:

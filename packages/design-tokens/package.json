@@ -1,0 +1,31 @@
+{
+  "name": "@atelier/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jetons de design (format DTCG) compilés par Style Dictionary en variables CSS (web) et en module TS (mobile).",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/tokens.d.ts",
+      "default": "./dist/tokens.js"
+    },
+    "./tokens.css": "./dist/tokens.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "node scripts/build.mjs --check",
+    "lint": "eslint .",
+    "test": "node scripts/build.mjs --check"
+  },
+  "nx": {
+    "tags": [
+      "type:tokens"
+    ]
+  },
+  "devDependencies": {
+    "style-dictionary": "^5.5.5"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/garment-request.schema.json",
+  "title": "GarmentRequest",
+  "description": "Ce que l'on demande au moteur de patronage : un type de vêtement et ses paramètres.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "params"],
+  "properties": {
+    "type": { "type": "string", "enum": ["straight-skirt"] },
+    "params": { "$ref": "#/$defs/StraightSkirtParams" }
+  },
+  "$defs": {
+    "StraightSkirtParams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lengthMm"],
+      "properties": {
+        "lengthMm": { "type": "integer", "minimum": 300, "maximum": 1300 },
+        "waistEaseMm": { "type": "integer", "minimum": 0, "maximum": 80, "default": 10 },
+        "hipEaseMm": { "type": "integer", "minimum": 0, "maximum": 200, "default": 40 },
+        "hemFlareMm": { "type": "integer", "minimum": 0, "maximum": 200, "default": 0 }
+      }
+    }
+  }
+}

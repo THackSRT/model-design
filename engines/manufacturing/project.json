@@ -1,0 +1,24 @@
+{
+  "name": "manufacturing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "tags": ["type:engine", "lang:python"],
+  "targets": {
+    "lint": {
+      "command": "uv run ruff check engines/manufacturing && uv run ruff format --check engines/manufacturing && uv run lint-imports --config engines/manufacturing/.importlinter",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "typecheck": {
+      "command": "uv run mypy engines/manufacturing/src",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "test": {
+      "command": "uv run pytest engines/manufacturing/tests",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "dev": {
+      "command": "uv run uvicorn manufacturing.main:app --reload",
+      "options": { "cwd": "{workspaceRoot}" }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@atelier/mannequin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Moteur mannequin : mesures (mm) -> corps MakeHuman ajusté (CC0), identique dans le navigateur et sur le serveur.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./assets/makehuman.mhz": "./assets/makehuman.mhz"
+  },
+  "files": [
+    "dist",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node -e \"const fs=require('node:fs');fs.mkdirSync('dist/core',{recursive:true});for(const f of ['makehuman.js','makehuman.d.ts'])fs.copyFileSync('src/core/'+f,'dist/core/'+f)\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "nx": {
+    "tags": [
+      "type:engine"
+    ]
+  },
+  "dependencies": {
+    "@atelier/contracts-ts": "workspace:*",
+    "@atelier/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4"
+  }
+}
