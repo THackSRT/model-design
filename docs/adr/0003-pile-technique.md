@@ -17,3 +17,6 @@ septembre 2026.
 
 **Conséquences.** Deux langages seulement. Les tests d'intégration PostgreSQL tournent sans Docker (PGlite) ;
 les tests contre NATS arriveront avec le relais de l'outbox (phase 1).
+
+**Suivi.** Le relais est livré avec ses tests d'intégration contre NATS (`test:integration`, hors de
+`pnpm check`, avec `pnpm dev:infra`) ; client retenu par l'ADR 0008.
