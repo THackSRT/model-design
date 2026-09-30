@@ -1,6 +1,7 @@
 import type { MeasurementSet } from '@atelier/contracts-ts';
 import { mmToCm } from '@atelier/kernel';
 import { createMakeHuman, type MakeHuman, type MakeHumanMeasuresCm } from './core/makehuman.js';
+import { plainFace } from './core/plain-face.js';
 
 export type Morphotype = { african: number; asian: number; caucasian: number };
 
@@ -11,10 +12,9 @@ export interface FitOptions {
   armAngleDeg?: number;
 }
 
-/** Corps ajusté, prêt à afficher : maillage du corps et tête lisse de mannequin (cm). */
+/** Corps ajusté, prêt à afficher (cm) : tête naturelle, visage sans traits (yeux, nez, bouche). */
 export interface FittedMannequin {
   body: { positions: Float32Array; normals: Float32Array; index: Uint32Array | Uint16Array };
-  head: { positions: Float32Array; index: Uint32Array };
   /** Tours obtenus sur le maillage, en mm, pour comparer aux mesures demandées. */
   measuredMm: Partial<Record<keyof MakeHumanMeasuresCm, number>>;
 }
@@ -60,16 +60,17 @@ export async function loadMannequinEngine(
         age: options.age ?? 30,
         ...morpho,
       });
-      const head = mh.mannequinHead(fit.pos, fit.measured.rings['neck']);
-      const posed = mh.pose(head.pos, options.armAngleDeg ?? 9);
-      const body = mh.renderGeometry(posed.pos, head.drop);
+      const neckY = fit.measured.rings['neck']?.center[1] ?? 0;
+      const face = plainFace(fit.pos, mh.baseTriangles(), neckY);
+      const posed = mh.pose(face.pos, options.armAngleDeg ?? 9);
+      const body = mh.renderGeometry(posed.pos, face.drop);
       const measuredMm = Object.fromEntries(
         mh.FIT_KEYS.filter((k) => typeof fit.measured[k] === 'number').map((k) => [
           k,
           (fit.measured[k] ?? 0) * 10,
         ]),
       );
-      return { body, head: head.head, measuredMm };
+      return { body, measuredMm };
     },
   };
 }

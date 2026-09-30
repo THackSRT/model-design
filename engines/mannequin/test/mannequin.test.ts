@@ -44,10 +44,10 @@ describe('moteur mannequin', () => {
     expect(Math.abs((again.fit(reference).measuredMm.hip ?? 0) - 980)).toBeLessThan(6);
   });
 
-  it('rend un maillage de corps et une tête lisse', () => {
+  it('rend un maillage de corps prêt à afficher', () => {
     const fitted = engine.fit(reference);
     expect(fitted.body.positions.length).toBe(fitted.body.normals.length);
     expect(fitted.body.index.length % 3).toBe(0);
-    expect(fitted.head.positions.length).toBeGreaterThan(0);
+    expect(fitted.body.positions.every(Number.isFinite)).toBe(true);
   });
 });

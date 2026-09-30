@@ -26,6 +26,8 @@ export interface MakeHumanMorphology {
 
 export interface MakeHumanRing {
   value: number;
+  /** Centre de l'anneau de mesure (cm). */
+  center: [number, number, number];
   side?: boolean;
 }
 
@@ -47,16 +49,11 @@ export interface MakeHumanGeometry {
 export interface MakeHuman {
   load(): Promise<unknown>;
   fit(m: MakeHumanMeasuresCm, p: MakeHumanMorphology): MakeHumanFit;
-  mannequinHead(
-    pos: Float32Array,
-    neck: MakeHumanRing | undefined,
-  ): {
-    pos: Float32Array;
-    drop: unknown;
-    head: { positions: Float32Array; index: Uint32Array };
-  };
+  measure(pos: Float32Array, stature?: number): MakeHumanFit['measured'];
+  /** Triangles en sommets de base (globes oculaires compris, pièces détachées du corps). */
+  baseTriangles(): Uint16Array;
   pose(pos: Float32Array, angle?: number): { pos: Float32Array };
-  renderGeometry(pos: Float32Array, drop: unknown): MakeHumanGeometry;
+  renderGeometry(pos: Float32Array, drop?: Uint8Array): MakeHumanGeometry;
   FIT_KEYS: readonly string[];
 }
 

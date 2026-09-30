@@ -98,10 +98,7 @@ function PatternPanel({ state }: { state: PatternStudioState }) {
 }
 
 function MannequinPanel({ state }: { state: PatternStudioState }) {
-  const meshes = useMemo(
-    () => (state.mannequin ? [state.mannequin.body, state.mannequin.head] : []),
-    [state.mannequin],
-  );
+  const meshes = useMemo(() => (state.mannequin ? [state.mannequin.body] : []), [state.mannequin]);
   return (
     <Panel title={t('mannequin.title')}>
       <div className="studio-viewer">
