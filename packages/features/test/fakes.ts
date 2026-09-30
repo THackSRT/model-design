@@ -1,7 +1,8 @@
 import type { Design, DesignVersion, GarmentSpec } from '@atelier/contracts-ts';
 import { err, ok } from '@atelier/kernel';
-import type { FittedMannequin, MannequinEngine } from '@atelier/mannequin';
+import type { FittedMannequin } from '@atelier/mannequin';
 import type { ApiProblem, DesignsClient } from '../src/api/designs-client.js';
+import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
 
 export const spec: GarmentSpec = {
   specVersion: '1.0',
@@ -63,13 +64,14 @@ export function fakeDesigns(problem?: ApiProblem): DesignsClient & { versions: n
   return client;
 }
 
-export const fakeMannequin = (): MannequinEngine => ({
-  fit: (): FittedMannequin => ({
-    body: {
-      positions: new Float32Array(9),
-      normals: new Float32Array(9),
-      index: Uint32Array.of(0, 1, 2),
-    },
-    measuredMm: { chest: 880 },
-  }),
+export const fittedBody = (chestMm = 880): FittedMannequin => ({
+  body: {
+    positions: new Float32Array(9),
+    normals: new Float32Array(9),
+    index: Uint32Array.of(0, 1, 2),
+  },
+  measuredMm: { chest: chestMm },
+  landmarksMm: { crotch: 780, hip: 900, waist: 1050, neck: 1400, knee: 480, ankle: 80 },
 });
+
+export const fakeMannequin = (): MannequinFitter => ({ fit: async () => fittedBody() });

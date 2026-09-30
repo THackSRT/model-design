@@ -9,6 +9,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Service `docs` dans `platform/docker-compose.yml` (profil « app », `pnpm stack:up`) : documentation MkDocs
+  construite puis servie par nginx sur http://localhost:8000.
 - Documentation MkDocs de la plateforme (`pnpm docs:serve`) : architecture, directives de codage, plateforme,
   composants, décisions, tableau des travaux et ce changelog.
 - Conteneurs Docker pour chaque moteur, service et application ; pile locale complète avec
@@ -16,8 +18,14 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Hook git `pre-push` qui lance `pnpm check:affected` : les vérifications tournent en local (ADR 0006).
 - Orchestration Claude Code : huit sous-agents répartis entre Opus, Sonnet et Haiku, skills `/planifier`,
   `/livrer`, `/cloturer` et permissions partagées (`CLAUDE.md`, `.claude/`, ADR 0007).
-- Silhouettes 2D du mannequin en `packages/viewer3d` : composant `MannequinOutline` (face, profil, dos) ;
-  pas encore affichées.
+- Repères de hauteur du mannequin (`landmarksMm`) : crotch, hip, waist, neck, knee, ankle ; ajustement de
+  l'entrejambe sur `crotchHeightMm` (plage 740–835 mm pour 1700 mm de stature).
+- Ajustement du mannequin dans un Web Worker (`apps/studio`) : l'écran du studio n'est plus figé pendant le
+  calcul ; indicateur « ajustement en cours » ; un échec du mannequin n'empêche pas le patron.
+- Bascule 3D / silhouettes 2D (face, profil, dos) dans le studio de patron : vue mannequin interactive ou
+  silhouettes vectorielles au choix.
+- Service `designs` branche son relais de l'outbox sur NATS JetStream : flux `DESIGNS` (sujets `design.>`),
+  variables `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, arrêt propre avec `SIGTERM/SIGINT`.
 - Relais générique de l'outbox vers NATS JetStream (`@atelier/service-kit`) : au moins une fois,
   déduplication par `Nats-Msg-Id` (ADR 0008).
 
@@ -38,6 +46,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Corrigé
 
+- `pnpm stack:up` sous Windows : le certificat d'autorité facultatif vaut par défaut un fichier vide
+  (`platform/empty-ca.crt`) au lieu de `/dev/null`.
 - `pnpm check` passe sous Windows : fins de ligne LF imposées (`.gitattributes`, ruff), Prettier lancé sans
   `npx` par le générateur de contrats, UTF-8 pour import-linter, chemins `/` dans les générateurs
   (`$ref` des événements), vérification des jetons sans course entre `test` et `typecheck`.

@@ -18,6 +18,8 @@ export interface MakeHumanMeasuresCm {
   knee?: number;
   calf?: number;
   ankle?: number;
+  /** Hauteur d'entrejambe (cm), facultative. */
+  crotch?: number;
 }
 
 export interface MakeHumanMorphology {

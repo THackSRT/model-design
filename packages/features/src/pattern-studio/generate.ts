@@ -1,16 +1,15 @@
 import type { CreateDesignVersionRequest, DesignVersion } from '@atelier/contracts-ts';
-import type { FittedMannequin, MannequinEngine } from '@atelier/mannequin';
 import type { ApiProblem, DesignsClient } from '../api/designs-client.js';
+import type { MannequinFitter } from './fitter.js';
 
 export interface PatternStudioDeps {
   designs: DesignsClient;
-  /** Charge le moteur mannequin une seule fois (l'appelant garde la promesse en cache). */
-  loadMannequin: () => Promise<MannequinEngine>;
+  /** Ajuste le mannequin hors du fil principal (Web Worker dans l'application). */
+  mannequin: MannequinFitter;
 }
 
 export interface GenerationResult {
   version?: DesignVersion;
-  mannequin?: FittedMannequin;
   problem?: ApiProblem;
 }
 
@@ -18,31 +17,20 @@ export interface StudioSession {
   designId?: string;
 }
 
-async function fitMannequin(deps: PatternStudioDeps, request: CreateDesignVersionRequest) {
-  try {
-    return (await deps.loadMannequin()).fit(request.measurements);
-  } catch {
-    return undefined; // le patron reste utile sans mannequin (données absentes, appareil trop lent…)
-  }
-}
-
-/** Ajuste le mannequin (localement) et calcule le patron (service designs), pour la même saisie. */
+/** Calcule le patron (service designs) ; l'ajustement du mannequin est suivi à part. */
 export async function generate(
-  deps: PatternStudioDeps,
+  designs: DesignsClient,
   session: StudioSession,
   request: CreateDesignVersionRequest,
 ): Promise<GenerationResult> {
-  const mannequin = await fitMannequin(deps, request);
   if (!session.designId) {
-    const design = await deps.designs.createDesign({
+    const design = await designs.createDesign({
       name: 'Jupe droite',
       garmentType: 'straight-skirt',
     });
-    if (design.isErr()) return { mannequin, problem: design.error };
+    if (design.isErr()) return { problem: design.error };
     session.designId = design.value.id;
   }
-  const version = await deps.designs.createVersion(session.designId, request);
-  return version.isOk()
-    ? { mannequin, version: version.value }
-    : { mannequin, problem: version.error };
+  const version = await designs.createVersion(session.designId, request);
+  return version.isOk() ? { version: version.value } : { problem: version.error };
 }

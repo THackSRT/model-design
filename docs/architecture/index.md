@@ -12,7 +12,7 @@ du projet : chaque décision qui le modifie passe par une [fiche de décision](.
 | [3. Acteurs et applications](acteurs.md)                            | Rôles, applications, boucle de la filière | Studio web (phase 1)                                                |
 | [4. Services métier](services.md)                                   | Les seize services                        | `designs` (service de référence)                                    |
 | [5. Les moteurs](moteurs.md)                                        | Les sept moteurs                          | `mannequin`, `patterning` ; `manufacturing` et `drape` en squelette |
-| [6. Communications](communications.md)                              | Modes d'échange, séquences                | HTTP + outbox ; bus NATS à venir                                    |
+| [6. Communications](communications.md)                              | Modes d'échange, séquences                | HTTP + outbox + NATS JetStream                                      |
 | [7. Données, stockage et formats](donnees.md)                       | Modèle conceptuel, entités, normes        | Tables de `designs`, format pivot `GarmentSpec`                     |
 | [8. Infrastructure](infrastructure.md)                              | Conteneurs, environnements                | Images Docker et `docker compose` locaux                            |
 | [9. Sécurité et licences](securite.md)                              | Données sensibles, licences               | Isolation par organisation (ADR 0005)                               |

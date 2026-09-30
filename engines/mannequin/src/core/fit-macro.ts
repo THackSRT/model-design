@@ -12,6 +12,8 @@ export interface FitContext {
   model: MhModel;
   /** Stature visée (cm). */
   stature: number;
+  /** Hauteur d'entrejambe visée (cm) ; 0 si absente. */
+  crotch: number;
   /** Tour visé (cm) pour une zone ; 0 si absent. */
   goal: (key: string) => number;
   /** Zones à ajuster (tours demandés), dans l'ordre. */

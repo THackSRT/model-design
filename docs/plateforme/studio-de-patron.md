@@ -43,5 +43,5 @@ signalé et le calcul ne part pas.
 ## Limites actuelles
 
 - Un seul vêtement, au tracé simplifié ; les patrons de production viendront de GarmentCode (travail 1.11).
-- Le mannequin est calculé dans le navigateur et fige l'écran une fraction de seconde (travail 1.14).
 - Pas encore de valeurs de couture ni d'export (travaux 1.17 et 1.18).
+- Les silhouettes 2D affichées sont actuellement sans animation : bascule statique entre 3D et 2D.

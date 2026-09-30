@@ -128,6 +128,7 @@ nav:
       - 0005 Organisation de développement: adr/0005-organisation-de-developpement.md
       - 0006 Local d'abord: adr/0006-local-d-abord.md
       - 0007 Orchestration Opus, Sonnet, Haiku: adr/0007-orchestration-des-modeles.md
+      - 0008 Client NATS: adr/0008-client-nats.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md

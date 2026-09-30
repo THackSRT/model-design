@@ -54,6 +54,11 @@ body {
   fill: var(--color-ink-muted);
   font-size: var(--font-size-pattern-label);
 }
+.studio-toggle {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
 .studio-viewer {
   height: 70vh;
 }

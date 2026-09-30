@@ -189,6 +189,9 @@ importers:
       '@nats-io/jetstream':
         specifier: ^3.4.0
         version: 3.4.0
+      '@nats-io/transport-node':
+        specifier: ^3.4.0
+        version: 3.4.0
       '@nestjs/common':
         specifier: ^11.2.7
         version: 11.2.7(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -211,9 +214,6 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@nats-io/transport-node':
-        specifier: ^3.4.0
-        version: 3.4.0
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4

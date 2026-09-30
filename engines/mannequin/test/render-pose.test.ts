@@ -17,8 +17,10 @@ describe('renderGeometry', () => {
     expect(g.positions).toHaveLength(12);
     expect([...g.normals.slice(0, 3)]).toEqual([0, 0, 1]);
     expect([...g.normals.slice(9, 12)]).toEqual([0, 0, 1]);
-    expect(g.index).toBe(data.tris);
-    expect(g.uvs).toBe(data.uv);
+    expect(g.index).toEqual(data.tris);
+    expect(g.index).not.toBe(data.tris);
+    expect(g.uvs).toEqual(data.uv);
+    expect(g.uvs).not.toBe(data.uv);
   });
 
   it('retire les triangles qui touchent un sommet à ne pas afficher', () => {

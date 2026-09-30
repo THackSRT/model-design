@@ -35,6 +35,10 @@ La Commande relie le client, son avatar et la version figée du modèle ; la Com
 **Stockage**
 
 - **PostgreSQL** : données métier, avec cloisonnement par atelier (sécurité au niveau des lignes).
+  Exception : la table `outbox` de chaque service n'est pas cloisonnée, car son relais publie les événements
+  de tous les ateliers. En contrepartie, `outbox.data` ne contient que des identifiants, empreintes et
+  versions, jamais de mesure ni de donnée personnelle ; un rôle PostgreSQL dédié au relais viendra avec
+  le service Identité.
 - **Stockage objet** (compatible S3) : photos, glTF, PDF, DXF, rendus ; accès par URL signées et limitées dans le temps ; CDN devant les fichiers publics.
 - **Cache** (Valkey) : sessions, résultats des moteurs par empreinte, limites de débit.
 - **Recherche** : index des modèles, ateliers et clients (OpenSearch, ou PostgreSQL pour commencer).

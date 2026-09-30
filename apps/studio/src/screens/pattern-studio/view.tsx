@@ -5,7 +5,7 @@ import {
 } from '@atelier/features';
 import { ColorMannequin } from '@atelier/design-tokens';
 import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
-import { MannequinView } from '@atelier/viewer3d';
+import { MannequinOutline, MannequinView, type SilhouetteView } from '@atelier/viewer3d';
 import { useMemo } from 'react';
 import { problemMessage, t } from '../../i18n/t.js';
 
@@ -97,14 +97,58 @@ function PatternPanel({ state }: { state: PatternStudioState }) {
   );
 }
 
-function MannequinPanel({ state }: { state: PatternStudioState }) {
+const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
+const DISPLAYS = ['3d', 'outline'] as const;
+
+function DisplayToggle({ state, actions }: PatternStudioViewProps) {
+  return (
+    <div role="group" aria-label={t('mannequin.display')} className="studio-toggle">
+      {DISPLAYS.map((display) => (
+        <Button
+          key={display}
+          emphasis={state.display === display ? 'high' : 'normal'}
+          aria-pressed={state.display === display}
+          onClick={() => actions.setDisplay(display)}
+        >
+          {t(`mannequin.display.${display}`)}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+function MannequinBody({ state }: { state: PatternStudioState }) {
   const meshes = useMemo(() => (state.mannequin ? [state.mannequin.body] : []), [state.mannequin]);
+  const labels = {
+    front: t('mannequin.view.front'),
+    side: t('mannequin.view.side'),
+    back: t('mannequin.view.back'),
+  };
+  const body = meshes[0];
+  if (!body) return null;
+  return state.display === 'outline' ? (
+    <MannequinOutline mesh={body} views={OUTLINE_VIEWS} labels={labels} />
+  ) : (
+    <MannequinView
+      meshes={meshes}
+      color={ColorMannequin}
+      label={t('mannequin.label')}
+      webglUnavailableLabel={t('mannequin.webglUnavailable')}
+    />
+  );
+}
+
+function MannequinPanel(props: PatternStudioViewProps) {
+  const { state } = props;
   return (
     <Panel title={t('mannequin.title')}>
+      <DisplayToggle {...props} />
+      {state.mannequinStatus === 'fitting' && <Message>{t('mannequin.fitting')}</Message>}
+      {state.mannequinStatus === 'failed' && (
+        <Message tone="danger">{t('mannequin.failed')}</Message>
+      )}
       <div className="studio-viewer">
-        {meshes.length > 0 && (
-          <MannequinView meshes={meshes} color={ColorMannequin} label={t('mannequin.label')} />
-        )}
+        <MannequinBody state={state} />
       </div>
     </Panel>
   );
@@ -123,7 +167,7 @@ export function PatternStudioView(props: PatternStudioViewProps) {
         <SkirtPanel {...props} />
       </div>
       <PatternPanel state={props.state} />
-      <MannequinPanel state={props.state} />
+      <MannequinPanel {...props} />
     </main>
   );
 }
