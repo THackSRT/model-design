@@ -25,6 +25,7 @@
     "@atelier/ui-web": "workspace:*",
     "@atelier/viewer3d": "workspace:*",
     "@tanstack/react-query": "^5.104.0",
+    "intl-messageformat": "^12.1.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

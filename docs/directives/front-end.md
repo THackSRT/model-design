@@ -32,7 +32,7 @@ export function PatternStudioScreen() {
 - **Chaque vue est testée dans tous ses états** (repos, calcul, prêt, échec, champ invalide) avec Testing Library ;
   histoires Storybook et captures comparées _(à venir)_.
 - **Textes** : tous par des clés de traduction (`t('action.generate')`, `apps/studio/src/i18n/`) ; jamais de
-  phrase construite par concaténation. Bibliothèque ICU (pluriels, genres) _(à venir)_.
+  phrase construite par concaténation. Messages ICU (pluriels, genres, nombres et unités) avec `intl-messageformat` ([ADR 0011](../adr/0011-messages-icu.md)).
 - **Accessibilité** WCAG 2.2 AA : champs reliés à leur libellé, erreurs annoncées (`role="alert"`), régions
   nommées ; contrastes vérifiés sur les jetons _(à venir)_.
 - **Nouveau parcours** derrière un drapeau de fonctionnalité _(à venir)_, pour l'essayer auprès d'ateliers pilotes.

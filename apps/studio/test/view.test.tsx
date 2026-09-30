@@ -78,6 +78,7 @@ describe('vue de l’atelier de patron', () => {
     );
     expect(screen.getByRole('img', { name: 'Patron' }).querySelectorAll('path')).toHaveLength(1);
     expect(screen.getByText('Version 3')).toBeTruthy();
+    expect(screen.getByText('1 pièce')).toBeTruthy();
   });
 
   it('échec : traduit le problème rendu par le service', () => {
@@ -95,11 +96,12 @@ describe('vue de l’atelier de patron', () => {
   it('champ invalide : il est signalé', () => {
     render(
       <PatternStudioView
-        state={{ ...base, errors: { hipGirthMm: 'entre 60 et 190 cm' } }}
+        state={{ ...base, errors: { hipGirthMm: { code: 'range', minMm: 600, maxMm: 1900 } } }}
         actions={actions()}
       />,
     );
     expect(screen.getByLabelText('Tour de bassin').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByRole('alert').textContent).toBe('Entre 600 mm et 1 900 mm');
   });
 
   it('ajustement en cours : indique « en cours » et garde l’écran utilisable', () => {
@@ -129,14 +131,14 @@ describe('vue de l’atelier de patron', () => {
     ).toBe(false);
   });
 
-  it('bascule 3D : affiche la vue 3D, pas les silhouettes', () => {
+  it('bascule 3D : affiche la vue 3D, pas les silhouettes', async () => {
     render(
       <PatternStudioView
         state={{ ...base, mannequin: fitted, mannequinStatus: 'ready' }}
         actions={actions()}
       />,
     );
-    expect(screen.getByTestId('mannequin-3d')).toBeTruthy();
+    expect(await screen.findByTestId('mannequin-3d')).toBeTruthy();
     expect(screen.queryByRole('img', { name: 'Face' })).toBeNull();
   });
 

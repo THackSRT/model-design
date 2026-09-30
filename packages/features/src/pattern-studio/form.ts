@@ -20,7 +20,9 @@ export const MEASUREMENT_KEYS: MeasurementKey[] = [
   'hipGirthMm',
 ];
 
-export type FieldErrors = Partial<Record<MeasurementKey | 'length', string>>;
+/** Erreur de saisie : un code et ses paramètres (mm), traduits par l'application. */
+export type FieldError = { code: 'required' } | { code: 'range'; minMm: number; maxMm: number };
+export type FieldErrors = Partial<Record<MeasurementKey | 'length', FieldError>>;
 
 export const initialForm: StudioForm = {
   sex: 'female',
@@ -36,10 +38,10 @@ const lengthBounds: Bounds =
 
 const toMm = (cm: number | undefined) => (cm === undefined ? undefined : Math.round(cmToMm(cm)));
 
-function checkMm(value: number | undefined, bounds: Bounds): string | undefined {
-  if (value === undefined) return 'obligatoire';
+function checkMm(value: number | undefined, bounds: Bounds): FieldError | undefined {
+  if (value === undefined) return { code: 'required' };
   if (value < bounds.minimum || value > bounds.maximum) {
-    return `entre ${bounds.minimum / 10} et ${bounds.maximum / 10} cm`;
+    return { code: 'range', minMm: bounds.minimum, maxMm: bounds.maximum };
   }
   return undefined;
 }

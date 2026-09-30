@@ -5,7 +5,11 @@ Rôle : écran de la phase 1 — mesures, paramètres de la jupe, patron 2D, man
 - `src/screens/<écran>/screen.tsx` branche un modèle de vue de `@atelier/features` sur `view.tsx`.
 - `view.tsx` est purement visuel : composants `@atelier/ui-web`, jetons `@atelier/design-tokens`, aucun appel
   réseau, aucune couleur ni taille en dur (règle de lint).
-- Textes : `src/i18n/fr.ts` (clés) et `t()` ; jamais de phrase écrite dans un composant.
+- Textes : `src/i18n/fr.ts` (catalogue au format ICU, ADR 0011) et `t(key, values?)` (clés vérifiées par TypeScript,
+  pluriels, select, nombres et unités en français via `intl-messageformat`) ; jamais de phrase écrite dans un
+  composant ni de concaténation. `packages/features` ne rend que des données et des clés.
+- 3D : `three.js` est chargé à la demande (`lazy-mannequin-view.tsx`, `Suspense`) ; la vue importe les silhouettes
+  depuis `@atelier/viewer3d/outline`, jamais `MannequinView` en import statique (le paquet initial reste sans three.js).
 - `src/platform/` : ce qui dépend du navigateur. Le mannequin s'ajuste dans un Web Worker (`mannequin.worker.ts`,
   protocole pur `fit-protocol.ts`, adaptateur `worker-fitter.ts` du port `MannequinFitter` de `@atelier/features`).
 - Les services sont appelés via `/api/<service>` (proxy Vite en local, passerelle en production).

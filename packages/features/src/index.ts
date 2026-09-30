@@ -1,5 +1,6 @@
 export { type ApiProblem, createDesignsClient, type DesignsClient } from './api/designs-client.js';
 export {
+  type FieldError,
   type FieldErrors,
   initialForm,
   MEASUREMENT_KEYS,

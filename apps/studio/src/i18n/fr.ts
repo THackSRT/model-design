@@ -1,4 +1,7 @@
-/** Catalogue français. Toute phrase de l'interface passe par une clé ; jamais de concaténation. */
+/**
+ * Catalogue français au format ICU MessageFormat (pluriels, select, nombres, unités).
+ * Toute phrase de l'interface passe par une clé ; jamais de concaténation.
+ */
 export const fr = {
   'app.title': 'Studio de patron',
   'app.subtitle': 'Phase 1 · jupe droite',
@@ -20,7 +23,12 @@ export const fr = {
   'status.working': 'Calcul en cours…',
   'pattern.title': 'Patron',
   'pattern.version': 'Version {number}',
+  'pattern.pieces': '{count, plural, =0 {Aucune pièce} one {# pièce} other {# pièces}}',
+  'measurements.value': '{valueMm, number, ::unit/millimeter}',
+  'error.required': 'Valeur obligatoire',
+  'error.range': 'Entre {minMm, number, ::unit/millimeter} et {maxMm, number, ::unit/millimeter}',
   'mannequin.title': 'Mannequin',
+  'mannequin.loading3d': 'Chargement de la vue 3D…',
   'mannequin.fitting': 'Ajustement du mannequin en cours…',
   'mannequin.failed': 'Le mannequin n’a pas pu être ajusté. Le patron reste valable.',
   'mannequin.display': 'Affichage du mannequin',

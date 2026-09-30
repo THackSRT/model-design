@@ -17,8 +17,8 @@ describe('saisie de l’atelier', () => {
       measurementsCm: { ...initialForm.measurementsCm, hipGirthMm: 20, statureMm: undefined },
     });
     expect(request.isErr() && request.error).toEqual({
-      hipGirthMm: 'entre 60 et 190 cm',
-      statureMm: 'obligatoire',
+      hipGirthMm: { code: 'range', minMm: 600, maxMm: 1900 },
+      statureMm: { code: 'required' },
     });
   });
 });

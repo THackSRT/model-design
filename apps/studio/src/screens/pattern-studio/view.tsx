@@ -1,19 +1,22 @@
 import {
   MEASUREMENT_KEYS,
+  type FieldError,
   type PatternStudioActions,
   type PatternStudioState,
 } from '@atelier/features';
 import { ColorMannequin } from '@atelier/design-tokens';
 import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
-import { MannequinOutline, MannequinView, type SilhouetteView } from '@atelier/viewer3d';
-import { useMemo } from 'react';
-import { problemMessage, t } from '../../i18n/t.js';
+import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline';
+import { Suspense, useMemo } from 'react';
+import { fieldErrorMessage, problemMessage, t } from '../../i18n/t.js';
+import { LazyMannequinView } from './lazy-mannequin-view.js';
 
 export interface PatternStudioViewProps {
   state: PatternStudioState;
   actions: PatternStudioActions;
 }
 
+const errorText = (error: FieldError | undefined) => error && fieldErrorMessage(error);
 const SKIRT_FIELDS = ['length', 'waistEase', 'hipEase', 'hemFlare'] as const;
 
 function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
@@ -36,7 +39,7 @@ function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
           unit={t('unit.cm')}
           step={0.5}
           value={state.form.measurementsCm[key]}
-          invalid={Boolean(state.errors[key])}
+          error={errorText(state.errors[key])}
           onChange={(cm) => actions.setMeasurement(key, cm)}
         />
       ))}
@@ -54,7 +57,7 @@ function SkirtPanel({ state, actions }: PatternStudioViewProps) {
           unit={t('unit.cm')}
           step={0.5}
           value={state.form.skirtCm[key]}
-          invalid={key === 'length' && Boolean(state.errors.length)}
+          error={key === 'length' ? errorText(state.errors.length) : undefined}
           onChange={(cm) => actions.setSkirt(key, cm)}
         />
       ))}
@@ -76,6 +79,7 @@ function StatusMessage({ state }: { state: PatternStudioState }) {
 function PatternPanel({ state }: { state: PatternStudioState }) {
   return (
     <Panel title={t('pattern.title')}>
+      {state.layout && <p>{t('pattern.pieces', { count: state.layout.panels.length })}</p>}
       {state.layout && (
         <svg
           className="studio-pattern"
@@ -129,12 +133,14 @@ function MannequinBody({ state }: { state: PatternStudioState }) {
   return state.display === 'outline' ? (
     <MannequinOutline mesh={body} views={OUTLINE_VIEWS} labels={labels} />
   ) : (
-    <MannequinView
-      meshes={meshes}
-      color={ColorMannequin}
-      label={t('mannequin.label')}
-      webglUnavailableLabel={t('mannequin.webglUnavailable')}
-    />
+    <Suspense fallback={<Message>{t('mannequin.loading3d')}</Message>}>
+      <LazyMannequinView
+        meshes={meshes}
+        color={ColorMannequin}
+        label={t('mannequin.label')}
+        webglUnavailableLabel={t('mannequin.webglUnavailable')}
+      />
+    </Suspense>
   );
 }
 
