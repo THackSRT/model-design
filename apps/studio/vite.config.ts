@@ -5,6 +5,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   resolve: { conditions: ['source'] },
+  // Le worker du mannequin est un module ES (import de @atelier/mannequin, code partagé).
+  worker: { format: 'es' },
   server: {
     port: 5173,
     proxy: {
@@ -14,5 +16,9 @@ export default defineConfig({
       },
     },
   },
-  test: { environment: 'jsdom', include: ['test/**/*.test.tsx'], setupFiles: ['test/setup.ts'] },
+  test: {
+    environment: 'jsdom',
+    include: ['test/**/*.test.{ts,tsx}'],
+    setupFiles: ['test/setup.ts'],
+  },
 });

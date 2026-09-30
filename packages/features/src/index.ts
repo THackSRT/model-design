@@ -8,6 +8,13 @@ export {
   toVersionRequest,
 } from './pattern-studio/form.js';
 export {
+  initialMannequinState,
+  type MannequinDisplay,
+  type MannequinFitter,
+  type MannequinState,
+  type MannequinStatus,
+} from './pattern-studio/fitter.js';
+export {
   generate,
   type GenerationResult,
   type PatternStudioDeps,

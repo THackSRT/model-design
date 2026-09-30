@@ -1,7 +1,5 @@
-import type { CreateDesignVersionRequest } from '@atelier/contracts-ts';
 import type { FittedMannequin } from '@atelier/mannequin';
-import { useMutation } from '@tanstack/react-query';
-import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from 'react';
+import { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import type { ApiProblem } from '../api/designs-client.js';
 import {
   type FieldErrors,
@@ -10,13 +8,10 @@ import {
   type StudioForm,
   toVersionRequest,
 } from './form.js';
-import {
-  generate,
-  type GenerationResult,
-  type PatternStudioDeps,
-  type StudioSession,
-} from './generate.js';
+import type { MannequinDisplay, MannequinStatus } from './fitter.js';
+import type { GenerationResult, PatternStudioDeps } from './generate.js';
 import { layoutPanels, type PanelsLayout } from './panels.js';
+import { useStudioRun } from './use-studio-run.js';
 
 export type StudioStatus = 'idle' | 'working' | 'ready' | 'failed';
 
@@ -26,6 +21,10 @@ export interface PatternStudioState {
   status: StudioStatus;
   layout?: PanelsLayout;
   mannequin?: FittedMannequin;
+  /** État de l'ajustement du mannequin (Web Worker) : « en cours » sans figer l'écran. */
+  mannequinStatus: MannequinStatus;
+  /** Vue choisie : mannequin 3D ou silhouettes en trait. */
+  display: MannequinDisplay;
   problem?: ApiProblem;
   versionNumber?: number;
 }
@@ -34,10 +33,11 @@ export interface PatternStudioActions {
   setSex(sex: StudioForm['sex']): void;
   setMeasurement(key: MeasurementKey, cm: number | undefined): void;
   setSkirt(key: keyof StudioForm['skirtCm'], cm: number | undefined): void;
+  setDisplay(display: MannequinDisplay): void;
   generate(): void;
 }
 
-type FormActions = Omit<PatternStudioActions, 'generate'>;
+type FormActions = Omit<PatternStudioActions, 'generate' | 'setDisplay'>;
 
 function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions {
   return {
@@ -48,8 +48,8 @@ function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions
   };
 }
 
-function statusOf(isPending: boolean, result: GenerationResult | undefined): StudioStatus {
-  if (isPending) return 'working';
+function statusOf(isWorking: boolean, result: GenerationResult | undefined): StudioStatus {
+  if (isWorking) return 'working';
   if (!result) return 'idle';
   return result.problem ? 'failed' : 'ready';
 }
@@ -60,28 +60,29 @@ export function usePatternStudio(deps: PatternStudioDeps): {
   actions: PatternStudioActions;
 } {
   const [form, setForm] = useState(initialForm);
-  const session = useRef<StudioSession>({});
-  const mutation = useMutation({
-    mutationFn: (req: CreateDesignVersionRequest) => generate(deps, session.current, req),
-  });
+  const [display, setDisplay] = useState<MannequinDisplay>('3d');
+  const { patron, body, run } = useStudioRun(deps);
   const request = toVersionRequest(form);
-  const result = mutation.data;
+  const result = patron.result;
   const layout = useMemo(
     () => (result?.version ? layoutPanels(result.version.spec) : undefined),
     [result],
   );
   const actions: PatternStudioActions = {
     ...formActions(setForm),
+    setDisplay,
     generate: () => {
-      if (request.isOk()) mutation.mutate(request.value);
+      if (request.isOk()) run(request.value);
     },
   };
   const state: PatternStudioState = {
     form,
     errors: request.isErr() ? request.error : {},
-    status: statusOf(mutation.isPending, result),
+    status: statusOf(patron.pending || body.status === 'fitting', result),
     layout,
-    mannequin: result?.mannequin,
+    mannequin: body.mannequin,
+    mannequinStatus: body.status,
+    display,
     problem: result?.problem,
     versionNumber: result?.version?.number,
   };

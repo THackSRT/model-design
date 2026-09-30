@@ -7,6 +7,8 @@ export interface MannequinViewProps {
   /** Couleur du corps, lue dans les jetons de design par l'appelant. */
   color: string;
   label: string;
+  /** Message affiché à la place de la vue sans WebGL (traduit par l'appelant). */
+  webglUnavailableLabel: string;
 }
 
 function attachRotation(canvas: HTMLCanvasElement, pivot: THREE.Object3D, render: () => void) {
@@ -57,14 +59,14 @@ function hasWebGL(): boolean {
 }
 
 /** Mannequin en 3D : glisser pour tourner. Sans WebGL, un message remplace la vue. */
-export function MannequinView({ meshes, color, label }: MannequinViewProps) {
+export function MannequinView({ meshes, color, label, webglUnavailableLabel }: MannequinViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [webgl] = useState(hasWebGL);
   useEffect(() => {
     if (!webgl || !canvasRef.current || meshes.length === 0) return;
     return mount(canvasRef.current, meshes, color);
   }, [webgl, meshes, color]);
-  if (!webgl) return <p role="status">La vue 3D a besoin de WebGL.</p>;
+  if (!webgl) return <p role="status">{webglUnavailableLabel}</p>;
   return (
     <canvas
       ref={canvasRef}
