@@ -1,0 +1,1 @@
+--8<-- "apps/studio/AGENTS.md"

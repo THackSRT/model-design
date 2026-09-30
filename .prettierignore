@@ -1,0 +1,14 @@
+prototype/
+pnpm-lock.yaml
+uv.lock
+py/contracts/src/atelier_contracts/generated/
+engines/mannequin/src/core/makehuman.js
+.venv/
+**/dist/
+**/coverage/
+.nx/
+# Références golden : toute différence doit venir du moteur, jamais d'un formateur.
+engines/*/tests/golden/
+# Gabarits des générateurs : remplis par tools/generators, pas du code valide tel quel.
+tools/generators/templates/
+.import_linter_cache/

@@ -1,0 +1,1 @@
+--8<-- "packages/service-kit/AGENTS.md"

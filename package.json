@@ -1,0 +1,44 @@
+{
+  "name": "atelier",
+  "private": true,
+  "description": "Plateforme de confection sur mesure — monorepo (apps, services, moteurs, bibliothèques).",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "scripts": {
+    "check": "pnpm contracts:check && prettier --check . && nx run-many -t lint typecheck test --outputStyle=static && pnpm docs:build",
+    "check:affected": "pnpm contracts:check && prettier --check . && nx affected -t lint typecheck test --outputStyle=static && pnpm docs:build",
+    "contracts:gen": "node tools/contracts/generate.mjs",
+    "contracts:check": "node tools/contracts/generate.mjs --check",
+    "gen": "node tools/generators/cli.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs:serve": "uv run --group docs mkdocs serve",
+    "docs:build": "uv run --group docs mkdocs build --strict --quiet",
+    "dev:infra": "docker compose -f platform/docker-compose.yml up -d",
+    "stack:up": "docker compose -f platform/docker-compose.yml --profile app up -d --build",
+    "stack:down": "docker compose -f platform/docker-compose.yml --profile app down",
+    "setup": "pnpm install && uv sync --all-packages",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@nx/eslint-plugin": "^23.2.1",
+    "@vitest/coverage-v8": "^5.0.3",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "json-schema-to-typescript": "^16.0.0",
+    "nx": "^23.2.1",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3",
+    "yaml": "^2.9.1"
+  }
+}

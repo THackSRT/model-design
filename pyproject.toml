@@ -1,0 +1,56 @@
+# Espace de travail Python (moteurs de calcul et bibliothèques partagées), géré par uv.
+[project]
+name = "atelier-workspace"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["py/contracts", "py/engine-kit", "engines/patterning", "engines/manufacturing", "engines/drape"]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.13",
+  "mypy>=1.18",
+  "pytest>=8.4",
+  "hypothesis>=6.140",
+  "import-linter>=2.5",
+  "datamodel-code-generator>=0.34",
+  "httpx2>=2.13",
+]
+
+# MkDocs 2.0 casse thèmes et plugins : on reste sur la branche 1.x tant que Material ne la supporte pas.
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10"]
+
+[tool.ruff]
+line-length = 100
+# Paquets internes détectés automatiquement : tout moteur ajouté par `pnpm gen engine` est reconnu.
+src = ["py/*/src", "engines/*/src", "engines/*"]
+target-version = "py312"
+extend-exclude = ["prototype", "**/generated", "engines/mannequin/tools"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "C90", "PL", "RUF"]
+ignore = ["PLR2004"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 4
+max-statements = 40
+max-branches = 10
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["PLR0913", "S101"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+exclude = ["prototype/", "generated/"]
+
+[tool.pytest.ini_options]
+addopts = "-q"

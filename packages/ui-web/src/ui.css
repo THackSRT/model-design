@@ -1,0 +1,61 @@
+/* Styles des composants : uniquement des jetons (var(--…)). */
+.ui-button {
+  font: inherit;
+  font-weight: var(--font-weight-strong);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.ui-button[data-emphasis='high'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.ui-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.ui-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+.ui-field input {
+  font: inherit;
+  width: 6em;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  text-align: right;
+}
+.ui-field[data-invalid='true'] input {
+  border-color: var(--color-danger);
+}
+.ui-panel {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+.ui-panel > h2 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-ink);
+}
+.ui-message {
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+.ui-message[data-tone='danger'] {
+  color: var(--color-danger);
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/measurement-set.schema.json",
+  "title": "MeasurementSet",
+  "description": "Mesures du corps d'un client (ISO 8559-1), en millimètres entiers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sex", "statureMm", "chestGirthMm", "waistGirthMm", "hipGirthMm"],
+  "properties": {
+    "sex": { "type": "string", "enum": ["female", "male"] },
+    "statureMm": { "type": "integer", "minimum": 900, "maximum": 2300 },
+    "neckGirthMm": { "type": "integer", "minimum": 250, "maximum": 600 },
+    "chestGirthMm": { "type": "integer", "minimum": 500, "maximum": 1800 },
+    "waistGirthMm": { "type": "integer", "minimum": 400, "maximum": 1800 },
+    "hipGirthMm": { "type": "integer", "minimum": 600, "maximum": 1900 },
+    "upperArmGirthMm": { "type": "integer", "minimum": 150, "maximum": 600 },
+    "wristGirthMm": { "type": "integer", "minimum": 110, "maximum": 260 },
+    "thighGirthMm": { "type": "integer", "minimum": 300, "maximum": 1000 },
+    "kneeGirthMm": { "type": "integer", "minimum": 250, "maximum": 600 },
+    "calfGirthMm": { "type": "integer", "minimum": 220, "maximum": 600 },
+    "ankleGirthMm": { "type": "integer", "minimum": 170, "maximum": 400 },
+    "crotchHeightMm": { "type": "integer", "minimum": 400, "maximum": 1100 }
+  }
+}

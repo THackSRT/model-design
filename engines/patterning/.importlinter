@@ -1,0 +1,24 @@
+[importlinter]
+include_external_packages = True
+root_packages =
+    patterning
+
+[importlinter:contract:layers]
+name = Le cœur ne dépend ni du contrat ni de l'API
+type = layers
+layers =
+    patterning.main
+    patterning.api
+    patterning.spec
+    patterning.core
+
+[importlinter:contract:pure-core]
+name = Le cœur n'importe aucun framework
+type = forbidden
+source_modules =
+    patterning.core
+forbidden_modules =
+    fastapi
+    pydantic
+    atelier_contracts
+    atelier_engine_kit

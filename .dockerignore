@@ -1,0 +1,16 @@
+# Contexte de construction des images : la racine du dépôt, sans ce qui se reconstruit dans l'image.
+.git
+**/node_modules
+**/dist
+.venv
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.hypothesis
+**/coverage
+.nx
+site
+prototype
+**/.env

@@ -1,0 +1,20 @@
+{
+  "name": "py-engine-kit",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": ["type:py-lib", "lang:python"],
+  "targets": {
+    "lint": {
+      "command": "uv run ruff check py/engine-kit && uv run ruff format --check py/engine-kit",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "typecheck": {
+      "command": "uv run mypy py/engine-kit/src",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "test": {
+      "command": "uv run pytest py/engine-kit/tests",
+      "options": { "cwd": "{workspaceRoot}" }
+    }
+  }
+}

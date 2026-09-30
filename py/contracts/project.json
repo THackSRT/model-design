@@ -1,0 +1,20 @@
+{
+  "name": "py-contracts",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": ["type:py-lib", "lang:python"],
+  "targets": {
+    "lint": {
+      "command": "uv run ruff check py/contracts && uv run ruff format --check py/contracts",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "typecheck": {
+      "command": "uv run mypy py/contracts/src",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "test": {
+      "command": "uv run python -c \"import atelier_contracts.generated\"",
+      "options": { "cwd": "{workspaceRoot}" }
+    }
+  }
+}

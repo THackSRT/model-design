@@ -1,0 +1,26 @@
+# Intégration continue facultative (ADR 0006) : les mêmes vérifications tournent en local, avant chaque
+# `git push` (hook .githooks/pre-push). Ce workflow ne se lance qu'à la main, depuis l'onglet Actions,
+# pour ne consommer aucune minute payante sans le vouloir.
+name: CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --all-packages --group docs --frozen
+      - run: pnpm check

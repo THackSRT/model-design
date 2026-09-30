@@ -1,0 +1,1 @@
+--8<-- "services/designs/AGENTS.md"

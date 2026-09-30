@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+.nx/
+.vite/
+*.tsbuildinfo
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.env
+.env.*
+!.env.example
+.check/
+site/
+.import_linter_cache/
+# Réglages personnels de Claude Code (les réglages d'équipe sont dans .claude/settings.json)
+.claude/settings.local.json

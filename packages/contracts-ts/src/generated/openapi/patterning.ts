@@ -1,0 +1,251 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+export interface paths {
+  '/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getHealth'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/patterns': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Calculer un patron */
+    post: operations['draftPattern'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+}
+export type webhooks = Record<string, never>;
+export interface components {
+  schemas: {
+    DraftPatternRequest: components['schemas']['create-design-version-request.schema'];
+    /**
+     * MeasurementSet
+     * @description Mesures du corps d'un client (ISO 8559-1), en millimètres entiers.
+     */
+    'measurement-set.schema': {
+      /** @enum {string} */
+      sex: 'female' | 'male';
+      statureMm: number;
+      neckGirthMm?: number;
+      chestGirthMm: number;
+      waistGirthMm: number;
+      hipGirthMm: number;
+      upperArmGirthMm?: number;
+      wristGirthMm?: number;
+      thighGirthMm?: number;
+      kneeGirthMm?: number;
+      calfGirthMm?: number;
+      ankleGirthMm?: number;
+      crotchHeightMm?: number;
+    };
+    StraightSkirtParams: {
+      lengthMm: number;
+      /** @default 10 */
+      waistEaseMm: number;
+      /** @default 40 */
+      hipEaseMm: number;
+      /** @default 0 */
+      hemFlareMm: number;
+    };
+    /**
+     * GarmentRequest
+     * @description Ce que l'on demande au moteur de patronage : un type de vêtement et ses paramètres.
+     */
+    'garment-request.schema': {
+      /** @enum {string} */
+      type: 'straight-skirt';
+      params: components['schemas']['StraightSkirtParams'];
+      $defs: {
+        StraightSkirtParams: {
+          lengthMm: number;
+          /** @default 10 */
+          waistEaseMm: number;
+          /** @default 40 */
+          hipEaseMm: number;
+          /** @default 0 */
+          hemFlareMm: number;
+        };
+      };
+    };
+    /** CreateDesignVersionRequest */
+    'create-design-version-request.schema': {
+      measurements: components['schemas']['measurement-set.schema'];
+      garment: components['schemas']['garment-request.schema'];
+    };
+    /** @description [x, y] en millimètres. */
+    Point: number[];
+    Edge: {
+      id: string;
+      from: components['schemas']['Point'];
+      to: components['schemas']['Point'];
+      /** @description Points de contrôle d'une courbe de Bézier (1 : quadratique, 2 : cubique). Absent : segment droit. */
+      controls?: components['schemas']['Point'][];
+      /** @enum {string} */
+      role?: 'seam' | 'fold' | 'hem' | 'waistline' | 'opening';
+    };
+    EdgeRef: {
+      panelId: string;
+      edgeId: string;
+    };
+    Panel: {
+      id: string;
+      name: string;
+      /** @description Contour fermé, dans le sens trigonométrique : la fin de chaque bord est le début du suivant. */
+      edges: components['schemas']['Edge'][];
+      /** @description Droit fil : deux points. */
+      grainline?: components['schemas']['Point'][];
+      /** @description Nombre de pièces à couper. */
+      quantity: number;
+      /** @default false */
+      cutOnFold: boolean;
+    };
+    Seam: {
+      id: string;
+      a: components['schemas']['EdgeRef'];
+      b: components['schemas']['EdgeRef'];
+    };
+    /**
+     * GarmentSpec
+     * @description Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat.
+     */
+    'garment-spec.schema': {
+      /** @constant */
+      specVersion: '1.0';
+      /** @constant */
+      unit: 'mm';
+      engine: {
+        name: string;
+        version: string;
+      };
+      garment: {
+        type: string;
+      };
+      panels: components['schemas']['Panel'][];
+      seams: components['schemas']['Seam'][];
+      $defs: {
+        /** @description [x, y] en millimètres. */
+        Point: number[];
+        Edge: {
+          id: string;
+          from: components['schemas']['Point'];
+          to: components['schemas']['Point'];
+          /** @description Points de contrôle d'une courbe de Bézier (1 : quadratique, 2 : cubique). Absent : segment droit. */
+          controls?: components['schemas']['Point'][];
+          /** @enum {string} */
+          role?: 'seam' | 'fold' | 'hem' | 'waistline' | 'opening';
+        };
+        Panel: {
+          id: string;
+          name: string;
+          /** @description Contour fermé, dans le sens trigonométrique : la fin de chaque bord est le début du suivant. */
+          edges: components['schemas']['Edge'][];
+          /** @description Droit fil : deux points. */
+          grainline?: components['schemas']['Point'][];
+          /** @description Nombre de pièces à couper. */
+          quantity: number;
+          /** @default false */
+          cutOnFold: boolean;
+        };
+        EdgeRef: {
+          panelId: string;
+          edgeId: string;
+        };
+        Seam: {
+          id: string;
+          a: components['schemas']['EdgeRef'];
+          b: components['schemas']['EdgeRef'];
+        };
+      };
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
+}
+export type $defs = Record<string, never>;
+export interface operations {
+  getHealth: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Le moteur répond. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            status: 'ok';
+            engineVersion: string;
+          };
+        };
+      };
+    };
+  };
+  draftPattern: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['create-design-version-request.schema'];
+      };
+    };
+    responses: {
+      /** @description La spécification de patron. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['garment-spec.schema'];
+        };
+      };
+      /** @description Entrées valides mais impossibles à tracer (ex. taille plus petite que le bassin). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': {
+            type: string;
+            title: string;
+            status: number;
+            detail?: string;
+          };
+        };
+      };
+    };
+  };
+}

@@ -1,0 +1,55 @@
+openapi: 3.1.0
+info:
+  title: Moteur de patronage
+  version: 1.0.0
+  description: >
+    Moteur sans état : des mesures et des paramètres en entrée, une spécification de patron en
+    sortie. Déterministe : mêmes entrées, même version, même résultat.
+servers:
+  - url: http://localhost:3201
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: Le moteur répond.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, engineVersion]
+                properties:
+                  status: { type: string, enum: [ok] }
+                  engineVersion: { type: string }
+  /v1/patterns:
+    post:
+      operationId: draftPattern
+      summary: Calculer un patron
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftPatternRequest' }
+      responses:
+        '200':
+          description: La spécification de patron.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/garment-spec.schema.json' }
+        '422':
+          description: Entrées valides mais impossibles à tracer (ex. taille plus petite que le bassin).
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                required: [type, title, status]
+                properties:
+                  type: { type: string }
+                  title: { type: string }
+                  status: { type: integer }
+                  detail: { type: string }
+components:
+  schemas:
+    DraftPatternRequest:
+      $ref: '../schemas/designs/create-design-version-request.schema.json'

@@ -1,0 +1,1 @@
+--8<-- "engines/mannequin/AGENTS.md"

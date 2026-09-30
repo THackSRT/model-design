@@ -1,0 +1,19 @@
+{
+  "name": "@atelier/generators",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Générateurs : toute nouvelle structure (service, moteur, événement, écran) naît de ces gabarits.",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "nx": {
+    "tags": [
+      "type:tool"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4"
+  }
+}

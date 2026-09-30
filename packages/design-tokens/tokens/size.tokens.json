@@ -1,0 +1,65 @@
+{
+  "space": {
+    "$type": "dimension",
+    "1": {
+      "$value": "4px"
+    },
+    "2": {
+      "$value": "8px"
+    },
+    "3": {
+      "$value": "12px"
+    },
+    "4": {
+      "$value": "16px"
+    },
+    "6": {
+      "$value": "24px"
+    },
+    "8": {
+      "$value": "32px"
+    }
+  },
+  "radius": {
+    "$type": "dimension",
+    "sm": {
+      "$value": "4px"
+    },
+    "md": {
+      "$value": "8px"
+    }
+  },
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "$value": "Inter, system-ui, sans-serif"
+    },
+    "size-sm": {
+      "$type": "dimension",
+      "$value": "13px"
+    },
+    "size-md": {
+      "$type": "dimension",
+      "$value": "15px"
+    },
+    "size-lg": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "weight-strong": {
+      "$type": "fontWeight",
+      "$value": 600
+    },
+    "size-pattern-label": {
+      "$type": "dimension",
+      "$value": "24px",
+      "$description": "Libellés dessinés sur le patron (unités du patron : mm)"
+    }
+  },
+  "stroke": {
+    "$type": "dimension",
+    "pattern": {
+      "$value": "1.5px"
+    }
+  }
+}

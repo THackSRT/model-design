@@ -1,0 +1,41 @@
+{
+  "name": "@atelier/studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Studio web (phase 1) : mesures, patron 2D et mannequin 3D.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "nx": {
+    "tags": [
+      "type:app"
+    ]
+  },
+  "dependencies": {
+    "@atelier/design-tokens": "workspace:*",
+    "@atelier/features": "workspace:*",
+    "@atelier/kernel": "workspace:*",
+    "@atelier/mannequin": "workspace:*",
+    "@atelier/ui-web": "workspace:*",
+    "@atelier/viewer3d": "workspace:*",
+    "@tanstack/react-query": "^5.104.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.1.1",
+    "vite": "^8.3.1"
+  }
+}

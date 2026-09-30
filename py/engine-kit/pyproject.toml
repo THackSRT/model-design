@@ -1,0 +1,13 @@
+[project]
+name = "atelier-engine-kit"
+version = "0.1.0"
+description = "Socle commun des moteurs : application FastAPI, santé, erreurs RFC 9457, journaux."
+requires-python = ">=3.12,<3.13"
+dependencies = ["fastapi>=0.118", "uvicorn>=0.37", "pydantic>=2.9"]
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "atelier_engine_kit"

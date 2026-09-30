@@ -1,0 +1,24 @@
+[importlinter]
+include_external_packages = True
+root_packages =
+    manufacturing
+
+[importlinter:contract:layers]
+name = Le cœur ne dépend ni du contrat ni de l'API
+type = layers
+layers =
+    manufacturing.main
+    manufacturing.api
+    manufacturing.spec
+    manufacturing.core
+
+[importlinter:contract:pure-core]
+name = Le cœur n'importe aucun framework
+type = forbidden
+source_modules =
+    manufacturing.core
+forbidden_modules =
+    fastapi
+    pydantic
+    atelier_contracts
+    atelier_engine_kit

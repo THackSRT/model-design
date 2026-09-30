@@ -1,0 +1,64 @@
+/* Mise en page du studio : uniquement des jetons. */
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+}
+.studio {
+  display: grid;
+  grid-template-columns: minmax(16rem, 20rem) 1fr minmax(16rem, 24rem);
+  grid-template-rows: auto 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.studio-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.studio-header h1 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+.studio-header p {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+.studio-inputs {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+.studio-select {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+.studio-pattern {
+  width: 100%;
+  max-height: 80vh;
+}
+.studio-pattern path {
+  fill: var(--color-pattern-fill);
+  stroke: var(--color-pattern-stroke);
+  stroke-width: var(--stroke-pattern);
+  vector-effect: non-scaling-stroke;
+}
+.studio-pattern text {
+  fill: var(--color-ink-muted);
+  font-size: var(--font-size-pattern-label);
+}
+.studio-viewer {
+  height: 70vh;
+}
+@media (max-width: 900px) {
+  .studio {
+    grid-template-columns: 1fr;
+  }
+}

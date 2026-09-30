@@ -1,0 +1,24 @@
+{
+  "name": "patterning",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "tags": ["type:engine", "lang:python"],
+  "targets": {
+    "lint": {
+      "command": "uv run ruff check engines/patterning && uv run ruff format --check engines/patterning && uv run lint-imports --config engines/patterning/.importlinter",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "typecheck": {
+      "command": "uv run mypy engines/patterning/src",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "test": {
+      "command": "uv run pytest engines/patterning/tests",
+      "options": { "cwd": "{workspaceRoot}" }
+    },
+    "dev": {
+      "command": "uv run uvicorn patterning.main:app --reload --port 3201",
+      "options": { "cwd": "{workspaceRoot}" }
+    }
+  }
+}

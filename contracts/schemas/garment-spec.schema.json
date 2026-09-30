@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/garment-spec.schema.json",
+  "title": "GarmentSpec",
+  "description": "Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "unit", "engine", "garment", "panels", "seams"],
+  "properties": {
+    "specVersion": {
+      "const": "1.0"
+    },
+    "unit": {
+      "const": "mm"
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "garment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "panels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Panel"
+      }
+    },
+    "seams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Seam"
+      }
+    }
+  },
+  "$defs": {
+    "Point": {
+      "type": "array",
+      "description": "[x, y] en millimètres.",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/Point"
+        },
+        "to": {
+          "$ref": "#/$defs/Point"
+        },
+        "controls": {
+          "type": "array",
+          "description": "Points de contrôle d'une courbe de Bézier (1 : quadratique, 2 : cubique). Absent : segment droit.",
+          "items": {
+            "$ref": "#/$defs/Point"
+          },
+          "maxItems": 2
+        },
+        "role": {
+          "type": "string",
+          "enum": ["seam", "fold", "hem", "waistline", "opening"]
+        }
+      }
+    },
+    "Panel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "edges", "quantity"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "edges": {
+          "type": "array",
+          "description": "Contour fermé, dans le sens trigonométrique : la fin de chaque bord est le début du suivant.",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        },
+        "grainline": {
+          "type": "array",
+          "description": "Droit fil : deux points.",
+          "items": {
+            "$ref": "#/$defs/Point"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Nombre de pièces à couper."
+        },
+        "cutOnFold": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "EdgeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["panelId", "edgeId"],
+      "properties": {
+        "panelId": {
+          "type": "string"
+        },
+        "edgeId": {
+          "type": "string"
+        }
+      }
+    },
+    "Seam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "a", "b"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "a": {
+          "$ref": "#/$defs/EdgeRef"
+        },
+        "b": {
+          "$ref": "#/$defs/EdgeRef"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[project]
+name = "atelier-patterning"
+version = "0.1.0"
+description = "Moteur de patronage : mesures + paramètres -> spécification de patron (GarmentSpec)."
+requires-python = ">=3.12,<3.13"
+dependencies = ["atelier-contracts", "atelier-engine-kit", "fastapi>=0.118", "uvicorn>=0.37"]
+
+[tool.uv.sources]
+atelier-contracts = { workspace = true }
+atelier-engine-kit = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "patterning"

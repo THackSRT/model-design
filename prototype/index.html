@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atelier Kaftan Chevrons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : établi de tailleur — panneau de mesures à gauche, feuille de travail (papier patron) à droite. */
+:root {
+  --bg: #eceee9;
+  --panel: #f9faf7;
+  --ink: #1b1f22;
+  --muted: #5a6367;
+  --line: #d3d8d1;
+  --accent: #2a4db0;      /* craie de tailleur bleue */
+  --accent-ink: #ffffff;
+  --accent-soft: #dfe6f7;
+  --mark: #b0412e;        /* crayon rouge des repères */
+  --sheet: #ffffff;
+  --sheet-grid: #e2e7ee;
+  --sheet-grid-strong: #c9d2df;
+  --shadow: 0 1px 2px rgba(20, 30, 40, .06), 0 8px 24px rgba(20, 30, 40, .06);
+  --ok: #1f6b45; --ok-bg: #dcefe3; --warn: #8a5a00; --warn-bg: #f7e9c8; --bad: #a3321f; --bad-bg: #f6dcd6;
+  --f-display: 'Archivo', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --f-body: 'IBM Plex Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121517; --panel: #1a1e21; --ink: #e5e8e5; --muted: #99a2a6; --line: #2d3438;
+    --accent: #8da6ff; --accent-ink: #0e1322; --accent-soft: #232c45; --mark: #e58a76;
+    --sheet: #f6f6f2; --sheet-grid: #e0e4ea; --sheet-grid-strong: #c6cfdc;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121517; --panel: #1a1e21; --ink: #e5e8e5; --muted: #99a2a6; --line: #2d3438;
+  --accent: #8da6ff; --accent-ink: #0e1322; --accent-soft: #232c45; --mark: #e58a76;
+  --sheet: #f6f6f2; --sheet-grid: #e0e4ea; --sheet-grid-strong: #c6cfdc;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-rows: auto 1fr; min-height: 100%; }
+header.top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+.brand { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.brand b { font: 800 22px/1 var(--f-display); font-stretch: 78%; letter-spacing: .01em; text-transform: uppercase; }
+.brand span { color: var(--muted); font-size: 13px; }
+.brand code { font: 500 12px var(--f-mono); color: var(--accent); }
+.spacer { flex: 1; }
+.sizes { display: flex; gap: 4px; align-items: center; }
+.sizes .lbl { font: 500 11px var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-right: 4px; }
+.chip {
+  border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  font: 600 13px var(--f-display); font-stretch: 90%;
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.custom { font-style: italic; }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  font-weight: 500; font-size: 13px;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.work { display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 0; }
+aside.panel {
+  border-right: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 16px 18px 40px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+legend {
+  font: 700 12px var(--f-display); font-stretch: 85%; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); padding: 0 0 8px; width: 100%; border-bottom: 1px solid var(--line); margin-bottom: 4px;
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.field { display: grid; gap: 3px; min-width: 0; }
+.field label { font-size: 12px; color: var(--muted); }
+.num { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.num input { width: 100%; min-width: 0; border: 0; background: transparent; padding: 5px 8px; font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; }
+.num span { padding-right: 8px; color: var(--muted); font: 12px var(--f-mono); }
+.row { display: flex; align-items: center; gap: 10px; }
+.row label { flex: 1; font-size: 13px; }
+.row output { font: 500 12px var(--f-mono); color: var(--muted); min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+.slider { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 10px; }
+.slider label { font-size: 13px; }
+.slider output { font: 500 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.slider input { grid-column: 1 / -1; width: 100%; margin: 2px 0 0; }
+input[type="range"] { accent-color: var(--accent); }
+.row input[type="range"] { width: 120px; }
+input[type="color"] { width: 36px; height: 26px; border: 1px solid var(--line); border-radius: 6px; padding: 1px; background: var(--bg); cursor: pointer; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+
+main.view { display: grid; grid-template-rows: auto 1fr; min-width: 0; min-height: 0; }
+nav.tabs { display: flex; gap: 2px; padding: 10px 20px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav.tabs button {
+  border: 0; background: transparent; padding: 8px 14px 10px; cursor: pointer; white-space: nowrap;
+  font: 600 14px var(--f-display); font-stretch: 92%; color: var(--muted); border-bottom: 2px solid transparent;
+}
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.pane { overflow: auto; padding: 20px; min-width: 0; }
+.status { font: 12px var(--f-mono); color: var(--muted); }
+
+/* Croquis */
+.croquis-wrap { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; justify-content: center; }
+.sheet { background: var(--sheet); border-radius: 4px; box-shadow: var(--shadow); }
+.croquis-sheet { padding: 28px 18px 12px; position: relative; max-width: 100%; }
+.croquis-sheet svg { height: max(560px, calc(100vh - 190px)); width: auto; max-width: 100%; display: block; margin: 0 auto; }
+.sheet-cap { position: absolute; left: 14px; top: 10px; font: 500 11px var(--f-mono); color: #5a6367; letter-spacing: .06em; text-transform: uppercase; }
+.ref-sheet { width: min(300px, 100%); padding: 10px; }
+.ref-sheet img { display: block; width: 100%; border-radius: 2px; }
+.ref-sheet p { margin: 8px 2px 0; font: 11px var(--f-mono); color: #5a6367; text-transform: uppercase; letter-spacing: .06em; }
+.side-notes { width: min(300px, 100%); display: grid; gap: 12px; }
+.side-notes h3 { margin: 0; font: 700 16px var(--f-display); font-stretch: 88%; text-wrap: balance; }
+.side-notes dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 13px; }
+.side-notes dt { color: var(--muted); }
+.side-notes dd { margin: 0; font: 500 13px var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Patrons & plan de coupe */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 22px; height: 0; vertical-align: middle; margin-right: 6px; border-top: 2px solid #1b1d1f; }
+.legend i.seam { border-top: 2px dashed #4d6fb8; }
+.legend i.place { border-top: 2px dashed var(--mark); }
+.legend i.fold { border-top: 2px solid #1b1d1f; width: 14px; }
+.legend i.cut2 { border-top: 2px dotted #1b1d1f; }
+.board { overflow: auto; }
+.board .sheet { display: inline-block; padding: 0; }
+.board svg { display: block; }
+.metrics { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; min-width: 150px; }
+.metric b { display: block; font: 700 22px var(--f-display); font-stretch: 85%; font-variant-numeric: tabular-nums; }
+.metric span { font-size: 12px; color: var(--muted); }
+
+/* Fiche technique */
+.techsheet { max-width: 980px; display: grid; gap: 24px; }
+.techsheet h2 { margin: 0 0 8px; font: 800 26px var(--f-display); font-stretch: 80%; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+.techsheet h3 { margin: 0 0 10px; font: 700 15px var(--f-display); font-stretch: 88%; text-transform: uppercase; letter-spacing: .08em; }
+.techsheet p { margin: 0; max-width: 68ch; }
+.tbl-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+td.n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
+.pill { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.warn { border-left: 3px solid var(--mark); padding: 8px 12px; background: var(--panel); font-size: 13px; }
+.text { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); padding: 6px 8px; font-size: 13px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 7px; padding: 2px; gap: 2px; background: var(--bg); }
+.seg-b { border: 0; border-radius: 5px; padding: 5px 8px; background: transparent; cursor: pointer; font: 600 13px var(--f-display); font-stretch: 92%; color: var(--muted); }
+.seg-b[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.views-sheet { padding: 12px 8px 8px; }
+.views-host { width: 100%; min-height: 200px; }
+.views-canvas { display: block; width: 100%; height: auto; cursor: grab; touch-action: pan-y; }
+.views-canvas:active { cursor: grabbing; }
+.views-labels { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #5a6367; padding: 6px 0 4px; }
+.pane a { color: var(--accent); }
+.mq-bar { align-items: flex-end; }
+.flabel { font-size: 12px; color: var(--muted); }
+.mq-mix { display: flex; gap: 10px; flex-wrap: wrap; }
+.mq-mix label { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+.mq-mix input { width: 90px; }
+select.text { padding: 5px 8px; }
+.gap-ok { color: var(--ok); } .gap-warn { color: var(--warn); } .gap-bad { color: var(--bad); }
+.h3 { margin: 0 0 10px; font: 700 15px var(--f-display); font-stretch: 88%; text-transform: uppercase; letter-spacing: .08em; }
+.st { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 8px; border-radius: 99px; }
+.st.ok { background: var(--ok-bg); color: var(--ok); }
+.st.warn { background: var(--warn-bg); color: var(--warn); }
+.st.bad { background: var(--bad-bg); color: var(--bad); }
+.nogl { padding: 40px 20px; text-align: center; color: #5a6367; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .work { grid-template-columns: 1fr; }
+  main.view { order: -1; border-bottom: 1px solid var(--line); }
+  aside.panel { border-right: 0; max-height: none; }
+  header.top { padding: 12px 16px; }
+  .pane { padding: 16px; }
+  nav.tabs { padding: 8px 16px 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chip, .btn, nav.tabs button { transition: background-color .15s, border-color .15s, color .15s; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <b>Atelier</b>
+      <span><code>MOD-001</code> Ensemble kaftan à chevrons</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="sizes" role="group" aria-label="Taille">
+      <span class="lbl">Taille</span>
+      <button class="chip" data-size="S" type="button">S</button>
+      <button class="chip" data-size="M" type="button">M</button>
+      <button class="chip" data-size="L" type="button">L</button>
+      <button class="chip" data-size="XL" type="button">XL</button>
+      <span class="chip custom" id="size-custom" hidden>sur mesure</span>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-copy" type="button">Copier le SVG</button>
+      <button class="btn primary" id="btn-download" type="button">Télécharger SVG</button>
+    </div>
+  </header>
+
+  <div class="work">
+    <aside class="panel" aria-label="Paramètres du client et du modèle">
+      <fieldset><legend>Client</legend>
+        <div class="field"><label for="c-name">Nom du client</label><input class="text" id="c-name" type="text" autocomplete="off" placeholder="ex. Moussa Diallo"></div>
+        <div class="seg" role="group" aria-label="Morphologie">
+          <button type="button" class="seg-b" data-sex="homme">Homme</button>
+          <button type="button" class="seg-b" data-sex="femme">Femme</button>
+        </div>
+      </fieldset>
+      <fieldset><legend>Mesures du corps (cm)</legend><div class="grid2" id="meas-body"></div></fieldset>
+      <fieldset><legend>Silhouette</legend><div id="morph-ctrls" style="display:grid;gap:8px"></div></fieldset>
+      <fieldset><legend>Modèle — longueurs et aisances (cm)</legend><div class="grid2" id="meas-garment"></div></fieldset>
+      <fieldset><legend>Couleurs</legend>
+        <div class="row"><label for="c-fabric">Tissu principal</label><input type="color" id="c-fabric"></div>
+        <div class="row"><label for="c-accent">Chevrons et passepoils</label><input type="color" id="c-accent"></div>
+        <div class="row"><label for="c-shoe">Chaussures</label><input type="color" id="c-shoe"></div>
+      </fieldset>
+      <fieldset><legend>Ornement devant</legend><div id="style-ctrls" style="display:grid;gap:8px"></div></fieldset>
+      <fieldset><legend>Affichage</legend>
+        <label class="toggle"><input type="checkbox" id="t-texture"> Texture du tissu</label>
+        <label class="toggle"><input type="checkbox" id="t-shoes"> Chaussures</label>
+        <label class="toggle"><input type="checkbox" id="t-body"> Mannequin visible</label>
+      </fieldset>
+      <button class="btn" id="btn-reset" type="button">Revenir au modèle d'origine</button>
+      <p class="hint">Chaque réglage met à jour le croquis, les patrons, le plan de coupe et la fiche technique.</p>
+    </aside>
+
+    <main class="view">
+      <nav class="tabs" role="tablist" aria-label="Vues">
+        <button role="tab" id="tab-mannequin" aria-controls="pane-mannequin" type="button">Mannequin</button>
+        <button role="tab" id="tab-croquis" aria-controls="pane-croquis" type="button">Croquis</button>
+        <button role="tab" id="tab-vues" aria-controls="pane-vues" type="button">Vues 3D</button>
+        <button role="tab" id="tab-patrons" aria-controls="pane-patrons" type="button">Patrons</button>
+        <button role="tab" id="tab-coupe" aria-controls="pane-coupe" type="button">Plan de coupe</button>
+        <button role="tab" id="tab-fiche" aria-controls="pane-fiche" type="button">Fiche technique</button>
+      </nav>
+
+      <section class="pane" id="pane-mannequin" role="tabpanel" aria-labelledby="tab-mannequin">
+        <div class="toolbar mq-bar">
+          <div class="field"><label for="mq-age">Âge</label><div class="num" style="width:96px"><input id="mq-age" type="number" min="16" max="90" step="1"><span>ans</span></div></div>
+          <div class="field mq-origin"><span class="flabel">Morphotype</span>
+            <div class="mq-mix">
+              <label><span>Afrique</span><input type="range" id="mq-african" min="0" max="1" step="0.05"></label>
+              <label><span>Asie</span><input type="range" id="mq-asian" min="0" max="1" step="0.05"></label>
+              <label><span>Europe</span><input type="range" id="mq-caucasian" min="0" max="1" step="0.05"></label>
+            </div>
+          </div>
+          <div class="field"><label for="mq-muscle">Musculature</label>
+            <select id="mq-muscle" class="text"><option value="auto">automatique</option><option value="0">faible</option><option value="0.25">légère</option><option value="0.5">moyenne</option><option value="0.75">marquée</option><option value="1">forte</option></select></div>
+          <div class="field"><span class="flabel">Rendu</span>
+            <div class="seg" role="group" aria-label="Rendu"><button type="button" class="seg-b" data-mqstyle="trait">Trait 2D</button><button type="button" class="seg-b" data-mqstyle="volume">Volume 3D</button></div></div>
+          <label class="toggle"><input type="checkbox" id="mq-rings"> Lignes de mesure</label>
+          <button type="button" class="btn" id="mq-svg">Silhouettes 2D (SVG)</button>
+        </div>
+        <div class="sheet views-sheet"><div class="views-host" id="mq-host"></div><div class="views-labels" id="mq-labels"></div></div>
+        <p class="status" id="mq-status">Chargement du mannequin…</p>
+        <div class="cols" style="margin-top:14px">
+          <div><h3 class="h3">Mesures : cible et mannequin</h3><div class="tbl-wrap"><table><thead><tr><th>Mesure</th><th>Client</th><th>Mannequin</th><th>Écart</th></tr></thead><tbody id="mq-table"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">Tours mesurés sur le maillage comme au mètre ruban (enveloppe de la section). Maillage de base : MakeHuman, licence CC0.</p></div>
+          <div><h3 class="h3">Contrôle d'aisance du modèle</h3><div class="tbl-wrap"><table><thead><tr><th>Zone</th><th>Corps</th><th>Vêtement</th><th>Aisance</th><th></th></tr></thead><tbody id="fit-table"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">Aisance = tour du vêtement fini − tour du corps.</p></div>
+        </div>
+      </section>
+
+      <section class="pane" id="pane-croquis" role="tabpanel" aria-labelledby="tab-croquis" hidden>
+        <div class="croquis-wrap">
+          <figure class="sheet ref-sheet" id="ref-fig" style="margin:0">
+            <img src="references/modele-kaftan-chevrons.png" alt="Photo du modèle de référence" onerror="document.getElementById('ref-fig').hidden=true">
+            <p>Référence client</p>
+          </figure>
+          <div class="sheet croquis-sheet"><span class="sheet-cap">Croquis · face</span><div id="croquis"></div></div>
+          <div class="side-notes">
+            <h3>Tunique droite, manches courtes, pantalon droit ajusté</h3>
+            <dl id="croquis-facts"></dl>
+            <p class="hint">Le croquis suit les proportions allongées du mannequin de mode. Les cotes réelles sont celles des patrons.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="pane" id="pane-vues" role="tabpanel" aria-labelledby="tab-vues" hidden>
+        <div class="toolbar">
+          <label class="toggle"><input type="checkbox" id="t-lines-vues"> Lignes de construction</label>
+          <p class="hint">Glisser sur les vues pour tourner, double-clic pour revenir aux quatre vues standard.</p>
+        </div>
+        <div class="sheet views-sheet"><div class="views-host" id="views-host"></div><div class="views-labels" id="views-labels"></div></div>
+        <p class="status" id="views-status"></p>
+      </section>
+
+      <section class="pane" id="pane-patrons" role="tabpanel" aria-labelledby="tab-patrons" hidden>
+        <div class="toolbar">
+          <div class="row" style="gap:8px"><label for="zoom" style="flex:none">Zoom</label><input type="range" id="zoom" min="2" max="12" step="0.5"><output id="zoom-out"></output></div>
+          <div class="legend">
+            <span><i></i>ligne de coupe</span>
+            <span><i class="seam"></i>ligne de couture</span>
+            <span><i class="place"></i>placement ornement</span>
+            <span><i class="cut2"></i>fente à ouvrir</span>
+          </div>
+        </div>
+        <div class="board"><div class="sheet" id="patterns"></div></div>
+        <p class="hint" style="margin-top:10px">Coutures comprises : 1 cm, côtés 1,5 cm, ourlets 3 cm, chevrons 0,7 cm. Le SVG exporté est à l'échelle 1:1 ; vérifiez le carré test de 10 cm après impression.</p>
+      </section>
+
+      <section class="pane" id="pane-coupe" role="tabpanel" aria-labelledby="tab-coupe" hidden>
+        <div class="toolbar">
+          <div class="row" style="gap:8px"><label for="fabric-w" style="flex:none">Laize du tissu</label>
+            <div class="num" style="width:110px"><input id="fabric-w" type="number" min="90" max="180" step="5"><span>cm</span></div></div>
+          <p class="hint">Tissu plié en deux dans le sens de la longueur, pliure à gauche, lisières à droite.</p>
+        </div>
+        <div class="metrics" id="marker-metrics"></div>
+        <div class="board"><div class="sheet" id="marker"></div></div>
+      </section>
+
+      <section class="pane" id="pane-fiche" role="tabpanel" aria-labelledby="tab-fiche" hidden>
+        <div class="techsheet" id="techsheet"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>')</script>
+<script src="js/mh-data.js"></script>
+<script src="js/mh.js"></script>
+<script src="js/anthro-model.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/mannequin-data.js"></script>
+<script src="js/geom.js"></script>
+<script src="js/pattern.js"></script>
+<script src="js/croquis.js"></script>
+<script src="js/body.js"></script>
+<script src="js/garment.js"></script>
+<script src="js/viewer3d.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

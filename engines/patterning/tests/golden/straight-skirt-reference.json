@@ -1,0 +1,205 @@
+{
+  "specVersion": "1.0",
+  "unit": "mm",
+  "engine": {
+    "name": "patterning",
+    "version": "0.1.0"
+  },
+  "garment": {
+    "type": "straight-skirt"
+  },
+  "panels": [
+    {
+      "id": "front",
+      "name": "Devant",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [
+            0.0,
+            0.0
+          ],
+          "to": [
+            250.0,
+            0.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-lower",
+          "from": [
+            250.0,
+            0.0
+          ],
+          "to": [
+            250.0,
+            402.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [
+            250.0,
+            402.0
+          ],
+          "to": [
+            177.5,
+            600.0
+          ],
+          "controls": [
+            [
+              250.0,
+              520.8
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist",
+          "from": [
+            177.5,
+            600.0
+          ],
+          "to": [
+            0.0,
+            600.0
+          ],
+          "role": "waistline"
+        },
+        {
+          "id": "fold",
+          "from": [
+            0.0,
+            600.0
+          ],
+          "to": [
+            0.0,
+            0.0
+          ],
+          "role": "fold"
+        }
+      ],
+      "grainline": [
+        [
+          125.0,
+          120.0
+        ],
+        [
+          125.0,
+          480.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": true
+    },
+    {
+      "id": "back",
+      "name": "Dos",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [
+            0.0,
+            0.0
+          ],
+          "to": [
+            250.0,
+            0.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-lower",
+          "from": [
+            250.0,
+            0.0
+          ],
+          "to": [
+            250.0,
+            402.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [
+            250.0,
+            402.0
+          ],
+          "to": [
+            177.5,
+            600.0
+          ],
+          "controls": [
+            [
+              250.0,
+              520.8
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist",
+          "from": [
+            177.5,
+            600.0
+          ],
+          "to": [
+            0.0,
+            600.0
+          ],
+          "role": "waistline"
+        },
+        {
+          "id": "fold",
+          "from": [
+            0.0,
+            600.0
+          ],
+          "to": [
+            0.0,
+            0.0
+          ],
+          "role": "fold"
+        }
+      ],
+      "grainline": [
+        [
+          125.0,
+          120.0
+        ],
+        [
+          125.0,
+          480.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": true
+    }
+  ],
+  "seams": [
+    {
+      "id": "side-lower",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-lower"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "side-lower"
+      }
+    },
+    {
+      "id": "side-upper",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-upper"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "side-upper"
+      }
+    }
+  ]
+}

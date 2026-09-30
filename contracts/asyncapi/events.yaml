@@ -1,0 +1,23 @@
+asyncapi: 3.0.0
+info:
+  title: Événements de la plateforme
+  version: 1.0.0
+  description: >
+    Tous les événements voyagent dans une enveloppe CloudEvents 1.0 (schemas/events/cloud-event.schema.json)
+    sur NATS JetStream. Un service ne publie que sur ses propres sujets.
+defaultContentType: application/json
+channels:
+  designVersioned:
+    address: design.versioned
+    messages:
+      designVersioned:
+        name: design.versioned
+        title: Nouvelle version d'un modèle
+        payload:
+          $ref: '../schemas/events/design-versioned.schema.json'
+operations:
+  publishDesignVersioned:
+    action: send
+    channel: { $ref: '#/channels/designVersioned' }
+    x-producer: designs
+    x-consumers: []

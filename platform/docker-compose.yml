@@ -1,0 +1,91 @@
+# Tout tourne en local, sans service payant.
+#   pnpm dev:infra    infrastructure seule (PostgreSQL, NATS, Valkey, stockage S3)
+#   pnpm stack:up     infrastructure + moteurs + services + studio (profil « app »), http://localhost:8080
+#   pnpm stack:down   arrêt (les volumes sont conservés)
+name: atelier
+
+x-engine: &engine
+  profiles: [app]
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: atelier
+      POSTGRES_PASSWORD: atelier-dev
+      POSTGRES_DB: designs
+    ports: ['5432:5432']
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U atelier -d designs']
+      interval: 5s
+      retries: 10
+
+  nats:
+    image: nats:2.11
+    command: ['--jetstream', '--store_dir', '/data', '--http_port', '8222']
+    ports: ['4222:4222', '8222:8222']
+    volumes: [nats:/data]
+
+  valkey:
+    image: valkey/valkey:8
+    ports: ['6379:6379']
+
+  # Stockage compatible S3 (SeaweedFS, Apache 2.0) : MinIO ne publie plus d'images depuis octobre 2025.
+  s3:
+    image: chrislusf/seaweedfs:3.97
+    command: ['server', '-dir=/data', '-s3', '-s3.port=8333']
+    ports: ['8333:8333']
+    volumes: [s3:/data]
+
+  patterning:
+    <<: *engine
+    build: { context: .., dockerfile: engines/patterning/Dockerfile, secrets: [ca] }
+    image: atelier/patterning:local
+    ports: ['3201:8000']
+
+  manufacturing:
+    <<: *engine
+    build: { context: .., dockerfile: engines/manufacturing/Dockerfile, secrets: [ca] }
+    image: atelier/manufacturing:local
+    ports: ['3202:8000']
+
+  drape:
+    <<: *engine
+    build: { context: .., dockerfile: engines/drape/Dockerfile, secrets: [ca] }
+    image: atelier/drape:local
+    ports: ['3203:8000']
+
+  designs:
+    profiles: [app]
+    restart: unless-stopped
+    build: { context: .., dockerfile: services/designs/Dockerfile, secrets: [ca] }
+    image: atelier/designs:local
+    environment:
+      DATABASE_URL: postgres://atelier:atelier-dev@postgres:5432/designs
+      MIGRATE_ON_START: 'true'
+      PATTERNING_URL: http://patterning:8000
+    ports: ['3101:3101']
+    depends_on:
+      postgres: { condition: service_healthy }
+      patterning: { condition: service_healthy }
+
+  studio:
+    profiles: [app]
+    restart: unless-stopped
+    build: { context: .., dockerfile: apps/studio/Dockerfile, secrets: [ca] }
+    image: atelier/studio:local
+    ports: ['8080:8080']
+    depends_on: [designs]
+
+# Certificat d'autorité facultatif pour construire derrière un proxy d'entreprise :
+#   ATELIER_BUILD_CA=/chemin/ca.crt pnpm stack:up
+secrets:
+  ca:
+    file: ${ATELIER_BUILD_CA:-/dev/null}
+
+volumes:
+  postgres:
+  nats:
+  s3:

@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - services/*
+  - engines/mannequin
+  - packages/*
+  - tools/*
+
+onlyBuiltDependencies:
+  - nx
+  - esbuild
+  - '@nestjs/core'
