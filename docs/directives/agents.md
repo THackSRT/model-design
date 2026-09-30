@@ -5,8 +5,9 @@ des fichiers de contexte courts et à jour, des tâches bornées, et une vérifi
 
 ## Fichiers de contexte
 
-- `AGENTS.md` à la racine : carte du dépôt, commandes, règles d'or, interdits. `CLAUDE.md` contient seulement
-  `@AGENTS.md`, pour que tous les outils lisent le même fichier.
+- `AGENTS.md` à la racine : carte du dépôt, commandes, règles d'or, interdits. `CLAUDE.md` inclut
+  `@AGENTS.md`, pour que tous les outils lisent le même fichier, et y ajoute l'orchestration propre à Claude Code
+  (répartition entre Opus, Sonnet et Haiku) : voir [Orchestration des agents](../demarrer/orchestration.md).
 - Un `AGENTS.md` par projet (100 lignes au plus) : rôle, données possédées, événements, commandes, pièges. Il est
   mis à jour dans la demande de fusion qui change ce qu'il décrit ; la section [Composants](../composants/index.md)
   de ce site les affiche directement.

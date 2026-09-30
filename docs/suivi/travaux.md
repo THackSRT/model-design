@@ -38,6 +38,7 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
 | 1.23 | Chargement différé de three.js                                      | `apps/studio`                      | ⬜     | Paquet de 806 kB aujourd'hui                |
 | 1.24 | Tests de bout en bout (Playwright) sur la pile Docker               | `apps/studio`                      | ⬜     | —                                           |
 | 1.25 | Porte : toiles d'essai coupées depuis les exports, écarts corrigés  | équipe + modéliste                 | ⬜     | Fin de phase 1                              |
+| 1.26 | Orchestration des agents Claude Code (Opus, Sonnet, Haiku)          | `CLAUDE.md`, `.claude/`            | ✅     | Non publié — ADR 0007                       |
 
 ## Phases suivantes (à détailler à l'ouverture de chaque phase)
 

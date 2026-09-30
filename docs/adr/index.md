@@ -13,3 +13,4 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0004](0004-reprise-moteur-mannequin.md)      | Reprise du moteur mannequin du prototype (exception aux limites de taille) | Acceptée, temporaire |
 | [0005](0005-organisation-de-developpement.md) | Organisation fixe tant que le service Identité n'existe pas                | Acceptée, temporaire |
 | [0006](0006-local-d-abord.md)                 | Local d'abord, zéro dépense                                                | Acceptée             |
+| [0007](0007-orchestration-des-modeles.md)     | Orchestration des agents : Opus décide, Sonnet construit, Haiku exécute    | Acceptée             |

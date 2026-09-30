@@ -21,17 +21,12 @@ pnpm setup      # pnpm install + uv sync --all-packages ; active aussi le hook g
 pnpm check      # formatage, contrats, lint, types, tests, documentation
 ```
 
-## Cache partagé Nx Cloud (facultatif, gratuit)
+## Cache partagé Nx Cloud (gratuit)
 
-Nx garde en cache le résultat des tâches (lint, types, tests, build). Connecté à Nx Cloud (offre gratuite
-Hobby), ce cache est partagé entre les postes : une tâche déjà calculée par un autre membre n'est pas relancée.
-
-```bash
-pnpm nx connect   # ouvre une page Nx Cloud : se connecter, choisir l'offre gratuite, relier le dépôt
-```
-
-La page fournit un identifiant (`nxCloudId`) à ajouter dans `nx.json`, ou ouvre la demande de fusion qui l'ajoute.
-Sans connexion, tout fonctionne avec le cache local.
+Nx garde en cache le résultat des tâches (lint, types, tests, build). Le dépôt est relié à Nx Cloud (offre
+gratuite Hobby, identifiant `nxCloudId` dans `nx.json`) : ce cache est partagé entre les postes, et une tâche déjà
+calculée par un autre membre n'est pas relancée. Rien à faire de plus sur un nouveau poste ; sans accès réseau,
+tout fonctionne avec le cache local.
 
 ## Lancer la tranche phase 1 sans Docker
 

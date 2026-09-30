@@ -47,7 +47,11 @@ markdown_extensions:
       permalink: true
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tasklist:
       custom_checkbox: true
   # Inclusion de fichiers du dépôt (AGENTS.md, CHANGELOG.md, schémas) : une seule source, jamais de copie.
@@ -67,6 +71,7 @@ nav:
       - Installation: demarrer/installation.md
       - Conteneurs Docker: demarrer/conteneurs.md
       - Contribuer: demarrer/contribuer.md
+      - Orchestration des agents: demarrer/orchestration.md
       - Rédiger la documentation: demarrer/documentation.md
   - Plateforme:
       - plateforme/index.md
@@ -122,6 +127,7 @@ nav:
       - 0004 Reprise du mannequin: adr/0004-reprise-moteur-mannequin.md
       - 0005 Organisation de développement: adr/0005-organisation-de-developpement.md
       - 0006 Local d'abord: adr/0006-local-d-abord.md
+      - 0007 Orchestration Opus, Sonnet, Haiku: adr/0007-orchestration-des-modeles.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md

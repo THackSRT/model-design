@@ -14,12 +14,14 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Conteneurs Docker pour chaque moteur, service et application ; pile locale complète avec
   `pnpm stack:up` (studio et passerelle locale sur http://localhost:8080).
 - Hook git `pre-push` qui lance `pnpm check:affected` : les vérifications tournent en local (ADR 0006).
+- Orchestration Claude Code : huit sous-agents répartis entre Opus, Sonnet et Haiku, skills `/planifier`,
+  `/livrer`, `/cloturer` et permissions partagées (`CLAUDE.md`, `.claude/`, ADR 0007).
 
 ### Modifié
 
 - Stockage objet local : SeaweedFS remplace MinIO, qui ne publie plus d'images depuis octobre 2025.
 - L'intégration continue GitHub devient facultative (lancement manuel).
-- Nx Cloud (offre gratuite) prêt à partager le cache des tâches ; connexion à finaliser avec `pnpm nx connect`.
+- Nx Cloud (offre gratuite) connecté : le cache des tâches est partagé entre les postes.
 
 ## [0.1.0] — 2026-09-30 — Architecture initiale
 

@@ -5,7 +5,8 @@ vendeurs de tissus et prestataires. Microservices dans un seul dépôt (monorepo
 
 Lisez ce fichier, puis le `AGENTS.md` du projet que vous modifiez. Les règles complètes sont dans les
 **Directives de codage** ; l'architecture dans le **document d'architecture** ; les deux sont dans la documentation du dépôt
-(`docs/`, site MkDocs : `pnpm docs:serve`).
+(`docs/`, site MkDocs : `pnpm docs:serve`). Avec Claude Code, `CLAUDE.md` et `.claude/` ajoutent la répartition
+des tâches entre sous-agents (`docs/demarrer/orchestration.md`).
 
 ## Carte du dépôt
 

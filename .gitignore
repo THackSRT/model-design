@@ -16,3 +16,5 @@ __pycache__/
 .check/
 site/
 .import_linter_cache/
+# Réglages personnels de Claude Code (les réglages d'équipe sont dans .claude/settings.json)
+.claude/settings.local.json
