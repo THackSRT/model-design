@@ -106,19 +106,26 @@
   };
 
   /* Repères de hauteur (cm) calculés à partir de la stature et des mesures verticales. */
+  /* Proportions moyennes (fraction de la stature) : ANSUR II si le modèle est chargé. */
+  const RATIOS = {
+    homme: { neckBase: 0.8639, shoulder: 0.8203, chest: 0.7351, knee: 0.278, ankle: 0.0415 },
+    femme: { neckBase: 0.857, shoulder: 0.8198, chest: 0.7194, knee: 0.2756, ankle: 0.0385 },
+  };
   B.landmarks = function (m) {
     const H = m.stature;
+    const sex = m.sex === 'femme' ? 'femme' : 'homme';
+    const R = (window.ANTHRO_MODEL && window.ANTHRO_MODEL[sex].landmarks) || RATIOS[sex];
     const L = { H };
     L.chin = H * 0.868;
-    L.neckBase = H * 0.83;                       // point haut d'épaule (HPS)
-    L.shoulder = L.neckBase - 4.5;               // acromion (même pente que le patron)
-    L.chest = H * 0.72;
+    L.neckBase = H * (R.neckBase - 0.018);       // point haut d'épaule (HPS), un peu sous la 7e cervicale
+    L.shoulder = Math.min(H * R.shoulder, L.neckBase - 3);  // acromion
+    L.chest = H * R.chest;
     L.waist = m.outseam + 3;                     // la longueur côté s'arrête à 3 cm du sol
-    L.hip = L.waist - H * 0.11;
-    L.crotch = L.waist - m.rise;
-    L.knee = H * 0.285;
+    L.crotch = L.waist - (m.rise - 4);           // montant de patronage = montant du corps + 4 cm
+    L.hip = L.crotch + 0.3 * (L.waist - L.crotch);
+    L.knee = H * R.knee;
     L.calf = L.knee - H * 0.075;
-    L.ankle = H * 0.045;
+    L.ankle = H * R.ankle;
     L.shoulderHalf = (m.neck / TAU) * 1.12 + m.shoulder * 0.97; // demi-carrure (acromion)
     return L;
   };

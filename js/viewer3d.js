@@ -17,7 +17,8 @@
 
   let renderer, scene, camera, root, bodyGroup, garmentGroup, linesGroup, host, labelsEl;
   let offset = 0, ready = false, model = null, stature = 176;
-  const opts = { garment: true, lines: false, shoes: true };
+  const opts = { garment: true, lines: false, shoes: true, duo: false };
+  const currentViews = () => (opts.duo ? [V.VIEWS[0], V.VIEWS[1]] : V.VIEWS);
 
   V.available = () => typeof window.THREE !== 'undefined';
 
@@ -216,6 +217,7 @@
 
   V.init = function (container, labels) {
     if (!V.available()) return false;
+    if (ready) { V.attach(container, labels); return true; }
     host = container; labelsEl = labels;
     renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -347,8 +349,8 @@
 
   V.render = function () {
     if (!ready || !host || !host.offsetParent) return;
-    const cw = Math.max(320, host.clientWidth);
-    const views = V.VIEWS;
+    const cw = Math.max(240, host.clientWidth);
+    const views = currentViews();
     const vw = cw / views.length;
     const aspect = 0.42;
     const vh = Math.round(vw / aspect);
@@ -392,6 +394,7 @@
     renderer.setViewport(0, 0, cw, vh);
     renderer.render(quadScene, quadCam);
     if (labelsEl) {
+      labelsEl.style.gridTemplateColumns = `repeat(${views.length}, 1fr)`;
       labelsEl.innerHTML = views.map((v) => `<span>${offset ? v.label + ' ' + (offset > 0 ? '+' : '−') + Math.round(Math.abs(offset) * 180 / Math.PI) + '°' : v.label}</span>`).join('');
     }
   };
@@ -409,7 +412,8 @@
     const k = src.width / Math.max(1, src.clientWidth);
     ctx.fillStyle = '#1b1f22'; ctx.textAlign = 'center';
     ctx.font = `${13 * k}px "IBM Plex Mono", monospace`;
-    V.VIEWS.forEach((v, i) => ctx.fillText(v.label.toUpperCase(), (i + 0.5) * out.width / V.VIEWS.length, src.height + 24 * k));
+    const vs = currentViews();
+    vs.forEach((v, i) => ctx.fillText(v.label.toUpperCase(), (i + 0.5) * out.width / vs.length, src.height + 24 * k));
     ctx.font = `600 ${14 * k}px "IBM Plex Sans", Arial, sans-serif`;
     ctx.fillText(title, out.width / 2, src.height + 52 * k);
     return out;

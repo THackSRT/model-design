@@ -6,6 +6,7 @@
 <title>Atelier Kaftan Chevrons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="css/sizefinder.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Mise en page : établi de tailleur — panneau de mesures à gauche, feuille de travail (papier patron) à droite. */
@@ -48,6 +49,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); }
 button, input, select { font: inherit; color: inherit; }
@@ -175,6 +177,7 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 .views-canvas { display: block; width: 100%; height: auto; cursor: grab; touch-action: pan-y; }
 .views-canvas:active { cursor: grabbing; }
 .views-labels { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; font: 500 11px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #5a6367; padding: 6px 0 4px; }
+.pane a { color: var(--accent); }
 .h3 { margin: 0 0 10px; font: 700 15px var(--f-display); font-stretch: 88%; text-transform: uppercase; letter-spacing: .08em; }
 .st { display: inline-block; font: 500 11px var(--f-mono); padding: 1px 8px; border-radius: 99px; }
 .st.ok { background: var(--ok-bg); color: var(--ok); }
@@ -253,6 +256,7 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
         <button role="tab" id="tab-croquis" aria-controls="pane-croquis" type="button">Croquis</button>
         <button role="tab" id="tab-vues" aria-controls="pane-vues" type="button">Vues 3D</button>
         <button role="tab" id="tab-avatar" aria-controls="pane-avatar" type="button">Avatar client</button>
+        <button role="tab" id="tab-taille" aria-controls="pane-taille" type="button">Trouver ma taille</button>
         <button role="tab" id="tab-patrons" aria-controls="pane-patrons" type="button">Patrons</button>
         <button role="tab" id="tab-coupe" aria-controls="pane-coupe" type="button">Plan de coupe</button>
         <button role="tab" id="tab-fiche" aria-controls="pane-fiche" type="button">Fiche technique</button>
@@ -296,6 +300,13 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
         </div>
       </section>
 
+      <section class="pane" id="pane-taille" role="tabpanel" aria-labelledby="tab-taille" hidden>
+        <div class="toolbar">
+          <p class="hint">Le client répond à 7 questions ; ses mesures sont estimées, la taille du modèle qui lui va le mieux est recommandée zone par zone, et son avatar porte la taille choisie. <a href="boutique.html">Voir l'intégration dans une boutique en ligne</a>.</p>
+        </div>
+        <div id="sizefinder"></div>
+      </section>
+
       <section class="pane" id="pane-patrons" role="tabpanel" aria-labelledby="tab-patrons" hidden>
         <div class="toolbar">
           <div class="row" style="gap:8px"><label for="zoom" style="flex:none">Zoom</label><input type="range" id="zoom" min="2" max="12" step="0.5"><output id="zoom-out"></output></div>
@@ -329,6 +340,8 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>')</script>
+<script src="js/anthro-model.js"></script>
+<script src="js/catalog.js"></script>
 <script src="js/mannequin-data.js"></script>
 <script src="js/geom.js"></script>
 <script src="js/pattern.js"></script>
@@ -336,6 +349,9 @@ ol.steps li::marker { font: 600 12px var(--f-mono); color: var(--accent); }
 <script src="js/body.js"></script>
 <script src="js/garment.js"></script>
 <script src="js/viewer3d.js"></script>
+<script src="js/estimate.js"></script>
+<script src="js/recommend.js"></script>
+<script src="js/sizefinder.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

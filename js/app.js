@@ -1,34 +1,6 @@
 /* Interface : état du modèle, contrôles, rendu des vues et exports. */
 (function () {
-  const MODEL = { ref: 'MOD-001', name: 'Ensemble kaftan à chevrons' };
-
-  // Barèmes de départ (cm) ; chaque mesure reste modifiable pour le sur-mesure.
-  const SIZES = {
-    homme: {
-      S:  { stature: 172, neck: 38, shoulder: 14.5, chest: 92,  waist: 78,  hip: 94,  bicep: 30, wrist: 16.5, armLength: 59, thigh: 53, knee: 36, calf: 35, ankle: 22, outseam: 102, rise: 26, hemCirc: 36, tunicLength: 78 },
-      M:  { stature: 176, neck: 40, shoulder: 15,   chest: 100, waist: 86,  hip: 100, bicep: 32, wrist: 17,   armLength: 60, thigh: 57, knee: 38, calf: 37, ankle: 23, outseam: 104, rise: 27, hemCirc: 38, tunicLength: 80 },
-      L:  { stature: 178, neck: 42, shoulder: 15.5, chest: 108, waist: 94,  hip: 106, bicep: 34, wrist: 17.5, armLength: 61, thigh: 61, knee: 40, calf: 39, ankle: 24, outseam: 106, rise: 28, hemCirc: 40, tunicLength: 82 },
-      XL: { stature: 180, neck: 44, shoulder: 16,   chest: 116, waist: 102, hip: 112, bicep: 36, wrist: 18,   armLength: 62, thigh: 65, knee: 42, calf: 41, ankle: 25, outseam: 107, rise: 29, hemCirc: 42, tunicLength: 84 },
-    },
-    femme: {
-      S:  { stature: 163, neck: 33,   shoulder: 12,   chest: 86,  waist: 68, hip: 94,  bicep: 26, wrist: 15,   armLength: 55, thigh: 54, knee: 35, calf: 34, ankle: 21,   outseam: 99,  rise: 26, hemCirc: 36, tunicLength: 80 },
-      M:  { stature: 165, neck: 34,   shoulder: 12.5, chest: 92,  waist: 74, hip: 100, bicep: 28, wrist: 15.5, armLength: 56, thigh: 58, knee: 37, calf: 35, ankle: 21.5, outseam: 100, rise: 27, hemCirc: 38, tunicLength: 82 },
-      L:  { stature: 167, neck: 35.5, shoulder: 13,   chest: 100, waist: 82, hip: 108, bicep: 31, wrist: 16,   armLength: 57, thigh: 62, knee: 39, calf: 37, ankle: 22.5, outseam: 101, rise: 28, hemCirc: 40, tunicLength: 84 },
-      XL: { stature: 167, neck: 37,   shoulder: 13.5, chest: 108, waist: 92, hip: 116, bicep: 34, wrist: 17,   armLength: 57, thigh: 66, knee: 41, calf: 39, ankle: 23.5, outseam: 101, rise: 29, hemCirc: 42, tunicLength: 86 },
-    },
-  };
-  const MORPH0 = {
-    homme: { belly: 0.15, seat: 0.35, bust: 0 },
-    femme: { belly: 0.1, seat: 0.6, bust: 0.6 },
-  };
-  const COMMON = { sleeveLength: 22, ease: 12, sideSlit: 12 };
-
-  // Relevé sur la photo de référence (proportions ramenées en cm pour une taille M).
-  const STYLE0 = {
-    fabric: '#442721', accent: '#f2efe8', shoe: '#c98f5a',
-    chevCount: 3, chevWidth: 20, chevBand: 4.3, chevGap: 1.8, chevDrop: 5, chevTop: 18.6, placketGap: 5,
-    texture: true, shoes: true, showBody: true,
-  };
+  const { MODEL, SIZES, MORPH0, COMMON, STYLE0 } = window.Catalog;
 
   const MEAS = {
     body: [
@@ -72,7 +44,7 @@
   ];
 
   const KEY = 'atelier-mod001-v2';
-  const TABS = ['croquis', 'vues', 'avatar', 'patrons', 'coupe', 'fiche'];
+  const TABS = ['croquis', 'vues', 'avatar', 'taille', 'patrons', 'coupe', 'fiche'];
   const $ = (id) => document.getElementById(id);
   const fmt = (v, d = 1) => G.fmt(v, d);
 
@@ -187,7 +159,7 @@
     $('zoom').value = state.zoom; $('zoom-out').textContent = fmt(state.zoom) + ' px/cm';
     $('fabric-w').value = state.fabricW;
     const labels = { croquis: 'croquis', patrons: 'patrons', coupe: 'plan de coupe', fiche: 'fiche' };
-    const is3D = state.tab === 'vues' || state.tab === 'avatar';
+    const is3D = state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille';
     $('btn-copy').textContent = is3D ? "Copier l'image des vues" : state.tab === 'fiche' ? 'Copier le SVG des patrons' : `Copier le SVG (${labels[state.tab]})`;
     $('btn-download').textContent = is3D ? 'Télécharger les vues (PNG)' : state.tab === 'croquis' ? 'Télécharger le croquis' : state.tab === 'coupe' ? 'Télécharger le plan de coupe' : 'Télécharger les patrons 1:1';
   }
@@ -406,6 +378,7 @@
       const onAvatar = state.tab === 'avatar';
       Viewer3D.attach(onAvatar ? $('avatar-host') : $('views-host'), onAvatar ? $('avatar-labels') : $('views-labels'));
       Viewer3D.setOptions({
+        duo: false,
         garment: onAvatar ? state.v3.dress : true,
         lines: onAvatar ? state.v3.linesAvatar : state.v3.linesVues,
       });
@@ -443,6 +416,28 @@
       <td class="n">${r.ease >= 0 ? '+' : '−'}${fmt(Math.abs(r.ease))}</td><td><span class="st ${cls[r.status]}">${r.status}</span></td></tr>`).join('');
   }
   function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  /* ---------- Trouver ma taille ---------- */
+
+  let finder = null;
+  function renderSizeFinder() {
+    if (finder) return requestAnimationFrame(() => finder.refresh());
+    finder = SizeFinder.mount($('sizefinder'), {
+      product: {
+        name: MODEL.name, order: Catalog.SIZE_ORDER, style: state.s,
+        sizesFor: (sex) => Object.fromEntries(Catalog.SIZE_ORDER.map((sz) => [sz, Catalog.sizeMeasures(sex, sz)])),
+      },
+      onApply: (est, best) => {
+        state.client.sex = est.m.sex;
+        const keep = { tunicLength: state.m.tunicLength, sleeveLength: state.m.sleeveLength, ease: state.m.ease, sideSlit: state.m.sideSlit, hemCirc: state.m.hemCirc };
+        Object.assign(state.m, Catalog.sizeMeasures(est.m.sex, best), est.m, keep);
+        delete state.m.sex;
+        state.size = null; state.tab = 'avatar';
+        sync(); render();
+        toast('Mesures estimées reportées : ajustez-les après la prise de mesures réelle');
+      },
+    });
+  }
+
   function refreshClientText() {
     if (state.tab === 'avatar' && body3) renderAvatarTables(Garment3D.fitCheck(body3, pat3, state.m));
     if (state.tab === 'fiche') renderTech();
@@ -461,6 +456,7 @@
     dirty3D = true;
     renderCroquis();
     if (state.tab === 'avatar') renderAvatarTables(rows);
+    if (state.tab === 'taille') renderSizeFinder();
     if (state.tab === 'patrons') renderPatterns();
     if (state.tab === 'coupe') renderMarker();
     if (state.tab === 'fiche') renderTech(rows);
@@ -483,7 +479,7 @@
     return `${MODEL.ref.toLowerCase()}-${state.tab === 'croquis' ? 'croquis' : state.tab === 'coupe' ? 'plan-de-coupe' : 'patrons-1-1'}-${s}.svg`;
   }
   function copySVG() {
-    if (state.tab === 'vues' || state.tab === 'avatar') return copyPNG();
+    if (state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille') return copyPNG();
     const svg = '<?xml version="1.0" encoding="UTF-8"?>\n' + currentSVG();
     const done = () => toast('SVG copié — collez-le dans Illustrator, Inkscape ou Figma');
     try {
@@ -501,7 +497,7 @@
   }
   function viewsTitle() { return `${MODEL.ref} · ${state.tab === 'avatar' && !state.v3.dress ? 'Avatar' : MODEL.name} · ${clientLabel()} · taille ${sizeLabel()}`; }
   function copyPNG() {
-    const cv = v3Ready && Viewer3D.snapshot(viewsTitle());
+    const cv = Viewer3D.available() && Viewer3D.snapshot(viewsTitle());
     if (!cv) return toast('La vue 3D n’est pas disponible');
     cv.toBlob((blob) => {
       try {
@@ -512,8 +508,8 @@
     }, 'image/png');
   }
   function downloadSVG() {
-    if (state.tab === 'vues' || state.tab === 'avatar') {
-      const cv = v3Ready && Viewer3D.snapshot(viewsTitle());
+    if (state.tab === 'vues' || state.tab === 'avatar' || state.tab === 'taille') {
+      const cv = Viewer3D.available() && Viewer3D.snapshot(viewsTitle());
       if (!cv) return toast('La vue 3D n’est pas disponible');
       const a = document.createElement('a');
       const name = `${MODEL.ref.toLowerCase()}-${state.tab === 'avatar' ? 'avatar' : 'vues'}-${(state.size || 'sur-mesure').toLowerCase()}.png`;

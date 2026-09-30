@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boutique démo Taille</title>
+<link rel="stylesheet" href="css/sizefinder.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Page produit d'une boutique fictive : montre l'intégration du widget « Trouver ma taille » (bandeau + fenêtre). */
+:root {
+  --bg: #f4f3f0; --panel: #ffffff; --ink: #1c1a18; --muted: #6a645e; --line: #e2ded8;
+  --accent: #6b3a24; --accent-ink: #ffffff; --accent-soft: #f3e6de;
+  --ok: #1f6b45; --ok-bg: #dcefe3; --warn: #8a5a00; --warn-bg: #f7e9c8; --bad: #a3321f; --bad-bg: #f6dcd6;
+  --f-display: 'Archivo', 'Arial Narrow', Arial, sans-serif; --f-body: 'IBM Plex Sans', Arial, sans-serif; --f-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151312; --panel: #1f1c1a; --ink: #eeeae6; --muted: #a59d95; --line: #35302c;
+    --accent: #e0a080; --accent-ink: #1b120d; --accent-soft: #3a2a21;
+    --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151312; --panel: #1f1c1a; --ink: #eeeae6; --muted: #a59d95; --line: #35302c;
+  --accent: #e0a080; --accent-ink: #1b120d; --accent-soft: #3a2a21;
+  --ok: #7fd3a4; --ok-bg: #1d3328; --warn: #e8bd62; --warn-bg: #3a2f17; --bad: #f09a86; --bad-bg: #3d221c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.demo-bar { background: var(--ink); color: var(--bg); font: 12px var(--f-mono); padding: 6px 16px; text-align: center; }
+.demo-bar a { color: inherit; }
+header.shop { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header.shop b { font: 800 20px var(--f-display); font-stretch: 80%; letter-spacing: .06em; text-transform: uppercase; }
+header.shop nav { display: flex; gap: 18px; font-size: 14px; color: var(--muted); }
+main.product { max-width: 1120px; margin: 0 auto; padding: 28px 24px 60px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 36px; }
+.gallery { background: #fff; border-radius: 10px; border: 1px solid var(--line); display: grid; place-items: center; padding: 16px; }
+.gallery img { max-width: 100%; max-height: 640px; object-fit: contain; }
+.info { display: grid; gap: 18px; align-content: start; min-width: 0; }
+.crumb { font-size: 13px; color: var(--muted); }
+.info h1 { margin: 0; font: 700 34px/1.1 var(--f-display); font-stretch: 85%; text-wrap: balance; }
+.price { font: 600 22px var(--f-mono); font-variant-numeric: tabular-nums; }
+.desc { margin: 0; color: var(--muted); max-width: 60ch; }
+.label { font-size: 13px; font-weight: 600; }
+.sizes { display: flex; gap: 8px; flex-wrap: wrap; }
+.size { min-width: 56px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; font-weight: 600; color: var(--ink); position: relative; }
+.size[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.size .tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: var(--ok); color: #fff; font: 600 9px var(--f-mono); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.fit-banner { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--accent-soft); cursor: pointer; text-align: left; color: var(--ink); width: 100%; }
+.fit-banner svg { flex: none; width: 34px; height: 46px; color: var(--accent); }
+.fit-banner b { display: block; font-size: 15px; }
+.fit-banner span { font-size: 13px; color: var(--muted); }
+.fit-banner .go { margin-left: auto; font: 600 13px var(--f-display); color: var(--accent); white-space: nowrap; }
+.add { padding: 14px; border: 0; border-radius: 8px; background: var(--ink); color: var(--bg); font-weight: 600; cursor: pointer; }
+.add:disabled { opacity: .5; cursor: not-allowed; }
+.msg { font-size: 14px; min-height: 1.4em; margin: 0; }
+.overlay { position: fixed; inset: 0; background: rgba(20, 16, 12, .55); display: grid; place-items: start center; overflow: auto; padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 24px; z-index: 10; }
+.modal { width: min(1180px, 100%); background: var(--bg); border-radius: 12px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: grid; gap: 14px; }
+.modal-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.modal-h h2 { margin: 0; font: 700 22px var(--f-display); font-stretch: 85%; }
+.close { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 6px 12px; cursor: pointer; color: var(--ink); }
+@media (max-width: 860px) { main.product { grid-template-columns: 1fr; padding: 20px 16px 48px; } header.shop nav { display: none; } header.shop { padding: 12px 16px; } }
+</style>
+</head>
+<body>
+<div class="demo-bar">Démonstration — boutique fictive intégrant le widget « Trouver ma taille ». <a href="index.html">Retour à l'atelier</a></div>
+<header class="shop"><b>Maison Démo</b><nav><span>Homme</span><span>Femme</span><span>Nouveautés</span><span>Panier (0)</span></nav></header>
+
+<main class="product">
+  <div class="gallery"><img src="references/modele-kaftan-chevrons.png" alt="Ensemble kaftan brun à chevrons blancs porté avec un pantalon assorti" onerror="this.parentNode.innerHTML='<p style=&quot;color:#6a645e&quot;>Photo du produit</p>'"></div>
+  <div class="info">
+    <span class="crumb">Homme · Ensembles</span>
+    <h1>Ensemble kaftan à chevrons</h1>
+    <span class="price">45 000 FCFA</span>
+    <p class="desc">Tunique droite en jacquard brun, trois chevrons appliqués et passepoils blancs, pantalon assorti à ceinture coulissée.</p>
+
+    <button type="button" class="fit-banner" id="fit-banner">
+      <svg viewBox="0 0 40 60" aria-hidden="true"><path d="M20 4a4 4 0 1 0 0.1 0M9 14 L31 14 M9 14 C9 22 12 28 13 32 C11 38 10 44 11 50 L15 58 M31 14 C31 22 28 28 27 32 C29 38 30 44 29 50 L25 58" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div><b id="banner-title">Trouvez votre taille en 1 minute</b><span id="banner-sub">7 questions, sans mètre ruban : taille, poids, silhouette.</span></div>
+      <span class="go">Voir sur mon avatar →</span>
+    </button>
+
+    <div>
+      <div class="label" style="margin-bottom:8px">Taille</div>
+      <div class="sizes" id="sizes" role="group" aria-label="Taille"></div>
+    </div>
+    <button type="button" class="add" id="add" disabled>Choisissez une taille</button>
+    <p class="msg" id="msg" role="status"></p>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-h"><h2 id="modal-title">Trouver ma taille</h2><button type="button" class="close" id="close">Fermer</button></div>
+    <div id="finder"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE || document.write('<script src="vendor/three.min.js"><\/script>')</script>
+<script src="js/anthro-model.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/geom.js"></script>
+<script src="js/pattern.js"></script>
+<script src="js/body.js"></script>
+<script src="js/garment.js"></script>
+<script src="js/viewer3d.js"></script>
+<script src="js/estimate.js"></script>
+<script src="js/recommend.js"></script>
+<script src="js/sizefinder.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const product = {
+    name: 'Ensemble kaftan à chevrons', order: Catalog.SIZE_ORDER, style: Catalog.STYLE0,
+    sizesFor: (sex) => Object.fromEntries(Catalog.SIZE_ORDER.map((s) => [s, Catalog.sizeMeasures(sex, s)])),
+  };
+  let chosen = null, finder = null, lastFocus = null;
+
+  function renderSizes(reco) {
+    $('sizes').innerHTML = product.order.map((s) => `<button type="button" class="size" data-size="${s}" aria-pressed="${s === chosen}">${s}${reco && reco.best === s ? '<span class="tag">votre taille</span>' : ''}</button>`).join('');
+    $('add').disabled = !chosen;
+    $('add').textContent = chosen ? `Ajouter au panier — taille ${chosen}` : 'Choisissez une taille';
+  }
+  function refreshBanner() {
+    const reco = SizeFinder.quick(product);
+    if (reco) {
+      $('banner-title').textContent = `Votre taille : ${reco.best}`;
+      $('banner-sub').textContent = reco.advice || `Confiance ${reco.confidence} · d'après votre profil enregistré sur cet appareil.`;
+    }
+    renderSizes(reco);
+  }
+  function open() {
+    lastFocus = document.activeElement;
+    $('overlay').hidden = false;
+    document.body.style.overflow = 'hidden';
+    if (!finder) {
+      finder = SizeFinder.mount($('finder'), {
+        product,
+        onChoose: (size) => { chosen = size; close(); refreshBanner(); $('msg').textContent = `Taille ${size} sélectionnée.`; },
+      });
+    } else finder.refresh();
+    $('close').focus();
+  }
+  function close() {
+    $('overlay').hidden = true;
+    document.body.style.overflow = '';
+    refreshBanner();
+    if (lastFocus) lastFocus.focus();
+  }
+  $('fit-banner').addEventListener('click', open);
+  $('close').addEventListener('click', close);
+  $('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('overlay').hidden) close(); });
+  $('sizes').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-size]'); if (!b) return;
+    chosen = b.dataset.size; refreshBanner(); $('msg').textContent = '';
+  });
+  $('add').addEventListener('click', () => { $('msg').textContent = `Démonstration : la taille ${chosen} serait ajoutée au panier.`; });
+  window.addEventListener('resize', () => { if (!$('overlay').hidden && finder) finder.refresh(); });
+  refreshBanner();
+})();
+</script>
+</body>
+</html>

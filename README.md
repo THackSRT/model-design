@@ -5,6 +5,10 @@ croquis sur mannequin, **avatar 3D du client construit à partir de ses mesures*
 **4 vues** (3/4 droit, face, dos, 3/4 gauche), patrons à l'échelle 1:1, plan de coupe et fiche
 technique, tous générés à partir des mêmes paramètres.
 
+Il intègre aussi une **recommandation de taille en ligne** (dans l'esprit d'[Unisize](https://unisize.net/)) :
+7 questions → mesures estimées → taille conseillée zone par zone → avatar habillé, avec une démo
+d'intégration boutique (`boutique.html`). Analyse et plan : [docs/PRODUIT-TAILLE.md](docs/PRODUIT-TAILLE.md).
+
 Premier modèle de test : **MOD-001 · Ensemble kaftan à chevrons** (tunique à col rond, manches
 courtes passepoilées, ouverture milieu devant encadrée de deux passepoils, trois chevrons
 appliqués, pantalon droit à ceinture coulissée).
@@ -24,6 +28,8 @@ npx serve .        # ou : python3 -m http.server
 | **Croquis** | La tenue dessinée en SVG sur le mannequin vectorisé, à côté de la photo de référence. Couleurs, nombre/taille des chevrons, longueurs, texture, chaussures et visibilité du mannequin sont réglables. |
 | **Vues 3D** | La tenue portée par l'avatar du client, en planche 4 vues façon croquis (contours + lignes de construction en option). Glisser pour tourner. Export PNG. |
 | **Avatar client** | Créateur d'avatar : homme ou femme, 15 mesures du corps (stature, tours, longueurs) et 3 réglages de silhouette (ventre, fessier, poitrine). Chaque tour de l'avatar est calé exactement sur la mesure. Fiche client et **contrôle d'aisance** (vêtement fini − corps) zone par zone. |
+| **Trouver ma taille** | Questionnaire (sexe, âge, taille, poids, 4 pictogrammes de silhouette, coupe préférée). Mesures estimées par un modèle appris sur ANSUR II, taille recommandée avec confiance et détail par zone (serré ↔ ample), avatar portant la taille choisie. Bouton pour passer au sur-mesure avec les mesures estimées. |
+| **Boutique (démo)** | `boutique.html` : fiche produit fictive avec le bandeau « Votre taille : M » et la fenêtre du widget ; le profil est mémorisé sur l'appareil pour tous les articles. |
 | **Patrons** | 9 pièces tracées par calcul (devant, dos, manche, parementures, chevron, pantalon devant/dos, ceinture) avec valeurs de couture, droit fil, pliures, crans, repères de placement. Export SVG à l'échelle 1:1 avec carré test de 10 cm. |
 | **Plan de coupe** | Placement automatique sur tissu plié (laize réglable), métrage et efficience. |
 | **Fiche technique** | Nomenclature, cotes finies, fournitures, ordre de montage. |
@@ -42,6 +48,14 @@ js/body.js               avatar paramétrique : corps construit à partir des me
 js/garment.js            habillage 3D (tunique, manches, pantalon) à partir des cotes du patron + contrôle d'aisance
 js/viewer3d.js           rendu three.js en 4 vues, style croquis (détection de contours)
 js/app.js                état, contrôles, exports
+js/catalog.js            modèles et barèmes de tailles (partagés atelier / boutique)
+js/anthro-model.js       modèle « questionnaire → mesures » (généré, ANSUR II)
+js/estimate.js           estimation des mesures à partir du questionnaire
+js/recommend.js          moteur de recommandation de taille (aisances par zone)
+js/sizefinder.js         composant « Trouver ma taille » (questionnaire + résultat + avatar)
+css/sizefinder.css       styles du composant
+boutique.html            démo d'intégration dans une boutique en ligne
+tools/fit_anthropometry.py  entraînement du modèle d'estimation sur ANSUR II
 vendor/three.min.js      three.js r128 (MIT), secours hors-ligne si le CDN est inaccessible
 js/mannequin-data.js     mannequin vectorisé (généré)
 tools/vectorize_mannequin.py   vectorisation du croquis mannequin (potrace)
@@ -58,6 +72,8 @@ docs/ROADMAP.md          suggestions et feuille de route du projet
 - L'avatar 3D respecte les tours mesurés ; les hauteurs non mesurées (poitrine, genou, cheville…)
   sont déduites de la stature par des proportions moyennes. La tenue 3D est un habillage géométrique
   (pas encore de simulation du tombé du tissu) : elle montre volumes, longueurs et aisances.
+- L'estimation des mesures est apprise sur ANSUR II (militaires américains) : à recalibrer avec des
+  mesures de la clientèle réelle avant un usage commercial (voir docs/PRODUIT-TAILLE.md).
 - La planche 4 vues fournie en référence (image de banque d'images) a servi de modèle de style ;
   elle n'est pas intégrée à l'application.
 - Le mannequin fourni porte une signature d'auteur : pour un usage commercial, utiliser des
