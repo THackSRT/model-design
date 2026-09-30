@@ -21,8 +21,8 @@ Méthode :
 4. Changer un calcul, c'est changer `ENGINE_VERSION`.
 5. Vérifie : `pnpm nx run <moteur>:lint`, `:typecheck`, `:test` (ou la commande de la fiche) ; corrige jusqu'au vert.
 
-Pour le moteur mannequin (TypeScript) : `src/core/makehuman.js` est une exception documentée (ADR 0004) ; tout
-nouveau code va dans des modules de moins de 300 lignes, testés.
+Pour le moteur mannequin (TypeScript) : modules de moins de 300 lignes dans `src/core` (voir son `AGENTS.md`) ;
+`test/characterization.test.ts` fige la sortie de l'ajustement et ne se modifie pas sans instruction explicite.
 
 Interdits : commit, push, modification de `prototype/`, du code généré, d'un autre moteur.
 
