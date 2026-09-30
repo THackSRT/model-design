@@ -20,7 +20,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 ### Modifié
 
 - Mannequin 3D : la tête garde sa forme naturelle (crâne, joues, mâchoire, menton, oreilles) ; seuls les
-  traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine.
+  traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine ;
+  le visage est aplati (la bouche et le menton ne dépassent plus le plan du front).
 - Stockage objet local : SeaweedFS remplace MinIO, qui ne publie plus d'images depuis octobre 2025.
 - L'intégration continue GitHub devient facultative (lancement manuel).
 - Nx Cloud (offre gratuite) connecté : le cache des tâches est partagé entre les postes.

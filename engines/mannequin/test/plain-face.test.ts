@@ -49,6 +49,19 @@ describe('visage sans traits', () => {
     expect(before - after).toBeGreaterThan(1);
   });
 
+  it('rend le visage plat : du menton aux yeux, l’axe du visage varie de moins d’un centimètre', () => {
+    const rows = [3, 4.5, 6, 7.5, 9, 10.5, 12, 13.5].map((dy) =>
+      Math.max(
+        ...headVertices(face.pos, neckY)
+          .filter(
+            ([x, y, , v]) => !face.drop[v] && Math.abs(x) < 1 && Math.abs(y - neckY - dy) < 0.4,
+          )
+          .map(([, , z]) => z),
+      ),
+    );
+    expect(Math.max(...rows) - Math.min(...rows)).toBeLessThan(1);
+  });
+
   it('garde la forme de la tête : crâne, nuque et oreilles ne bougent pas', () => {
     const neckZ = fit.measured.rings['neck']?.center[2] ?? 0;
     const skull = headVertices(fit.pos, neckY).filter(

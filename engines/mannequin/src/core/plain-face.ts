@@ -3,7 +3,9 @@
  * seuls les traits du visage (yeux, sourcils, nez, bouche) sont effacés.
  * La zone des traits est dépliée à plat (plongement de Tutte : les replis de la bouche et des paupières
  * s'étalent sans se chevaucher), puis posée sur la surface la plus lisse qui prolonge la peau autour
- * (spline de plaque mince). Unités : cm, y vers le haut, z vers l'avant ; topologie de base.
+ * (spline de plaque mince). Enfin le visage est aplati : ce qui avance au-delà du plan du front
+ * (bouche, menton) recule, comme sur un mannequin de vitrine.
+ * Unités : cm, y vers le haut, z vers l'avant ; topologie de base.
  */
 import { add, at, flood, neighbours, rings, taubin, vertexNormals } from './mesh.js';
 import { solveThinPlate, type ThinPlate } from './thin-plate.js';
@@ -29,6 +31,10 @@ const BLEND_RINGS = 4;
 const BLEND_PASSES = 20;
 /** Une peau d'appui regarde vers l'avant (composante z de la normale). */
 const FRONT_FACING = 0.35;
+/** Aplatissement : part du relief en avant du plan du front qui est retirée (0 à 1 exclu). */
+const FLATNESS = 0.85;
+/** Douceur du passage au plan du front (cm). */
+const FLAT_SOFTNESS = 0.6;
 
 /** Globes oculaires : les pièces détachées de plus d'un sommet, au-dessus du cou. */
 function eyeballs(adj: number[][], pos: Float32Array, neckY: number): number[][] {
@@ -132,6 +138,36 @@ function relax(uv: Float32Array, nb: number[], i: number): void {
   uv[i] = cur + OVER_RELAX * (s / nb.length - cur);
 }
 
+/** Plan du front : avancée de la peau juste au-dessus des sourcils, dans l'axe du visage. */
+function foreheadPlane(pos: Float32Array, eyes: Eyes, drop: Uint8Array): number {
+  const [ex, ey] = eyes.center;
+  const d = eyes.spread;
+  let z = -Infinity;
+  for (let v = 0; v < drop.length; v++) {
+    const near = Math.abs(at(pos, 3 * v) - ex) < 0.3 * d;
+    if (!drop[v] && near && Math.abs(at(pos, 3 * v + 1) - (ey + 0.6 * d)) < 0.15 * d) {
+      z = Math.max(z, at(pos, 3 * v + 2));
+    }
+  }
+  return z;
+}
+
+/**
+ * Visage plus plat : tout ce qui, sur la tête, avance au-delà du plan du front (bouche, menton, joues
+ * basses) recule d'une part FLATNESS de son avancée. La déformation est continue et monotone : la
+ * surface reste lisse, sans pli, et l'arrière de la tête, le cou et le corps ne bougent pas.
+ */
+function flattenFront(pos: Float32Array, planeZ: number, neckY: number): void {
+  const s = FLAT_SOFTNESS;
+  for (let v = 0; v < pos.length / 3; v++) {
+    const t = Math.min(1, Math.max(0, (at(pos, 3 * v + 1) - neckY) / 3));
+    const ahead = at(pos, 3 * v + 2) - planeZ;
+    if (ahead < -10 * s) continue; // effet < 0,001 mm : l'arrière de la tête reste exact
+    const softplus = s * Math.log1p(Math.exp(ahead / s));
+    pos[3 * v + 2] = at(pos, 3 * v + 2) - FLATNESS * t * t * (3 - 2 * t) * softplus;
+  }
+}
+
 function place(pos: Float32Array, free: number[], uv: Float32Array, surface: ThinPlate) {
   const out = Float32Array.from(pos);
   for (const v of free) {
@@ -151,7 +187,8 @@ export function plainFace(pos: Float32Array, tris: ArrayLike<number>, neckY: num
   const balls = eyeballs(adj, pos, neckY);
   const drop = new Uint8Array(adj.length);
   for (const v of balls.flat()) drop[v] = 1;
-  const zone = faceZone(pos, adj, locateEyes(pos, balls), drop);
+  const eyes = locateEyes(pos, balls);
+  const zone = faceZone(pos, adj, eyes, drop);
   const surface = solveThinPlate(supportSkin(pos, vertexNormals(pos, tris), adj, zone));
   const out = place(pos, zone, flatten(pos, adj, zone), surface);
   const inZone = new Uint8Array(adj.length);
@@ -159,5 +196,6 @@ export function plainFace(pos: Float32Array, tris: ArrayLike<number>, neckY: num
   const edge = zone.filter((v) => (adj[v] ?? []).some((w) => !inZone[w]));
   const band = [...edge, ...rings(adj, edge, BLEND_RINGS, (v) => !!drop[v]).flat()];
   taubin(out, adj, band, BLEND_PASSES);
+  flattenFront(out, foreheadPlane(out, eyes, drop), neckY);
   return { pos: out, drop };
 }

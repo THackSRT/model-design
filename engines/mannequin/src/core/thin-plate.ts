@@ -7,7 +7,7 @@ import { add, at } from './mesh.js';
 
 export type ThinPlate = (x: number, y: number) => number;
 
-/** Régularisation : la surface passe au plus près des points, sans osciller entre eux. */
+/** Régularisation par défaut : la surface passe par les points, sans osciller entre eux. */
 const SMOOTHING = 1e-3;
 
 function kernel(dx: number, dy: number): number {
@@ -66,14 +66,20 @@ export function solveLinear(m: Matrix, b: Float64Array): Float64Array {
   return x;
 }
 
-/** Ajuste la plaque mince sur des points [x, y, z]. */
-export function solveThinPlate(points: [number, number, number][]): ThinPlate {
+/**
+ * Ajuste la plaque mince sur des points [x, y, z]. Un lissage fort donne une surface qui ne passe plus
+ * par les points mais en garde la forme d'ensemble, sans leurs bosses.
+ */
+export function solveThinPlate(
+  points: [number, number, number][],
+  smoothing = SMOOTHING,
+): ThinPlate {
   const k = points.length;
   const m: Matrix = { n: k + 3, cells: new Float64Array((k + 3) * (k + 3)) };
   const b = new Float64Array(k + 3);
   points.forEach(([xi, yi, zi], i) => {
     points.forEach(([xj, yj], j) => {
-      m.cells[i * m.n + j] = kernel(xi - xj, yi - yj) + (i === j ? SMOOTHING : 0);
+      m.cells[i * m.n + j] = kernel(xi - xj, yi - yj) + (i === j ? smoothing : 0);
     });
     [1, xi, yi].forEach((p, q) => {
       m.cells[i * m.n + k + q] = p;
