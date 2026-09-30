@@ -1,6 +1,7 @@
 # Tout tourne en local, sans service payant.
 #   pnpm dev:infra    infrastructure seule (PostgreSQL, NATS, Valkey, stockage S3)
-#   pnpm stack:up     infrastructure + moteurs + services + studio (profil « app »), http://localhost:8080
+#   pnpm stack:up     infrastructure + moteurs + services + studio + documentation (profil « app »),
+#                     studio http://localhost:8080, documentation http://localhost:8000
 #   pnpm stack:down   arrêt (les volumes sont conservés)
 name: atelier
 
@@ -79,11 +80,20 @@ services:
     ports: ['8080:8080']
     depends_on: [designs]
 
+  # Documentation MkDocs (construite dans l'image) : http://localhost:8000
+  docs:
+    profiles: [app]
+    restart: unless-stopped
+    build: { context: .., dockerfile: platform/docs.Dockerfile, secrets: [ca] }
+    image: atelier/docs:local
+    ports: ['8000:80']
+
 # Certificat d'autorité facultatif pour construire derrière un proxy d'entreprise :
 #   ATELIER_BUILD_CA=/chemin/ca.crt pnpm stack:up
 secrets:
   ca:
-    file: ${ATELIER_BUILD_CA:-/dev/null}
+    # Fichier vide par défaut (et non /dev/null, absent sous Windows) : les Dockerfiles ignorent un CA vide.
+    file: ${ATELIER_BUILD_CA:-./empty-ca.crt}
 
 volumes:
   postgres:

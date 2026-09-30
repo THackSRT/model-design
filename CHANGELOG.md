@@ -9,6 +9,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Service `docs` dans `platform/docker-compose.yml` (profil « app », `pnpm stack:up`) : documentation MkDocs
+  construite puis servie par nginx sur http://localhost:8000.
 - Documentation MkDocs de la plateforme (`pnpm docs:serve`) : architecture, directives de codage, plateforme,
   composants, décisions, tableau des travaux et ce changelog.
 - Conteneurs Docker pour chaque moteur, service et application ; pile locale complète avec
@@ -38,6 +40,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Corrigé
 
+- `pnpm stack:up` sous Windows : le certificat d'autorité facultatif vaut par défaut un fichier vide
+  (`platform/empty-ca.crt`) au lieu de `/dev/null`.
 - `pnpm check` passe sous Windows : fins de ligne LF imposées (`.gitattributes`, ruff), Prettier lancé sans
   `npx` par le générateur de contrats, UTF-8 pour import-linter, chemins `/` dans les générateurs
   (`$ref` des événements), vérification des jetons sans course entre `test` et `typecheck`.
