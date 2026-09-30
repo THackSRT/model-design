@@ -10,3 +10,11 @@ export {
 } from './logger.js';
 export { problem, type Problem, PROBLEM_CONTENT_TYPE } from './problem.js';
 export { contractValidator } from './validation.js';
+export {
+  createOutboxRelay,
+  type EventPublisher,
+  type OutboxRelay,
+  type OutboxRelayOptions,
+  type OutboxRow,
+  type OutboxStore,
+} from './outbox/index.js';

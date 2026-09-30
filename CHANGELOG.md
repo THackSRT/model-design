@@ -16,9 +16,15 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Hook git `pre-push` qui lance `pnpm check:affected` : les vérifications tournent en local (ADR 0006).
 - Orchestration Claude Code : huit sous-agents répartis entre Opus, Sonnet et Haiku, skills `/planifier`,
   `/livrer`, `/cloturer` et permissions partagées (`CLAUDE.md`, `.claude/`, ADR 0007).
+- Silhouettes 2D du mannequin en `packages/viewer3d` : composant `MannequinOutline` (face, profil, dos) ;
+  pas encore affichées.
+- Relais générique de l'outbox vers NATS JetStream (`@atelier/service-kit`) : au moins une fois,
+  déduplication par `Nats-Msg-Id` (ADR 0008).
 
 ### Modifié
 
+- Moteur mannequin remplacé par modules TypeScript testés (geometry, morph, measure, fit, render, pose) ;
+  exception au lint levée.
 - Mannequin 3D : la tête garde sa forme naturelle (crâne, joues, mâchoire, menton, oreilles) ; seuls les
   traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine ;
   le visage est aplati (la bouche et le menton ne dépassent plus le plan du front).
@@ -27,6 +33,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Nx Cloud (offre gratuite) connecté : le cache des tâches est partagé entre les postes.
 - L'installation se lance par `pnpm run setup` (`pnpm setup` seul est une commande de pnpm) et installe aussi
   le groupe Python `docs`.
+- Licences permises pour les dépendances : l'Unlicense s'ajoute (`tweetnacl`, requise par le client NATS ;
+  ADR 0008).
 
 ### Corrigé
 

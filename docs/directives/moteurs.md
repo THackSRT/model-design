@@ -26,7 +26,7 @@ engines/patterning/
 - **GPU isolé** : le code GPU (drapé, rendu) passe par une interface avec une version CPU plus lente, utilisée
   par les tests et les postes sans GPU.
 - **Mannequin** : mêmes règles en TypeScript ; le cœur tourne à l'identique dans le navigateur et dans Node.
-  Il est repris du prototype et doit être découpé pendant la phase 1 ([ADR 0004](../adr/0004-reprise-moteur-mannequin.md)).
+  Il est repris du prototype, découpé en modules testés ([ADR 0004](../adr/0004-reprise-moteur-mannequin.md)).
 - **IA** _(à venir)_ : consignes versionnées dans `prompts/`, réponses validées par le schéma du contrat, jeu
   d'évaluation à chaque changement ; l'IA propose, un service enregistre après accord humain.
 

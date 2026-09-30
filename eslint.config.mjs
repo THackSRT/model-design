@@ -24,8 +24,6 @@ export default tseslint.config(
       '**/node_modules/**',
       '.venv/**',
       '.nx/**',
-      // Reprise du prototype, exception documentée dans docs/adr/0004 (à découper en phase 1).
-      'engines/mannequin/src/core/makehuman.js',
     ],
   },
   js.configs.recommended,

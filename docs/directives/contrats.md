@@ -33,7 +33,7 @@ routes d'`openapi-typescript` rendent mal les schémas externes (ADR 0002).
 - Enveloppe CloudEvents 1.0 (`schemas/events/cloud-event.schema.json`), données décrites en JSON Schema et
   référencées dans AsyncAPI 3.
 - Publication par la table outbox dans la même transaction que le changement d'état (en place dans `designs`) ;
-  relais vers NATS JetStream _(à venir, phase 1)_. Livraison « au moins une fois », donc consommateurs idempotents.
+  relais vers NATS JetStream dans `@atelier/service-kit` ([ADR 0008](../adr/0008-client-nats.md)). Livraison « au moins une fois », donc consommateurs idempotents.
 - Un événement qui échoue plusieurs fois part dans une file des rejets, visible dans les tableaux de bord ;
   il n'est jamais ignoré en silence.
 - Jamais de fichier lourd ni de donnée sensible dans un événement : identifiants et faits seulement.

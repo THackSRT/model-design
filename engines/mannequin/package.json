@@ -17,7 +17,7 @@
     "assets"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node -e \"const fs=require('node:fs');fs.mkdirSync('dist/core',{recursive:true});for(const f of ['makehuman.js','makehuman.d.ts'])fs.copyFileSync('src/core/'+f,'dist/core/'+f)\"",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "vitest run"
