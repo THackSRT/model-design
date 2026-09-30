@@ -1,0 +1,1 @@
+--8<-- "engines/manufacturing/AGENTS.md"

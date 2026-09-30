@@ -1,7 +1,8 @@
-# Glossaire (langage commun)
+# 2. Langage commun
 
-Un terme métier = un seul nom dans le code, du contrat à la base et à l'écran. Un nouveau terme s'ajoute ici
-dans la même demande de fusion que le code qui l'introduit.
+Le code, les contrats, la base et les journaux sont en anglais ; l'interface est en français (puis d'autres
+langues) par les catalogues de traduction. Chaque terme métier a un seul nom dans le code, fixé ici ; un nouveau
+terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'introduit.
 
 | Terme métier                                                             | Nom dans le code                                | Service propriétaire           |
 | ------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------ |
@@ -24,7 +25,16 @@ dans la même demande de fusion que le code qui l'introduit.
 | Envoi                                                                    | `Shipment`                                      | delivery                       |
 | Publication, annonce                                                     | `Post`, `Listing`                               | community                      |
 
-**Unités et valeurs.** Longueurs en millimètres, suffixe `Mm` (la conversion vers les centimètres de
-GarmentCode ou de MakeHuman se fait dans l'adaptateur du moteur) ; montants entiers dans la plus petite unité
-de la devise avec leur code ISO 4217 ; dates ISO 8601 en UTC ; identifiants UUID v7 typés par entité ;
-événements `<entité>.<verbe au passé>`.
+## Unités et valeurs
+
+- **Longueurs** : millimètres, suffixe `Mm` (`chestGirthMm`, `fabricWidthMm`) ; entiers pour les mesures
+  saisies, décimaux permis pour la géométrie. La conversion vers les centimètres de GarmentCode ou de MakeHuman
+  se fait dans l'adaptateur du moteur, nulle part ailleurs (`engines/mannequin/src/index.ts`,
+  `engines/patterning/src/patterning/spec/`).
+- **Montants** : entier dans la plus petite unité de la devise + code ISO 4217
+  (`{ amountMinor: 15000, currency: "XOF" }`, type `Money` de `@atelier/kernel`) ; jamais de nombre à virgule.
+- **Dates** : ISO 8601 en UTC dans le code, les contrats et la base ; conversion au fuseau de l'utilisateur à
+  l'affichage seulement.
+- **Identifiants** : UUID v7 générés par le service propriétaire, typés par entité (`Id<'design'>`) pour qu'on ne
+  puisse pas les confondre.
+- **Événements** : `<entité>.<verbe au passé>` en minuscules (`design.versioned`, `stock.reserved`).

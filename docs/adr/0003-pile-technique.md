@@ -9,7 +9,8 @@ septembre 2026.
   Python 3.12 pour les moteurs de calcul (FastAPI, Pydantic).
 - PostgreSQL (Drizzle ORM, migrations SQL versionnées, sécurité au niveau des lignes), outbox pour les
   événements, NATS JetStream pour le bus et les files de tâches, Valkey pour le cache (et non Redis, dont
-  les versions 8 sont sous RSAL, SSPL ou AGPL), stockage compatible S3.
+  les versions 8 sont sous RSAL, SSPL ou AGPL), stockage compatible S3 (SeaweedFS en local : MinIO ne publie plus
+  d'images depuis octobre 2025).
 - Kubernetes managé et Istio en mode ambient (Linkerd écarté : versions stables payantes au-delà de 50 employés).
 - Outillage : pnpm + Nx, uv, ESLint + typescript-eslint, Prettier, Ruff, mypy strict, import-linter,
   Vitest, pytest + Hypothesis, Testing Library, Style Dictionary (jetons), PGlite pour les tests PostgreSQL.

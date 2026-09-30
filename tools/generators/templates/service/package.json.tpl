@@ -4,6 +4,10 @@
   "private": true,
   "description": "Service __name__ (à décrire en une phrase).",
   "type": "module",
+  "files": [
+    "dist",
+    "migrations"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -25,5 +29,10 @@
   "devDependencies": {
     "@types/node": "^22"
   },
-  "nx": { "tags": ["type:service", "scope:__name__"] }
+  "nx": {
+    "tags": [
+      "type:service",
+      "scope:__name__"
+    ]
+  }
 }

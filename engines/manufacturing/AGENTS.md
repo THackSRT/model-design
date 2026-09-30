@@ -1,7 +1,7 @@
 # Moteur manufacturing
 
 Rôle : rendre la spécification utilisable en atelier — valeurs de couture, crans, gradation, plan de coupe,
-exports SVG 1:1, PDF A4 tuilé, DXF-AAMA (phase 1, voir docs/phase-1.md). Entrées : `GarmentSpec`, tailles,
+exports SVG 1:1, PDF A4 tuilé, DXF-AAMA (phase 1, voir le tableau des travaux, docs/suivi/travaux.md). Entrées : `GarmentSpec`, tailles,
 laize. Temps visé : 1 à 30 s (imbrication en tâche).
 
 - `core/` : calcul pur et déterministe (ni E/S, ni horloge, ni hasard) ; `spec/` : conversions avec les

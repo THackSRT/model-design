@@ -21,6 +21,9 @@ dev = [
   "httpx2>=2.13",
 ]
 
+# MkDocs 2.0 casse thèmes et plugins : on reste sur la branche 1.x tant que Material ne la supporte pas.
+docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.6,<10"]
+
 [tool.ruff]
 line-length = 100
 # Paquets internes détectés automatiquement : tout moteur ajouté par `pnpm gen engine` est reconnu.

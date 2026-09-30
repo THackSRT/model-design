@@ -4,7 +4,8 @@ Plateforme de confection sur mesure : du modèle au vêtement livré, pour clien
 vendeurs de tissus et prestataires. Microservices dans un seul dépôt (monorepo), déployés séparément.
 
 Lisez ce fichier, puis le `AGENTS.md` du projet que vous modifiez. Les règles complètes sont dans les
-**Directives de codage** ; l'architecture dans le **document d'architecture** (liens : `docs/architecture.md`).
+**Directives de codage** ; l'architecture dans le **document d'architecture** ; les deux sont dans la documentation du dépôt
+(`docs/`, site MkDocs : `pnpm docs:serve`).
 
 ## Carte du dépôt
 
@@ -30,7 +31,9 @@ pnpm check:affected        # idem, seulement les projets touchés depuis main
 pnpm contracts:gen         # régénère les types TS et les modèles Python après une modification de contracts/
 pnpm gen service <nom>     # nouveau microservice (aussi : engine <nom>, event <entité>.<verbe>, screen <app> <écran>)
 pnpm nx run <projet>:test  # un seul projet (noms : `pnpm nx show projects`)
-pnpm dev:infra             # PostgreSQL, NATS, Valkey, MinIO en local (Docker)
+pnpm dev:infra             # infrastructure locale dans Docker (PostgreSQL, NATS, Valkey, stockage S3)
+pnpm stack:up              # toute la plateforme dans Docker, studio sur http://localhost:8080
+pnpm docs:serve            # documentation MkDocs en local (http://127.0.0.1:8000)
 ```
 
 Lancer la tranche phase 1 en local (trois terminaux) :
@@ -50,7 +53,7 @@ pnpm nx run @atelier/studio:dev                                     # studio, ht
    (`**/generated/**`) ne se modifie jamais à la main.
 4. **L'écran n'a pas de logique métier** : `packages/features` (modèle de vue) → `screen.tsx` → `view.tsx`.
    Aucune couleur ni taille en dur : jetons de `@atelier/design-tokens`.
-5. **Un concept, un nom** : voir `docs/glossary.md`. Code en anglais, interface en français (clés de traduction).
+5. **Un concept, un nom** : voir `docs/directives/langage-commun.md`. Code en anglais, interface en français (clés de traduction).
 6. **Unités explicites** : longueurs en mm (suffixe `Mm`), montants en plus petite unité + devise, dates UTC.
 7. **Petit et lisible** : 300 lignes par fichier, 40 par fonction, 4 paramètres, complexité 10 (vérifié par le lint).
 8. **Tout comportement est testé** ; un bogue corrigé laisse un test qui l'aurait vu.
@@ -77,8 +80,10 @@ pnpm nx run @atelier/studio:dev                                     # studio, ht
 
 ## Terminé, c'est
 
-- [ ] `pnpm check` passe.
+- [ ] `pnpm check` passe (le hook `pre-push` lance `pnpm check:affected` ; tout tourne en local, ADR 0006).
 - [ ] Contrats et code généré à jour.
 - [ ] Un test par comportement nouveau ou corrigé.
 - [ ] Textes de l'interface en clés de traduction.
-- [ ] `AGENTS.md` du projet, glossaire et ADR à jour si besoin.
+- [ ] `AGENTS.md` du projet, langage commun, ADR et pages de `docs/` à jour si besoin.
+- [ ] Ligne ajoutée au `CHANGELOG.md` (section « Non publié ») et statut mis à jour dans
+      `docs/suivi/travaux.md` pour un changement visible.

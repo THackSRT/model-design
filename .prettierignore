@@ -11,3 +11,4 @@ engines/mannequin/src/core/makehuman.js
 engines/*/tests/golden/
 # Gabarits des générateurs : remplis par tools/generators, pas du code valide tel quel.
 tools/generators/templates/
+.import_linter_cache/

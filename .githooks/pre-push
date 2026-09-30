@@ -1,0 +1,5 @@
+#!/bin/sh
+# Vérifications locales avant chaque envoi (ADR 0006) : gratuit, et plus rapide que l'intégration continue.
+# Contourner exceptionnellement : git push --no-verify (à signaler dans la demande de fusion).
+echo "pre-push : pnpm check:affected"
+exec pnpm check:affected

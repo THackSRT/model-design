@@ -1,0 +1,49 @@
+# Changelog
+
+Les changements visibles de la plateforme, du plus récent au plus ancien. Format inspiré de
+[Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; les versions suivent les phases du projet
+(`0.<phase>.<livraison>`). Chaque demande de fusion qui change un comportement ajoute une ligne sous
+**Non publié** ; la section est datée et numérotée à chaque livraison.
+
+## [Non publié]
+
+### Ajouté
+
+- Documentation MkDocs de la plateforme (`pnpm docs:serve`) : architecture, directives de codage, plateforme,
+  composants, décisions, tableau des travaux et ce changelog.
+- Conteneurs Docker pour chaque moteur, service et application ; pile locale complète avec
+  `pnpm stack:up` (studio et passerelle locale sur http://localhost:8080).
+- Hook git `pre-push` qui lance `pnpm check:affected` : les vérifications tournent en local (ADR 0006).
+
+### Modifié
+
+- Stockage objet local : SeaweedFS remplace MinIO, qui ne publie plus d'images depuis octobre 2025.
+- L'intégration continue GitHub devient facultative (lancement manuel).
+- Nx Cloud (offre gratuite) prêt à partager le cache des tâches ; connexion à finaliser avec `pnpm nx connect`.
+
+## [0.1.0] — 2026-09-30 — Architecture initiale
+
+### Ajouté
+
+- Monorepo pnpm + Nx et uv ; frontières d'architecture vérifiées (étiquettes Nx, règles par couche, import-linter).
+- Contrats d'abord : JSON Schema, OpenAPI, AsyncAPI ; types TypeScript et modèles Pydantic générés
+  (`pnpm contracts:gen`), fraîcheur vérifiée.
+- Service `designs` (service de référence) : modèles, versions, patrons ; PostgreSQL avec migrations, sécurité
+  par lignes et outbox.
+- Moteur `patterning` (moteur de référence) : jupe droite provisoire, tests unitaires, de propriétés et golden.
+- Moteur `mannequin` : mannequin MakeHuman ajusté aux mesures, repris du prototype.
+- Squelettes des moteurs `manufacturing` et `drape`.
+- Studio web : saisie des mesures, patron 2D, mannequin 3D ; bibliothèques de jetons, composants, modèles de vue
+  et visionneuse 3D.
+- Générateurs `pnpm gen service|engine|event|screen`, `AGENTS.md`, ADR 0001 à 0005.
+
+### Modifié
+
+- Le prototype statique d'origine est déplacé dans `prototype/` et figé.
+
+## [0.0.1] — 2026-09-30 — Prototype
+
+### Ajouté
+
+- Prototype statique : croquis du modèle MOD-001, patrons 1:1, plan de coupe, fiche technique, avatar
+  paramétrique en 4 vues, recommandation de taille, mannequin réaliste MakeHuman (dossier `prototype/`).

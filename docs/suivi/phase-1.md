@@ -14,11 +14,15 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
   (Hypothesis) et de référence (golden), frontières vérifiées par import-linter.
 - **Squelettes générés** `engines/manufacturing` et `engines/drape`.
 - **Outillage** : contrats et code généré (`pnpm contracts:gen|check`), générateurs (`pnpm gen`), règles
-  d'architecture dans le lint, `pnpm check` (16 projets), CI GitHub Actions, infrastructure locale.
+  d'architecture dans le lint, `pnpm check` (16 projets et documentation), hook `pre-push`, intégration continue manuelle.
+- **Conteneurs** : une image par moteur, service et application ; toute la pile tourne avec `pnpm stack:up`.
+- **Documentation** : ce site, le `CHANGELOG.md` et le [tableau des travaux](travaux.md).
 
 Limite assumée : le tracé de la jupe droite est volontairement simple ; il valide la chaîne, pas la coupe.
 
-## Travaux de la phase 1, dans l'ordre
+## Travaux de la phase 1
+
+Le détail, avec le statut de chaque travail, est dans le [tableau des travaux](travaux.md). En résumé, dans l'ordre :
 
 Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
 
