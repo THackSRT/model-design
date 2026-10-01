@@ -7,12 +7,13 @@ from patterning.core.body import RawMeasurements
 REFERENCE_PARAMS: dict[str, dict[str, float]] = {
     "straight-skirt": {"length_mm": 600},
     "circle-skirt": {"length_mm": 650, "circle_fraction": 1, "waistband_width_mm": 40},
+    "trousers": {"length_mm": 1000, "hem_girth_mm": 440},
 }
 
 
 def reference_measurements() -> RawMeasurements:
     """Mesures synthétiques des références golden : la taille est assez fine pour des pinces."""
-    return replace(minimal_measurements(), waist_girth_mm=640)
+    return replace(minimal_measurements(), waist_girth_mm=640, crotch_height_mm=770)
 
 
 def reference_request() -> dict[str, object]:
@@ -42,6 +43,7 @@ def full_measurements() -> RawMeasurements:
         bust_girth_mm=900,
         under_bust_girth_mm=750,
         thigh_girth_mm=560,
+        knee_girth_mm=380,
         wrist_girth_mm=160,
         cervicale_height_mm=1400,
         waist_height_mm=1020,

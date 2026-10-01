@@ -2,7 +2,7 @@
   {
     "file": "straight-skirt-reference.json",
     "garmentType": "straight-skirt",
-    "engineVersion": "0.2.1",
+    "engineVersion": "0.3.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Jupe droite à pinces, mesures synthétiques de tests/builders.py (taille 640, hanches 960, longueur 600). À valider sur toile (1.25)."
@@ -10,9 +10,17 @@
   {
     "file": "circle-skirt-reference.json",
     "garmentType": "circle-skirt",
-    "engineVersion": "0.2.1",
+    "engineVersion": "0.3.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Jupe cercle entier avec ceinture de 40 mm, mesures synthétiques de tests/builders.py (taille 640, longueur 650). À valider sur toile (1.25)."
+  },
+  {
+    "file": "trousers-reference.json",
+    "garmentType": "trousers",
+    "engineVersion": "0.3.0",
+    "status": "candidate",
+    "validatedOn": null,
+    "note": "Pantalon à pinces, mesures synthétiques de tests/builders.py (taille 640, hanches 960, entrejambe 770, longueur 1000, ourlet 440). À valider sur toile (1.25)."
   }
 ]

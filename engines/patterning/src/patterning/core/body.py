@@ -4,6 +4,11 @@ Les rapports d'estimation viennent des corps moyens `mean_female` / `mean_male` 
 (`assets/bodies`, commit d449629, licence MIT ; voir ADR 0010). Ce sont des hypothèses à valider
 par le modéliste. Une mesure estimée est listée dans `estimated`, sous le nom de son champ de
 `RawMeasurements`.
+
+Tour de cuisse et tour de genou absents : rapport moyen au tour de hanches par sexe, tiré d'ANSUR II
+(US Army 2012, domaine public ; moyennes `mean` en cm de `prototype/js/anthro-model.js`).
+Femmes : hanches 102,1, cuisse 61,6, genou 38,1 -> cuisse/hanches 0,603, genou/hanches 0,373.
+Hommes : hanches 102,0, cuisse 62,5, genou 38,9 -> cuisse/hanches 0,613, genou/hanches 0,381.
 """
 
 from collections.abc import Sequence
@@ -24,6 +29,7 @@ class RawMeasurements:
     bust_girth_mm: float | None = None
     under_bust_girth_mm: float | None = None
     thigh_girth_mm: float | None = None
+    knee_girth_mm: float | None = None
     wrist_girth_mm: float | None = None
     cervicale_height_mm: float | None = None
     waist_height_mm: float | None = None
@@ -58,15 +64,17 @@ class Ratios:
     neck_width: float
     shoulder_incl_deg: float
     hip_inclination_deg: float
+    thigh_of_hip: float
+    knee_of_hip: float
 
 
 FEMALE_RATIOS = Ratios(
     0.154, 0.215, 0.136, 0.209, 0.31, 0.076, 0.154, 0.166, 0.829, 0.47, 0.47, 0.535, 0.17, 0.107,
-    21.0, 12.7,
+    21.0, 12.7, 0.603, 0.373,
 )  # fmt: skip
 MALE_RATIOS = Ratios(
     0.152, 0.214, 0.137, 0.215, 0.318, 0.073, 0.145, 0.173, 0.905, 0.46, 0.49, 0.524, 0.17, 0.114,
-    22.5, 6.7,
+    22.5, 6.7, 0.613, 0.381,
 )  # fmt: skip
 RATIOS = {"female": FEMALE_RATIOS, "male": MALE_RATIOS}
 
@@ -94,7 +102,8 @@ class Body:
     neck_width_mm: float
     shoulder_incl_deg: float
     hip_inclination_deg: float
-    thigh_girth_mm: float | None = None
+    thigh_girth_mm: float
+    knee_girth_mm: float
     wrist_girth_mm: float | None = None
     crotch_hip_diff_mm: float | None = None
     front_waist_length_mm: float | None = None
@@ -191,7 +200,8 @@ def complete_body(
         neck_width_mm=r.neck_width * stature,
         shoulder_incl_deg=r.shoulder_incl_deg,
         hip_inclination_deg=r.hip_inclination_deg,
-        thigh_girth_mm=None if raw.thigh_girth_mm is None else float(raw.thigh_girth_mm),
+        thigh_girth_mm=fill.value("thigh_girth_mm", raw.thigh_girth_mm, r.thigh_of_hip * hip),
+        knee_girth_mm=fill.value("knee_girth_mm", raw.knee_girth_mm, r.knee_of_hip * hip),
         wrist_girth_mm=None if raw.wrist_girth_mm is None else float(raw.wrist_girth_mm),
         crotch_hip_diff_mm=None if crotch is None else hip_h - crotch,
         front_waist_length_mm=(

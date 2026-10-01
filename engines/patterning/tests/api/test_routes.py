@@ -15,7 +15,7 @@ def test_drafts_a_straight_skirt_that_follows_the_contract() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["unit"] == "mm"
-    assert body["engine"] == {"name": "patterning", "version": "0.2.1"}
+    assert body["engine"] == {"name": "patterning", "version": "0.3.0"}
     assert [p["id"] for p in body["panels"]] == ["front", "back-right", "back-left"]
     assert all(p["notches"] for p in body["panels"])
 
@@ -68,10 +68,38 @@ def test_rejects_measurements_outside_plausible_bounds() -> None:
 
 
 def test_garment_types_without_a_drafting_yet_are_problem_responses() -> None:
-    for garment in (
-        {"type": "trousers", "params": {"lengthMm": 1000}},
-        {"type": "bodice", "params": {}},
-    ):
+    for garment in ({"type": "bodice", "params": {}},):
         response = client.post("/v1/patterns", json=_request(garment))
         assert response.status_code == 422
         assert response.json()["type"] == "/problems/garment-type-not-supported"
+
+
+def _trousers_request(**measurements: object) -> dict[str, object]:
+    base = reference_request()
+    garment = {"type": "trousers", "params": {"lengthMm": 1000, "hemGirthMm": 440}}
+    return {
+        "measurements": {**base["measurements"], **measurements},  # type: ignore[dict-item]
+        "garment": garment,
+    }
+
+
+def test_drafts_trousers_with_four_panels_and_estimated_thigh() -> None:
+    response = client.post("/v1/patterns", json=_trousers_request(crotchHeightMm=770))
+    assert response.status_code == 200
+    body = response.json()
+    assert [p["id"] for p in body["panels"]] == [
+        "front-left",
+        "front-right",
+        "back-left",
+        "back-right",
+    ]
+    assert "thighGirthMm" in body["estimatedMeasurements"]
+    assert "crotchHeightMm" not in body["estimatedMeasurements"]
+
+
+def test_trousers_without_crotch_height_is_a_problem_response() -> None:
+    response = client.post("/v1/patterns", json=_trousers_request())
+    assert response.status_code == 422
+    problem = response.json()
+    assert problem["type"] == "/problems/measurement-required"
+    assert "crotchHeightMm" in problem["detail"]

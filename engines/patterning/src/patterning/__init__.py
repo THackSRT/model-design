@@ -1,4 +1,4 @@
 """Moteur de patronage : mesures + paramètres -> spécification de patron."""
 
 ENGINE_NAME = "patterning"
-ENGINE_VERSION = "0.2.1"
+ENGINE_VERSION = "0.3.0"

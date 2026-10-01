@@ -8,6 +8,7 @@ from patterning.core.checks import check_pattern
 from patterning.core.errors import DraftingError
 from patterning.core.garments.circle_skirt import draft_circle_skirt
 from patterning.core.garments.straight_skirt import draft_straight_skirt
+from patterning.core.garments.trousers import draft_trousers
 from patterning.core.model import Pattern
 
 type Params = Mapping[str, float]
@@ -19,6 +20,8 @@ class GarmentDrafter:
     draft: Drafter
     uses: tuple[str, ...]  # champs de RawMeasurements que le tracé exploite (si estimés : listés)
     checks: tuple[str, ...]  # champs de Body dont la cohérence est contrôlée
+    # (paramètre, mesure) : la mesure sert au tracé quand le paramètre est absent
+    uses_without_param: tuple[tuple[str, str], ...] = ()
 
 
 SKIRT_CHECKS = (
@@ -39,6 +42,12 @@ DRAFTERS: dict[str, GarmentDrafter] = {
         checks=SKIRT_CHECKS,
     ),
     "circle-skirt": GarmentDrafter(draft_circle_skirt, uses=(), checks=("waist_girth_mm",)),
+    "trousers": GarmentDrafter(
+        draft_trousers,
+        uses=("waist_height_mm", "hip_height_mm", "bust_point_width_mm", "thigh_girth_mm"),
+        checks=(*SKIRT_CHECKS, "crotch_hip_diff_mm", "thigh_girth_mm", "knee_girth_mm"),
+        uses_without_param=(("hem_girth_mm", "knee_girth_mm"),),
+    ),
 }
 
 
@@ -50,9 +59,10 @@ def draft(garment_type: str, measurements: RawMeasurements, params: Params) -> P
             f"Le type de vêtement « {garment_type} » n'est pas encore tracé par le moteur.",
         )
     body, estimated = complete_body(measurements, drafter.checks)
+    uses = drafter.uses + tuple(m for name, m in drafter.uses_without_param if name not in params)
     pattern = replace(
         drafter.draft(body, params),
-        estimated_measurements=used_estimates(estimated, drafter.uses),
+        estimated_measurements=used_estimates(estimated, uses),
     )
     check_pattern(pattern)
     return pattern

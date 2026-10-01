@@ -11,11 +11,10 @@ from patterning.spec.request import camel_case, snake_case, to_raw_measurements
 REQUIRED = {"sex", "statureMm", "chestGirthMm", "waistGirthMm", "hipGirthMm"}
 OPTIONAL = sorted(name for name in MeasurementSet.model_fields if name not in REQUIRED)
 CORE_FIELDS = {f.name for f in fields(RawMeasurements)}
-# Mesures du contrat qu'aucun tracé n'exploite encore (ni pantalon ni manche) : ignorées exprès.
+# Mesures du contrat qu'aucun tracé n'exploite encore (ni manche ni corsage) : ignorées exprès.
 UNUSED_BY_CORE = {
     "neckGirthMm",
     "upperArmGirthMm",
-    "kneeGirthMm",
     "calfGirthMm",
     "ankleGirthMm",
 }
