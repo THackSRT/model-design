@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pytest
 
+from atelier_contracts.generated.garment_spec_schema import GarmentSpec
 from manufacturing.core.allowances import cut_outline
 from manufacturing.core.errors import ManufacturingError
 from manufacturing.core.finishing import compute_cut_pieces
@@ -18,7 +19,9 @@ from manufacturing.core.model import (
     Seam,
 )
 from manufacturing.core.notches import place_notch, place_notches
+from manufacturing.spec.cut_patterns import to_pattern
 from tests.builders import a_pattern, polygon_panel, rectangle, skirt_pattern
+from tests.darted import darted_skirt_spec
 
 POLICY = AllowancePolicy(default_mm=10)
 
@@ -141,3 +144,20 @@ def test_place_notches_orders_marks_by_edge_then_distance() -> None:
         a_pattern(panel), panel, outline, FinishingSettings(requests=requests, auto_notches=False)
     )
     assert [(m.edge_id, m.distance_mm) for m in marks] == [("e0", 5), ("e1", 10), ("e1", 90)]
+
+
+def test_a_piece_and_its_mirror_copy_get_the_same_notches() -> None:
+    spec = darted_skirt_spec()
+    pattern = to_pattern(GarmentSpec.model_validate(spec))
+    pieces = {p.outline.panel_id: p for p in compute_cut_pieces(pattern)}
+    right = sorted(n.position for n in pieces["back-right"].notches)
+    left = sorted((267.5 - x, y) for x, y in (n.position for n in pieces["back-left"].notches))
+    assert len(right) == len(left)
+    for (rx, ry), (lx, ly) in zip(right, sorted(left), strict=True):
+        assert (rx, ry) == pytest.approx((lx, ly), abs=0.05)
+
+
+def test_request_at_the_end_of_an_edge_replaces_the_auto_notch_starting_the_next() -> None:
+    request = NotchRequest("front", NotchPlacement("side-lower", 402))
+    front = compute_cut_pieces(skirt_pattern(), requests=(request,))[0]
+    assert [(n.edge_id, n.source) for n in front.notches] == [("side-lower", NotchSource.REQUESTED)]

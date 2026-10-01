@@ -9,7 +9,7 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
-- Moteur `manufacturing` (port 3202, ENGINE_VERSION 0.3.0) : pièces de coupe avec valeurs de couture par bord,
+- Moteur `manufacturing` (port 3202, ENGINE_VERSION 0.3.1) : pièces de coupe avec valeurs de couture par bord,
   crans demandés ou automatiques, droit fil et pliure ; gradation par recalcul ; plan de coupe simple et
   déterministe ; exports SVG 1:1 (1.18a), PDF A4 tuilé et DXF-AAMA à venir (1.18b/c) ; routes RFC 9457 typées.
 - Patronage : quatre types de vêtements (`straight-skirt`, `circle-skirt`, `trousers`, `bodice`) et douze mesures

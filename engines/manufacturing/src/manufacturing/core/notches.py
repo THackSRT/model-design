@@ -23,6 +23,7 @@ NO_ALLOWANCE_DEPTH_MM = 3.0
 NOTCH_SPACING_MM = 4.0
 JUNCTION_MAX_TURN_DEG = 30.0
 DISTANCE_TOLERANCE_MM = 0.01
+POSITION_TOLERANCE_MM = 0.011  # positions arrondies à 0,01 mm
 
 
 def polyline_length(points: tuple[Point, ...]) -> float:
@@ -135,18 +136,14 @@ def dart_placements(pattern: Pattern, panel: Panel, outline: CutOutline) -> list
     return placements
 
 
-def _key(placement: NotchPlacement) -> tuple[str, int]:
-    return (placement.edge_id, round(placement.distance_mm / DISTANCE_TOLERANCE_MM))
-
-
 def place_notches(
     pattern: Pattern,
     panel: Panel,
     outline: CutOutline,
     settings: FinishingSettings,
 ) -> tuple[NotchMark, ...]:
-    """Crans d'une pièce. Priorité à un même endroit : demande > spécification > automatique."""
-    chosen: dict[tuple[str, int], tuple[NotchPlacement, NotchSource]] = {}
+    """Crans d'une pièce. Priorité au même point de la couture (fin d'un bord = début du suivant
+    compris) : demande > spécification > automatique."""
     candidates = [
         (r.placement, NotchSource.REQUESTED) for r in settings.requests if r.panel_id == panel.id
     ]
@@ -155,8 +152,10 @@ def place_notches(
         autos = auto_placements(pattern, panel, outline)
         autos += dart_placements(pattern, panel, outline)
         candidates += [(p, NotchSource.AUTO) for p in autos]
-    for placement, source in candidates:
-        chosen.setdefault(_key(placement), (placement, source))
-    marks = [place_notch(outline, p, s) for p, s in chosen.values()]
+    marks: list[NotchMark] = []
+    for placement, source in candidates:  # par priorité décroissante
+        mark = place_notch(outline, placement, source)
+        if all(distance(mark.position, kept.position) > POSITION_TOLERANCE_MM for kept in marks):
+            marks.append(mark)
     order = {e.edge_id: i for i, e in enumerate(outline.seam_edges)}
     return tuple(sorted(marks, key=lambda m: (order[m.edge_id], m.distance_mm)))
