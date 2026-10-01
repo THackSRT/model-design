@@ -16,7 +16,10 @@ vi.mock('../src/core/makehuman.js', () => ({
       },
     }),
     baseTriangles: () => new Uint16Array(),
-    pose: (pos: Float32Array) => ({ pos }),
+    pose: (pos: Float32Array) => {
+      const arm = { shoulder: [0, 0, 0], wrist: [0, -30, 0] };
+      return { pos, joints: { L: arm, R: arm } };
+    },
     renderGeometry: () => ({}),
   }),
 }));
