@@ -25,6 +25,46 @@ export const jsonSchemas = {
       garment: { $ref: '../garment-request.schema.json' },
     },
   },
+  cutPatternOptions: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/cut-pattern-options.schema.json',
+    title: 'CutPatternOptions',
+    description:
+      "Comment finir les pièces d'une version de modèle. Corps vide ({}) : valeurs par défaut du moteur de fabrication (10 mm partout, 30 mm aux ourlets, crans aux raccords). Longueurs en millimètres.",
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      finishing: { $ref: '../manufacturing/finishing-options.schema.json' },
+      sizeLabel: {
+        $ref: '../manufacturing/size-label.schema.json',
+        description: 'Taille ou repère reporté sur les pièces. Jamais de nom de client.',
+      },
+    },
+  },
+  designExportRequest: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/design-export-request.schema.json',
+    title: 'DesignExportRequest',
+    description:
+      "Demande d'export des pièces de coupe d'une version de modèle, à l'échelle 1:1. La spécification de patron est celle de la version : le client ne l'envoie pas. La réponse est le fichier lui-même.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['format'],
+    properties: {
+      format: { $ref: '../manufacturing/export-request.schema.json#/$defs/ExportFormat' },
+      finishing: { $ref: '../manufacturing/finishing-options.schema.json' },
+      sizeLabel: {
+        $ref: '../manufacturing/size-label.schema.json',
+        description:
+          'Taille écrite sur chaque pièce et dans le nom du fichier. Jamais de nom de client.',
+      },
+      reference: {
+        $ref: '../manufacturing/size-label.schema.json',
+        description:
+          'Référence du modèle écrite sur chaque pièce (ex. « MOD-002 »). Jamais de nom de client.',
+      },
+    },
+  },
   designVersion: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     $id: 'https://atelier.example/schemas/designs/design-version.schema.json',

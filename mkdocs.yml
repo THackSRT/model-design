@@ -132,6 +132,7 @@ nav:
       - 0009 Moteur de fabrication: adr/0009-moteur-de-fabrication.md
       - 0010 Intégration de GarmentCode: adr/0010-integration-garmentcode.md
       - 0011 Messages ICU: adr/0011-messages-icu.md
+      - 0012 Fabrication via designs: adr/0012-fabrication-via-designs.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md

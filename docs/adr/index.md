@@ -18,3 +18,4 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0009](0009-moteur-de-fabrication.md)         | Moteur de fabrication : géométrie et exports écrits par le moteur          | Acceptée             |
 | [0010](0010-integration-garmentcode.md)       | Intégration de GarmentCode : tracés réécrits en Python pur                 | Acceptée             |
 | [0011](0011-messages-icu.md)                  | Messages ICU : `intl-messageformat` (FormatJS)                             | Acceptée             |
+| [0012](0012-fabrication-via-designs.md)       | Pièces de coupe et exports servis par `designs`                            | Acceptée             |

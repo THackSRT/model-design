@@ -1,6 +1,8 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
 export type { CreateDesignRequest } from './create-design-request.js';
 export type { CreateDesignVersionRequest } from './create-design-version-request.js';
+export type { CutPatternOptions } from './cut-pattern-options.js';
+export type { DesignExportRequest } from './design-export-request.js';
 export type { DesignVersion } from './design-version.js';
 export type { Design } from './design.js';
 export type * from './cloud-event.js';

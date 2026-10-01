@@ -94,6 +94,49 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/designs/{designId}/versions/{versionNumber}/cut-patterns': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculer les pièces de coupe d'une version
+     * @description Envoie la spécification de patron de la version au moteur de fabrication (ADR 0012) et rend ses pièces de coupe. Rien n'est enregistré : mêmes entrées, même version du moteur, même résultat.
+     */
+    post: operations['createVersionCutPattern'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/designs/{designId}/versions/{versionNumber}/exports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Exporter les pièces de coupe d'une version (SVG 1:1, PDF A4 tuilé, DXF-AAMA) */
+    post: operations['createVersionExport'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -113,6 +156,9 @@ export interface components {
     Design: components['schemas']['design.schema'];
     CreateDesignVersionRequest: components['schemas']['create-design-version-request.schema'];
     DesignVersion: components['schemas']['design-version.schema'];
+    CutPatternOptions: components['schemas']['cut-pattern-options.schema'];
+    DesignExportRequest: components['schemas']['design-export-request.schema'];
+    CutPattern: components['schemas']['cut-pattern.schema'];
     /**
      * GarmentType
      * @description Type de vêtement connu de la plateforme (ADR 0010). Même valeur que GarmentRequest.type. Un type dont le tracé n'est pas encore livré est refusé par le moteur de patronage (problème garment-type-not-supported).
@@ -516,10 +562,245 @@ export interface components {
       fingerprint: string;
       spec: components['schemas']['garment-spec.schema'];
     };
+    /** @description Valeur de couture par rôle de bord (voir Edge.role de GarmentSpec). Un bord sans rôle est traité comme une couture (seam). */
+    RoleAllowances: {
+      seam?: number;
+      hem?: number;
+      waistline?: number;
+      opening?: number;
+    };
+    EdgeAllowance: {
+      panelId: string;
+      edgeId: string;
+      allowanceMm: number;
+    };
+    /** @description Priorité : byEdge, puis byRole, puis defaultMm. Un bord de pliure (role fold) n'a jamais de valeur de couture. Si seamAllowances est absent, le moteur applique defaultMm = 10 et byRole.hem = 30. */
+    SeamAllowances: {
+      /** @default 10 */
+      defaultMm: number;
+      byRole?: components['schemas']['RoleAllowances'];
+      byEdge?: components['schemas']['EdgeAllowance'][];
+    };
+    /** @description Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords. */
+    NotchRequest: {
+      panelId: string;
+    } & components['schemas']['NotchPlacement'];
+    /**
+     * FinishingOptions
+     * @description Comment finir les pièces d'un patron : valeurs de couture et crans. Longueurs en millimètres. Absent : valeurs par défaut du moteur (10 mm partout, 30 mm aux ourlets, crans aux raccords de couture).
+     */
+    'finishing-options.schema': {
+      seamAllowances?: components['schemas']['SeamAllowances'];
+      /** @description Crans demandés en plus des crans automatiques. */
+      notches?: components['schemas']['NotchRequest'][];
+      /**
+       * @description none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté, et un cran aux deux extrémités de chaque pince (pince franchie par la ligne de coupe).
+       * @default seam-junctions
+       * @enum {string}
+       */
+      autoNotches: 'none' | 'seam-junctions';
+      $defs: {
+        /** @description Priorité : byEdge, puis byRole, puis defaultMm. Un bord de pliure (role fold) n'a jamais de valeur de couture. Si seamAllowances est absent, le moteur applique defaultMm = 10 et byRole.hem = 30. */
+        SeamAllowances: {
+          /** @default 10 */
+          defaultMm: number;
+          byRole?: components['schemas']['RoleAllowances'];
+          byEdge?: components['schemas']['EdgeAllowance'][];
+        };
+        /** @description Valeur de couture par rôle de bord (voir Edge.role de GarmentSpec). Un bord sans rôle est traité comme une couture (seam). */
+        RoleAllowances: {
+          seam?: number;
+          hem?: number;
+          waistline?: number;
+          opening?: number;
+        };
+        EdgeAllowance: {
+          panelId: string;
+          edgeId: string;
+          allowanceMm: number;
+        };
+        /** @description Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords. */
+        NotchRequest: {
+          panelId: string;
+        } & components['schemas']['NotchPlacement'];
+      };
+    };
+    /**
+     * SizeLabel
+     * @description Nom de taille ou repère court (« 38 », « M », « MOD-002 »). Jeu de caractères restreint : il est écrit tel quel dans les exports (SVG, PDF, DXF). Jamais de nom de client.
+     */
+    'size-label.schema': string;
+    /**
+     * CutPatternOptions
+     * @description Comment finir les pièces d'une version de modèle. Corps vide ({}) : valeurs par défaut du moteur de fabrication (10 mm partout, 30 mm aux ourlets, crans aux raccords). Longueurs en millimètres.
+     */
+    'cut-pattern-options.schema': {
+      finishing?: components['schemas']['finishing-options.schema'];
+      /** @description Taille ou repère reporté sur les pièces. Jamais de nom de client. */
+      sizeLabel?: components['schemas']['size-label.schema'];
+    };
+    SeamLineEdge: {
+      edgeId: string;
+      /**
+       * @description Rôle du bord (Edge.role de GarmentSpec ; seam si absent).
+       * @enum {string}
+       */
+      role: 'seam' | 'fold' | 'hem' | 'waistline' | 'opening';
+      /** @description Valeur de couture appliquée à ce bord (0 pour une pliure). */
+      allowanceMm: number;
+      /** @description Polyligne du bord (courbe de Bézier aplatie), du début à la fin. */
+      points: components['schemas']['Point'][];
+    };
+    /** @description Segment de deux points. */
+    Segment: components['schemas']['Point'][];
+    NotchMark: {
+      edgeId: string;
+      /** @description Distance le long de la ligne de couture depuis le début du bord. */
+      distanceMm: number;
+      count: number;
+      /** @enum {string} */
+      source?: 'requested' | 'auto';
+      /** @description Point de la ligne de couture repéré par le cran. */
+      position: components['schemas']['Point'];
+      /** @description Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce. */
+      segments: components['schemas']['Segment'][];
+    };
+    /** @description Rectangle englobant de la ligne de coupe. */
+    Bounds: {
+      min: components['schemas']['Point'];
+      max: components['schemas']['Point'];
+    };
+    EngineRef: {
+      name: string;
+      version: string;
+    };
+    CutPiece: {
+      panelId: string;
+      name: string;
+      /** @description Nombre de pièces à couper par vêtement (Panel.quantity). */
+      quantity: number;
+      /** @description Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine). */
+      cutOnFold: boolean;
+      /** @description Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties. */
+      cutLine: components['schemas']['Point'][];
+      /** @description Ligne de couture, bord par bord, dans l'ordre de Panel.edges ; la fin de chaque bord est le début du suivant. */
+      seamLine: components['schemas']['SeamLineEdge'][];
+      notches: components['schemas']['NotchMark'][];
+      /** @description Droit fil : celui de la spécification, ou, s'il manque, une ligne verticale (axe y de la pièce) au centre de la pièce. */
+      grainline: components['schemas']['Segment'];
+      /** @description Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai. */
+      foldLine?: components['schemas']['Segment'];
+      /** @description Point intérieur à la pièce où placer son étiquette. */
+      labelAnchor: components['schemas']['Point'];
+      bounds: components['schemas']['Bounds'];
+      /** @description Aire de la ligne de coupe, en mm², telle que dessinée (moitié de pièce si cutOnFold). */
+      cutAreaMm2: number;
+    };
+    /**
+     * CutPattern
+     * @description Pièces de coupe : chaque pièce du patron avec sa ligne de couture, sa ligne de coupe (valeurs de couture ajoutées), ses crans, son droit fil et sa pliure. Coordonnées en millimètres dans le repère de la pièce de GarmentSpec (y vers le haut), arrondies à 0,01 mm.
+     */
+    'cut-pattern.schema': {
+      /** @constant */
+      unit: 'mm';
+      engine: components['schemas']['EngineRef'];
+      /** @description Moteur qui a calculé la spécification d'entrée (GarmentSpec.engine). */
+      specEngine: components['schemas']['EngineRef'];
+      garment: {
+        type: string;
+      };
+      sizeLabel?: components['schemas']['size-label.schema'];
+      pieces: components['schemas']['CutPiece'][];
+      $defs: {
+        EngineRef: {
+          name: string;
+          version: string;
+        };
+        /** @description Segment de deux points. */
+        Segment: components['schemas']['Point'][];
+        CutPiece: {
+          panelId: string;
+          name: string;
+          /** @description Nombre de pièces à couper par vêtement (Panel.quantity). */
+          quantity: number;
+          /** @description Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine). */
+          cutOnFold: boolean;
+          /** @description Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties. */
+          cutLine: components['schemas']['Point'][];
+          /** @description Ligne de couture, bord par bord, dans l'ordre de Panel.edges ; la fin de chaque bord est le début du suivant. */
+          seamLine: components['schemas']['SeamLineEdge'][];
+          notches: components['schemas']['NotchMark'][];
+          /** @description Droit fil : celui de la spécification, ou, s'il manque, une ligne verticale (axe y de la pièce) au centre de la pièce. */
+          grainline: components['schemas']['Segment'];
+          /** @description Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai. */
+          foldLine?: components['schemas']['Segment'];
+          /** @description Point intérieur à la pièce où placer son étiquette. */
+          labelAnchor: components['schemas']['Point'];
+          bounds: components['schemas']['Bounds'];
+          /** @description Aire de la ligne de coupe, en mm², telle que dessinée (moitié de pièce si cutOnFold). */
+          cutAreaMm2: number;
+        };
+        SeamLineEdge: {
+          edgeId: string;
+          /**
+           * @description Rôle du bord (Edge.role de GarmentSpec ; seam si absent).
+           * @enum {string}
+           */
+          role: 'seam' | 'fold' | 'hem' | 'waistline' | 'opening';
+          /** @description Valeur de couture appliquée à ce bord (0 pour une pliure). */
+          allowanceMm: number;
+          /** @description Polyligne du bord (courbe de Bézier aplatie), du début à la fin. */
+          points: components['schemas']['Point'][];
+        };
+        NotchMark: {
+          edgeId: string;
+          /** @description Distance le long de la ligne de couture depuis le début du bord. */
+          distanceMm: number;
+          count: number;
+          /** @enum {string} */
+          source?: 'requested' | 'auto';
+          /** @description Point de la ligne de couture repéré par le cran. */
+          position: components['schemas']['Point'];
+          /** @description Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce. */
+          segments: components['schemas']['Segment'][];
+        };
+        /** @description Rectangle englobant de la ligne de coupe. */
+        Bounds: {
+          min: components['schemas']['Point'];
+          max: components['schemas']['Point'];
+        };
+      };
+    };
+    /**
+     * @description svg : une planche à l'échelle 1:1 (unités mm). pdf-a4-tiled : la même planche découpée en pages A4 à assembler, précédées d'un plan d'assemblage avec un carré de contrôle de 100 mm. dxf-aama : DXF R12 selon AAMA-DXF (ASTM D6673), une taille, pour les logiciels de CAO et les tables de coupe.
+     * @enum {string}
+     */
+    ExportFormat: 'svg' | 'pdf-a4-tiled' | 'dxf-aama';
+    /**
+     * DesignExportRequest
+     * @description Demande d'export des pièces de coupe d'une version de modèle, à l'échelle 1:1. La spécification de patron est celle de la version : le client ne l'envoie pas. La réponse est le fichier lui-même.
+     */
+    'design-export-request.schema': {
+      format: components['schemas']['ExportFormat'];
+      finishing?: components['schemas']['finishing-options.schema'];
+      /** @description Taille écrite sur chaque pièce et dans le nom du fichier. Jamais de nom de client. */
+      sizeLabel?: components['schemas']['size-label.schema'];
+      /** @description Référence du modèle écrite sur chaque pièce (ex. « MOD-002 »). Jamais de nom de client. */
+      reference?: components['schemas']['size-label.schema'];
+    };
   };
   responses: {
-    /** @description Erreur au format RFC 9457. */
+    /** @description Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent (délai dépassé), réponse hors contrat ou requête refusée par sa validation. */
     Problem: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
+    /** @description Pièces impossibles à finir avec ces options, au format RFC 9457. Le service relaie le type stable du moteur de fabrication (contracts/openapi/manufacturing.yaml), seulement s'il est dans cette liste : /problems/unknown-edge, /problems/allowance-on-fold, /problems/allowance-on-dart, /problems/adjacent-darts, /problems/notch-outside-edge, /problems/open-contour, /problems/fold-edge-missing, /problems/cut-line-self-intersects, /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur, devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure. */
+    ManufacturingProblem: {
       headers: {
         [name: string]: unknown;
       };
@@ -530,9 +811,13 @@ export interface components {
   };
   parameters: {
     DesignId: string;
+    VersionNumber: number;
   };
   requestBodies: never;
-  headers: never;
+  headers: {
+    /** @description Pièces et fichiers dérivés des mesures d'un client : jamais gardés par le navigateur ni par un intermédiaire. */
+    NoStore: 'no-store';
+  };
   pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -657,6 +942,75 @@ export interface operations {
         };
       };
       404: components['responses']['Problem'];
+    };
+  };
+  createVersionCutPattern: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['cut-pattern-options.schema'];
+      };
+    };
+    responses: {
+      /** @description Les pièces de coupe (mm). */
+      200: {
+        headers: {
+          'Cache-Control': components['headers']['NoStore'];
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['cut-pattern.schema'];
+        };
+      };
+      400: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      422: components['responses']['ManufacturingProblem'];
+      502: components['responses']['Problem'];
+    };
+  };
+  createVersionExport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['design-export-request.schema'];
+      };
+    };
+    responses: {
+      /** @description Le fichier, dans le type de contenu du format demandé : image/svg+xml (svg), application/pdf (pdf-a4-tiled), image/vnd.dxf (dxf-aama). Type de contenu et nom de fichier sont fixés par le service, jamais recopiés de la réponse du moteur. */
+      200: {
+        headers: {
+          /** @description attachment; filename="<garmentType>-v<versionNumber>[-<sizeLabel>].<svg|pdf|dxf>", où sizeLabel est réduit à [a-z0-9-] ; jamais de nom de modèle ni de client. */
+          'Content-Disposition'?: string;
+          'Cache-Control': components['headers']['NoStore'];
+          'X-Content-Type-Options'?: 'nosniff';
+          [name: string]: unknown;
+        };
+        content: {
+          'image/svg+xml': string;
+          'application/pdf': string;
+          'image/vnd.dxf': string;
+        };
+      };
+      400: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+      422: components['responses']['ManufacturingProblem'];
+      502: components['responses']['Problem'];
     };
   };
 }

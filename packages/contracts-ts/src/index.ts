@@ -8,6 +8,19 @@ export type {
   RoleAllowances,
   SeamAllowances,
 } from './generated/schemas/finishing-options.js';
+// cut-pattern et export-request référencent GarmentSpec : leurs sous-types utiles au studio et à designs.
+export type {
+  Bounds,
+  CutPiece,
+  EngineRef,
+  NotchMark,
+  SeamLineEdge,
+} from './generated/schemas/cut-pattern.js';
+export type { ExportFormat } from './generated/schemas/export-request.js';
+export type {
+  paths as ManufacturingApiPaths,
+  components as ManufacturingApiComponents,
+} from './generated/openapi/manufacturing.js';
 export type {
   paths as DesignsApiPaths,
   components as DesignsApiComponents,

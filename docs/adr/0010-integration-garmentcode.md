@@ -171,3 +171,11 @@ constate :
 code copié). Ordre de livraison : jupes (droite à pinces, cercle), puis pantalon, puis corsage avec ou sans
 manches. La référence golden provisoire de la jupe droite, jamais validée, est remplacée. Aucun modéliste n'est
 encore désigné : les références restent « candidates » jusqu'à la validation sur toile (porte 1.25).
+
+**Décisions de l'orchestrateur, sur délégation de l'utilisateur (01/10/2026).** Mesures absentes : une mesure
+secondaire pour le vêtement peut être estimée, toujours déclarée dans `estimatedMeasurements` ; une mesure
+essentielle à l'aplomb reste obligatoire. Hauteur d'entrejambe (`crotchHeightMm`) : obligatoire pour le pantalon
+(problème `measurement-required`, le détail cite le nom du champ, jamais une valeur). Tour de cuisse, tour de
+poignet et longueur taille devant : estimés par des rapports moyens par sexe tirés d'ANSUR II (domaine public,
+déjà utilisé par le prototype : `prototype/js/anthro-model.js`), à valider par le modéliste comme les autres
+rapports.
