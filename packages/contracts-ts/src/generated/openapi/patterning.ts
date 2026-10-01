@@ -316,9 +316,51 @@ export interface components {
     };
     /** @description Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords. */
     Notch: components['schemas']['NotchPlacement'];
+    /** @description Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur. */
+    PanelPlacement: {
+      /**
+       * @description Partie du corps autour de laquelle la pièce s'enroule.
+       * @enum {string}
+       */
+      zone: 'torso' | 'leg' | 'arm';
+      /**
+       * @description Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.
+       * @enum {string}
+       */
+      bodySide: 'left' | 'right' | 'center';
+      /**
+       * @description Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.
+       * @enum {string}
+       */
+      facing: 'front' | 'back' | 'outer';
+      /** @description Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm. */
+      anchor: {
+        point: components['schemas']['Point'];
+        /**
+         * @description Repère de hauteur du corps ajusté.
+         * @enum {string}
+         */
+        landmark: 'neck' | 'shoulder' | 'waist' | 'hip' | 'crotch' | 'knee' | 'ankle' | 'wrist';
+        /**
+         * @description Décalage vertical depuis le repère, en millimètres, positif vers le haut.
+         * @default 0
+         */
+        offsetMm: number;
+      };
+      /**
+       * @description Distance au corps de la position de départ, en millimètres.
+       * @default 30
+       */
+      clearanceMm: number;
+    };
     EdgeRef: {
       panelId: string;
       edgeId: string;
+      /**
+       * @description Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.
+       * @enum {string}
+       */
+      side?: 'left' | 'right';
     };
     Panel: {
       id: string;
@@ -333,7 +375,9 @@ export interface components {
       cutOnFold: boolean;
       /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
       notches?: components['schemas']['Notch'][];
+      placement?: components['schemas']['PanelPlacement'];
     };
+    /** @description Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas. */
     Seam: {
       id: string;
       a: components['schemas']['EdgeRef'];
@@ -386,11 +430,55 @@ export interface components {
           cutOnFold: boolean;
           /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
           notches?: components['schemas']['Notch'][];
+          placement?: components['schemas']['PanelPlacement'];
+        };
+        /** @description Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur. */
+        PanelPlacement: {
+          /**
+           * @description Partie du corps autour de laquelle la pièce s'enroule.
+           * @enum {string}
+           */
+          zone: 'torso' | 'leg' | 'arm';
+          /**
+           * @description Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.
+           * @enum {string}
+           */
+          bodySide: 'left' | 'right' | 'center';
+          /**
+           * @description Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.
+           * @enum {string}
+           */
+          facing: 'front' | 'back' | 'outer';
+          /** @description Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm. */
+          anchor: {
+            point: components['schemas']['Point'];
+            /**
+             * @description Repère de hauteur du corps ajusté.
+             * @enum {string}
+             */
+            landmark: 'neck' | 'shoulder' | 'waist' | 'hip' | 'crotch' | 'knee' | 'ankle' | 'wrist';
+            /**
+             * @description Décalage vertical depuis le repère, en millimètres, positif vers le haut.
+             * @default 0
+             */
+            offsetMm: number;
+          };
+          /**
+           * @description Distance au corps de la position de départ, en millimètres.
+           * @default 30
+           */
+          clearanceMm: number;
         };
         EdgeRef: {
           panelId: string;
           edgeId: string;
+          /**
+           * @description Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.
+           * @enum {string}
+           */
+          side?: 'left' | 'right';
         };
+        /** @description Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas. */
         Seam: {
           id: string;
           a: components['schemas']['EdgeRef'];

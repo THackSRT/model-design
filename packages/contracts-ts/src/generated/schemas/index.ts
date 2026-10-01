@@ -1,4 +1,5 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+export type * from './avatar-options.js';
 export type { CreateDesignRequest } from './create-design-request.js';
 export type { CreateDesignVersionRequest } from './create-design-version-request.js';
 export type { CutPatternOptions } from './cut-pattern-options.js';
@@ -8,8 +9,16 @@ export type { DesignVersionPage } from './design-version-page.js';
 export type { DesignVersionSummary } from './design-version-summary.js';
 export type { DesignVersion } from './design-version.js';
 export type { Design } from './design.js';
+export type { DrapeRequest } from './drape-request.js';
+export type { Drape } from './drape.js';
+export type { DrapeJob } from './drape-job.js';
+export type * from './drape-result.js';
+export type * from './fabric.js';
 export type * from './cloud-event.js';
 export type * from './design-versioned.js';
+export type { DrapeCompleted } from './drape-completed.js';
+export type * from './drape-failed.js';
+export type { DrapeRequested } from './drape-requested.js';
 export type * from './garment-request.js';
 export type * from './garment-spec.js';
 export type * from './garment-type.js';

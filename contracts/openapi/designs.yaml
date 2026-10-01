@@ -204,6 +204,103 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/ManufacturingProblem' }
         '502': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/drapes:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+    post:
+      operationId: createVersionDrape
+      summary: Demander le drapé d'une version (tâche asynchrone)
+      description: >
+        Enregistre un drapé pending et écrit drape.requested dans l'outbox, dans la même transaction
+        (ADR 0013) ; le calcul prend 5 à 60 s. Même demande canonique (empreinte SHA-256) sur la même
+        version : le drapé existant est rendu (200), sauf s'il a échoué. Suivre l'état par
+        GET …/drapes/{drapeId}.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DrapeRequest' }
+      responses:
+        '200':
+          description: Drapé existant pour la même demande (pending ou completed).
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drape' }
+        '202':
+          description: Drapé demandé, pending.
+          headers:
+            Location:
+              description: Chemin du drapé (GET …/drapes/{drapeId}).
+              schema: { type: string, maxLength: 200 }
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drape' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/drapes/{drapeId}:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+      - $ref: '#/components/parameters/DrapeId'
+    get:
+      operationId: getVersionDrape
+      summary: Lire l'état d'un drapé
+      description: >
+        Réservé à l'organisation propriétaire du modèle (404 sinon). Le studio interroge toutes les 2 s
+        tant que status vaut pending. Types d'erreur stables d'un drapé failed (problemType) :
+        /problems/drape-placement-missing, /problems/drape-placement-failed,
+        /problems/drape-seam-not-closed, /problems/drape-body-penetration, /problems/drape-too-large,
+        /problems/drape-internal (relayés de drape.failed), /problems/drape-timeout (encore pending 10
+        minutes après createdAt).
+      responses:
+        '200':
+          description: Le drapé.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Drape' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/drapes/{drapeId}/model:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+      - $ref: '#/components/parameters/DrapeId'
+    get:
+      operationId: getVersionDrapeModel
+      summary: Lire le modèle 3D d'un drapé (glTF 2.0 binaire, vêtement seul)
+      description: >
+        Lu dans le seau privé par le service, après vérification de l'organisation (404 sinon) ; jamais
+        d'URL publique. Le fichier révèle la silhouette du client. Positions en mètres (unité imposée
+        par glTF).
+      responses:
+        '200':
+          description: Le modèle glTF 2.0 binaire.
+          headers:
+            Cache-Control:
+              schema: { type: string, enum: ['private, no-store'] }
+            X-Content-Type-Options:
+              schema: { type: string, enum: [nosniff] }
+          content:
+            model/gltf-binary:
+              schema: { type: string, contentMediaType: model/gltf-binary }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: >
+            /problems/drape-not-completed (RFC 9457) : le drapé est pending ou failed, aucun modèle à lire.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '502':
+          description: >
+            /problems/storage-unavailable (RFC 9457) : stockage objet injoignable ou objet absent.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 components:
   parameters:
     DesignId:
@@ -216,6 +313,11 @@ components:
       in: path
       required: true
       schema: { type: integer, minimum: 1 }
+    DrapeId:
+      name: drapeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     Limit:
       name: limit
       in: query
@@ -238,7 +340,8 @@ components:
     Problem:
       description: >
         Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent
-        (délai dépassé), réponse hors contrat ou requête refusée par sa validation.
+        (délai dépassé), réponse hors contrat ou requête refusée par sa validation. Types stables des
+        drapés : voir getVersionDrape (dont /problems/drape-timeout) et getVersionDrapeModel.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -304,3 +407,7 @@ components:
       $ref: '../schemas/designs/design-export-request.schema.json'
     CutPattern:
       $ref: '../schemas/manufacturing/cut-pattern.schema.json'
+    DrapeRequest:
+      $ref: '../schemas/designs/drape-request.schema.json'
+    Drape:
+      $ref: '../schemas/designs/drape.schema.json'

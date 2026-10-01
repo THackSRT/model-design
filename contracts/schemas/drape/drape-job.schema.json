@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/drape/drape-job.schema.json",
+  "title": "DrapeJob",
+  "description": "Tâche de drapé confiée au moteur drape (données de drape.requested). Contient des mesures de client : jamais journalisée (ADR 0013). L'avatar est recalculé par le moteur depuis measurements et avatar, jamais transmis.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "drapeId",
+    "organizationId",
+    "designId",
+    "versionNumber",
+    "spec",
+    "measurements",
+    "avatar",
+    "fabric",
+    "quality"
+  ],
+  "properties": {
+    "drapeId": { "type": "string", "format": "uuid" },
+    "organizationId": { "type": "string", "format": "uuid" },
+    "designId": { "type": "string", "format": "uuid" },
+    "versionNumber": { "type": "integer", "minimum": 1 },
+    "spec": { "$ref": "../garment-spec.schema.json" },
+    "measurements": { "$ref": "../measurement-set.schema.json" },
+    "avatar": { "$ref": "../avatar-options.schema.json" },
+    "fabric": { "$ref": "./fabric.schema.json" },
+    "quality": {
+      "type": "string",
+      "description": "Finesse du maillage du vêtement : draft (arête de 25 mm), standard (arête de 15 mm).",
+      "enum": ["draft", "standard"]
+    }
+  }
+}

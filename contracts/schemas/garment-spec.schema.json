@@ -140,6 +140,62 @@
           "items": {
             "$ref": "#/$defs/Notch"
           }
+        },
+        "placement": {
+          "$ref": "#/$defs/PanelPlacement"
+        }
+      }
+    },
+    "PanelPlacement": {
+      "type": "object",
+      "description": "Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur.",
+      "additionalProperties": false,
+      "required": ["zone", "bodySide", "facing", "anchor"],
+      "properties": {
+        "zone": {
+          "type": "string",
+          "enum": ["torso", "leg", "arm"],
+          "description": "Partie du corps autour de laquelle la pièce s'enroule."
+        },
+        "bodySide": {
+          "type": "string",
+          "enum": ["left", "right", "center"],
+          "description": "Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée."
+        },
+        "facing": {
+          "type": "string",
+          "enum": ["front", "back", "outer"],
+          "description": "Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre."
+        },
+        "anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["point", "landmark"],
+          "description": "Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm.",
+          "properties": {
+            "point": {
+              "$ref": "#/$defs/Point"
+            },
+            "landmark": {
+              "type": "string",
+              "enum": ["neck", "shoulder", "waist", "hip", "crotch", "knee", "ankle", "wrist"],
+              "description": "Repère de hauteur du corps ajusté."
+            },
+            "offsetMm": {
+              "type": "number",
+              "minimum": -500,
+              "maximum": 500,
+              "default": 0,
+              "description": "Décalage vertical depuis le repère, en millimètres, positif vers le haut."
+            }
+          }
+        },
+        "clearanceMm": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 150,
+          "default": 30,
+          "description": "Distance au corps de la position de départ, en millimètres."
         }
       }
     },
@@ -153,11 +209,17 @@
         },
         "edgeId": {
           "type": "string"
+        },
+        "side": {
+          "type": "string",
+          "enum": ["left", "right"],
+          "description": "Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam."
         }
       }
     },
     "Seam": {
       "type": "object",
+      "description": "Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas.",
       "additionalProperties": false,
       "required": ["id", "a", "b"],
       "properties": {

@@ -1,10 +1,6 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
 
 /**
- * svg : une planche à l'échelle 1:1 (unités mm). pdf-a4-tiled : la même planche découpée en pages A4 à assembler, précédées d'un plan d'assemblage avec un carré de contrôle de 100 mm. dxf-aama : DXF R12 selon AAMA-DXF (ASTM D6673), une taille, pour les logiciels de CAO et les tables de coupe.
- */
-export type ExportFormat = 'svg' | 'pdf-a4-tiled' | 'dxf-aama';
-/**
  * [x, y] en millimètres.
  *
  * @minItems 2
@@ -15,34 +11,23 @@ export type Point = [number, number];
  * Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords.
  */
 export type Notch = NotchPlacement;
-/**
- * Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords.
- */
-export type NotchRequest = NotchPlacement & {
-  panelId: string;
-};
-/**
- * Nom de taille ou repère court (« 38 », « M », « MOD-002 »). Jeu de caractères restreint : il est écrit tel quel dans les exports (SVG, PDF, DXF). Jamais de nom de client.
- */
-export type SizeLabel = string;
-/**
- * Nom de taille ou repère court (« 38 », « M », « MOD-002 »). Jeu de caractères restreint : il est écrit tel quel dans les exports (SVG, PDF, DXF). Jamais de nom de client.
- */
-export type SizeLabel1 = string;
 
 /**
- * Demande d'export des pièces de coupe d'un patron, à l'échelle 1:1. La réponse est le fichier lui-même (SVG, PDF ou DXF).
+ * Données de l'événement drape.requested : une tâche de drapé (DrapeJob). Contient des mesures : jamais journalisée.
  */
-export interface ExportRequest {
-  format: ExportFormat;
+export interface DrapeRequested {
+  drapeId: string;
+  organizationId: string;
+  designId: string;
+  versionNumber: number;
   spec: GarmentSpec;
-  finishing?: FinishingOptions;
-  sizeLabel?: SizeLabel;
-  reference?: SizeLabel1;
+  measurements: MeasurementSet;
+  avatar: AvatarOptions;
+  fabric: Fabric;
   /**
-   * Langue des annotations (droit fil, pliure, « couper 2 × »).
+   * Finesse du maillage du vêtement : draft (arête de 25 mm), standard (arête de 15 mm).
    */
-  locale?: 'fr';
+  quality: 'draft' | 'standard';
 }
 /**
  * Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique.
@@ -175,43 +160,119 @@ export interface EdgeRef {
   side?: 'left' | 'right';
 }
 /**
- * Comment finir les pièces d'un patron : valeurs de couture et crans. Longueurs en millimètres. Absent : valeurs par défaut du moteur (10 mm partout, 30 mm aux ourlets, crans aux raccords de couture).
+ * Mesures du corps d'un client (ISO 8559-1), en millimètres entiers. Une mesure facultative absente est estimée par le moteur de patronage, qui la liste dans GarmentSpec.estimatedMeasurements.
  */
-export interface FinishingOptions {
-  seamAllowances?: SeamAllowances;
+export interface MeasurementSet {
+  sex: 'female' | 'male';
+  statureMm: number;
+  neckGirthMm?: number;
+  chestGirthMm: number;
+  waistGirthMm: number;
+  hipGirthMm: number;
+  upperArmGirthMm?: number;
+  wristGirthMm?: number;
+  thighGirthMm?: number;
+  kneeGirthMm?: number;
+  calfGirthMm?: number;
+  ankleGirthMm?: number;
+  crotchHeightMm?: number;
   /**
-   * Crans demandés en plus des crans automatiques.
-   *
-   * @maxItems 200
+   * Tour de poitrine sur les pointes de seins (ISO 8559-1 : bust girth).
    */
-  notches?: NotchRequest[];
+  bustGirthMm?: number;
   /**
-   * none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté, et un cran aux deux extrémités de chaque pince (pince franchie par la ligne de coupe).
+   * Tour de dessous de poitrine (ISO 8559-1 : underbust girth).
    */
-  autoNotches?: 'none' | 'seam-junctions';
+  underBustGirthMm?: number;
+  /**
+   * Hauteur de la vertèbre cervicale saillante depuis le sol (ISO 8559-1 : cervicale height).
+   */
+  cervicaleHeightMm?: number;
+  /**
+   * Hauteur de la taille depuis le sol (ISO 8559-1 : waist height).
+   */
+  waistHeightMm?: number;
+  /**
+   * Hauteur des hanches (tour le plus fort) depuis le sol (ISO 8559-1 : hip height).
+   */
+  hipHeightMm?: number;
+  /**
+   * Longueur taille dos : de la cervicale à la taille, le long de la colonne (ISO 8559-1 : back waist length).
+   */
+  backWaistLengthMm?: number;
+  /**
+   * Longueur taille devant : du point d'encolure à l'épaule à la taille, par la pointe de sein (ISO 8559-1 : front waist length).
+   */
+  frontWaistLengthMm?: number;
+  /**
+   * Du point d'encolure à l'épaule à la pointe de sein (ISO 8559-1 : neck shoulder point to bust point).
+   */
+  neckShoulderToBustPointMm?: number;
+  /**
+   * Écart entre les pointes de seins (ISO 8559-1 : bust point width).
+   */
+  bustPointWidthMm?: number;
+  /**
+   * Carrure d'épaule à épaule, d'un point d'épaule à l'autre, par le dos (ISO 8559-1 : shoulder width).
+   */
+  shoulderWidthMm?: number;
+  /**
+   * Profondeur d'emmanchure : de la ligne d'épaule au niveau du dessous de bras (ISO 8559-1 : armscye depth).
+   */
+  armscyeDepthMm?: number;
+  /**
+   * Longueur de bras : du point d'épaule au poignet, coude légèrement plié (ISO 8559-1 : arm length).
+   */
+  armLengthMm?: number;
 }
 /**
- * Priorité : byEdge, puis byRole, puis defaultMm. Un bord de pliure (role fold) n'a jamais de valeur de couture. Si seamAllowances est absent, le moteur applique defaultMm = 10 et byRole.hem = 30.
+ * Options d'ajustement de l'avatar (FitOptions du moteur mannequin), en plus des mesures. Champ absent : défaut du studio. Le même jeu d'options donne le même corps dans le studio et dans le drapé (ADR 0013).
  */
-export interface SeamAllowances {
-  defaultMm?: number;
-  byRole?: RoleAllowances;
+export interface AvatarOptions {
   /**
-   * @maxItems 500
+   * Âge en années. Défaut : 30.
    */
-  byEdge?: EdgeAllowance[];
+  age?: number;
+  /**
+   * Proportions de morphotype, de 0 à 1 chacune (normalisées par le moteur mannequin ; somme nulle : africain). Défaut : africain (1, 0, 0).
+   */
+  morphotype?: {
+    african: number;
+    asian: number;
+    caucasian: number;
+  };
+  /**
+   * Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.
+   */
+  armAngleDeg?: number;
 }
 /**
- * Valeur de couture par rôle de bord (voir Edge.role de GarmentSpec). Un bord sans rôle est traité comme une couture (seam).
+ * Tissu d'un drapé : un préréglage et des surcharges facultatives, chacune dans son unité (suffixe). Les valeurs des préréglages sont dans le moteur de drapé et sont des estimations, signalées par DrapeResult.fabricEstimated (ADR 0013).
  */
-export interface RoleAllowances {
-  seam?: number;
-  hem?: number;
-  waistline?: number;
-  opening?: number;
-}
-export interface EdgeAllowance {
-  panelId: string;
-  edgeId: string;
-  allowanceMm: number;
+export interface Fabric {
+  preset: 'cotton-poplin' | 'cotton-wax' | 'bazin' | 'linen' | 'denim' | 'silk-satin' | 'jersey';
+  /**
+   * Grammage, en grammes par mètre carré.
+   */
+  weightGPerM2?: number;
+  /**
+   * Épaisseur, en millimètres.
+   */
+  thicknessMm?: number;
+  /**
+   * Allongement dans le sens de la chaîne (droit fil) sous 10 N sur une bande de 50 mm de large, en pourcentage.
+   */
+  stretchWarpPercent?: number;
+  /**
+   * Allongement dans le sens de la trame sous 10 N sur une bande de 50 mm de large, en pourcentage.
+   */
+  stretchWeftPercent?: number;
+  /**
+   * Rigidité de flexion par unité de largeur (valeur B de Kawabata), en micronewtons-mètres (µN·m ; 1 gf·cm²/cm ≈ 98 µN·m).
+   */
+  bendingRigidityMicroNm?: number;
+  /**
+   * Coefficient de frottement du tissu sur le corps (sans unité).
+   */
+  frictionCoefficient?: number;
 }

@@ -170,6 +170,77 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/designs/{designId}/versions/{versionNumber}/drapes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Demander le drapé d'une version (tâche asynchrone)
+     * @description Enregistre un drapé pending et écrit drape.requested dans l'outbox, dans la même transaction (ADR 0013) ; le calcul prend 5 à 60 s. Même demande canonique (empreinte SHA-256) sur la même version : le drapé existant est rendu (200), sauf s'il a échoué. Suivre l'état par GET …/drapes/{drapeId}.
+     */
+    post: operations['createVersionDrape'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/designs/{designId}/versions/{versionNumber}/drapes/{drapeId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+        drapeId: components['parameters']['DrapeId'];
+      };
+      cookie?: never;
+    };
+    /**
+     * Lire l'état d'un drapé
+     * @description Réservé à l'organisation propriétaire du modèle (404 sinon). Le studio interroge toutes les 2 s tant que status vaut pending. Types d'erreur stables d'un drapé failed (problemType) : /problems/drape-placement-missing, /problems/drape-placement-failed, /problems/drape-seam-not-closed, /problems/drape-body-penetration, /problems/drape-too-large, /problems/drape-internal (relayés de drape.failed), /problems/drape-timeout (encore pending 10 minutes après createdAt).
+     */
+    get: operations['getVersionDrape'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/designs/{designId}/versions/{versionNumber}/drapes/{drapeId}/model': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+        drapeId: components['parameters']['DrapeId'];
+      };
+      cookie?: never;
+    };
+    /**
+     * Lire le modèle 3D d'un drapé (glTF 2.0 binaire, vêtement seul)
+     * @description Lu dans le seau privé par le service, après vérification de l'organisation (404 sinon) ; jamais d'URL publique. Le fichier révèle la silhouette du client. Positions en mètres (unité imposée par glTF).
+     */
+    get: operations['getVersionDrapeModel'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -195,6 +266,8 @@ export interface components {
     CutPatternOptions: components['schemas']['cut-pattern-options.schema'];
     DesignExportRequest: components['schemas']['design-export-request.schema'];
     CutPattern: components['schemas']['cut-pattern.schema'];
+    DrapeRequest: components['schemas']['drape-request.schema'];
+    Drape: components['schemas']['drape.schema'];
     /**
      * GarmentType
      * @description Type de vêtement connu de la plateforme (ADR 0010). Même valeur que GarmentRequest.type. Un type dont le tracé n'est pas encore livré est refusé par le moteur de patronage (problème garment-type-not-supported).
@@ -515,9 +588,51 @@ export interface components {
     };
     /** @description Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords. */
     Notch: components['schemas']['NotchPlacement'];
+    /** @description Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur. */
+    PanelPlacement: {
+      /**
+       * @description Partie du corps autour de laquelle la pièce s'enroule.
+       * @enum {string}
+       */
+      zone: 'torso' | 'leg' | 'arm';
+      /**
+       * @description Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.
+       * @enum {string}
+       */
+      bodySide: 'left' | 'right' | 'center';
+      /**
+       * @description Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.
+       * @enum {string}
+       */
+      facing: 'front' | 'back' | 'outer';
+      /** @description Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm. */
+      anchor: {
+        point: components['schemas']['Point'];
+        /**
+         * @description Repère de hauteur du corps ajusté.
+         * @enum {string}
+         */
+        landmark: 'neck' | 'shoulder' | 'waist' | 'hip' | 'crotch' | 'knee' | 'ankle' | 'wrist';
+        /**
+         * @description Décalage vertical depuis le repère, en millimètres, positif vers le haut.
+         * @default 0
+         */
+        offsetMm: number;
+      };
+      /**
+       * @description Distance au corps de la position de départ, en millimètres.
+       * @default 30
+       */
+      clearanceMm: number;
+    };
     EdgeRef: {
       panelId: string;
       edgeId: string;
+      /**
+       * @description Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.
+       * @enum {string}
+       */
+      side?: 'left' | 'right';
     };
     Panel: {
       id: string;
@@ -532,7 +647,9 @@ export interface components {
       cutOnFold: boolean;
       /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
       notches?: components['schemas']['Notch'][];
+      placement?: components['schemas']['PanelPlacement'];
     };
+    /** @description Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas. */
     Seam: {
       id: string;
       a: components['schemas']['EdgeRef'];
@@ -585,11 +702,55 @@ export interface components {
           cutOnFold: boolean;
           /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
           notches?: components['schemas']['Notch'][];
+          placement?: components['schemas']['PanelPlacement'];
+        };
+        /** @description Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur. */
+        PanelPlacement: {
+          /**
+           * @description Partie du corps autour de laquelle la pièce s'enroule.
+           * @enum {string}
+           */
+          zone: 'torso' | 'leg' | 'arm';
+          /**
+           * @description Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.
+           * @enum {string}
+           */
+          bodySide: 'left' | 'right' | 'center';
+          /**
+           * @description Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.
+           * @enum {string}
+           */
+          facing: 'front' | 'back' | 'outer';
+          /** @description Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm. */
+          anchor: {
+            point: components['schemas']['Point'];
+            /**
+             * @description Repère de hauteur du corps ajusté.
+             * @enum {string}
+             */
+            landmark: 'neck' | 'shoulder' | 'waist' | 'hip' | 'crotch' | 'knee' | 'ankle' | 'wrist';
+            /**
+             * @description Décalage vertical depuis le repère, en millimètres, positif vers le haut.
+             * @default 0
+             */
+            offsetMm: number;
+          };
+          /**
+           * @description Distance au corps de la position de départ, en millimètres.
+           * @default 30
+           */
+          clearanceMm: number;
         };
         EdgeRef: {
           panelId: string;
           edgeId: string;
+          /**
+           * @description Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.
+           * @enum {string}
+           */
+          side?: 'left' | 'right';
         };
+        /** @description Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas. */
         Seam: {
           id: string;
           a: components['schemas']['EdgeRef'];
@@ -899,9 +1060,113 @@ export interface components {
       /** @description Référence du modèle écrite sur chaque pièce (ex. « MOD-002 »). Jamais de nom de client. */
       reference?: components['schemas']['size-label.schema'];
     };
+    /**
+     * Fabric
+     * @description Tissu d'un drapé : un préréglage et des surcharges facultatives, chacune dans son unité (suffixe). Les valeurs des préréglages sont dans le moteur de drapé et sont des estimations, signalées par DrapeResult.fabricEstimated (ADR 0013).
+     */
+    'fabric.schema': {
+      /** @enum {string} */
+      preset:
+        'cotton-poplin' | 'cotton-wax' | 'bazin' | 'linen' | 'denim' | 'silk-satin' | 'jersey';
+      /** @description Grammage, en grammes par mètre carré. */
+      weightGPerM2?: number;
+      /** @description Épaisseur, en millimètres. */
+      thicknessMm?: number;
+      /** @description Allongement dans le sens de la chaîne (droit fil) sous 10 N sur une bande de 50 mm de large, en pourcentage. */
+      stretchWarpPercent?: number;
+      /** @description Allongement dans le sens de la trame sous 10 N sur une bande de 50 mm de large, en pourcentage. */
+      stretchWeftPercent?: number;
+      /** @description Rigidité de flexion par unité de largeur (valeur B de Kawabata), en micronewtons-mètres (µN·m ; 1 gf·cm²/cm ≈ 98 µN·m). */
+      bendingRigidityMicroNm?: number;
+      /** @description Coefficient de frottement du tissu sur le corps (sans unité). */
+      frictionCoefficient?: number;
+    };
+    /**
+     * AvatarOptions
+     * @description Options d'ajustement de l'avatar (FitOptions du moteur mannequin), en plus des mesures. Champ absent : défaut du studio. Le même jeu d'options donne le même corps dans le studio et dans le drapé (ADR 0013).
+     */
+    'avatar-options.schema': {
+      /**
+       * @description Âge en années. Défaut : 30.
+       * @default 30
+       */
+      age: number;
+      /** @description Proportions de morphotype, de 0 à 1 chacune (normalisées par le moteur mannequin ; somme nulle : africain). Défaut : africain (1, 0, 0). */
+      morphotype?: {
+        african: number;
+        asian: number;
+        caucasian: number;
+      };
+      /**
+       * @description Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.
+       * @default 9
+       */
+      armAngleDeg: number;
+    };
+    /**
+     * DrapeRequest
+     * @description Demande de drapé d'une version de modèle : le tissu, les options de l'avatar et la finesse. Les mesures et le patron sont ceux de la version. Même demande canonique sur la même version : même drapé (ADR 0013).
+     */
+    'drape-request.schema': {
+      fabric: components['schemas']['fabric.schema'];
+      /** @description Absent : défauts du studio, comme {}. */
+      avatar?: components['schemas']['avatar-options.schema'];
+      /**
+       * @description draft (arête de 25 mm) ou standard (arête de 15 mm).
+       * @default standard
+       * @enum {string}
+       */
+      quality: 'draft' | 'standard';
+    };
+    /** @description Aisance : distance du tissu au corps moins l'épaisseur du tissu, en millimètres (négative : pénétration). */
+    DrapeEase: {
+      minMm: number;
+      medianMm: number;
+      maxMm: number;
+      /** @description Surface du vêtement où l'aisance est nulle (tissu au contact du corps), en mm². */
+      tightAreaMm2: number;
+    };
+    /**
+     * Drape
+     * @description Drapé d'une version de modèle, tel que le service designs le suit. Le modèle 3D se lit par GET …/drapes/{drapeId}/model une fois le drapé completed. Longueurs en millimètres.
+     */
+    'drape.schema': {
+      /** Format: uuid */
+      id: string;
+      /**
+       * @description pending : en calcul ; completed : modèle disponible ; failed : voir problemType. Un drapé encore pending 10 minutes après createdAt est lu failed (drape-timeout).
+       * @enum {string}
+       */
+      status: 'pending' | 'completed' | 'failed';
+      /**
+       * @description Seulement si status vaut failed. Types de drape.failed, plus /problems/drape-timeout.
+       * @enum {string}
+       */
+      problemType?:
+        | '/problems/drape-placement-missing'
+        | '/problems/drape-placement-failed'
+        | '/problems/drape-seam-not-closed'
+        | '/problems/drape-body-penetration'
+        | '/problems/drape-too-large'
+        | '/problems/drape-internal'
+        | '/problems/drape-timeout';
+      /** @description Seulement si status vaut completed. */
+      ease?: components['schemas']['DrapeEase'];
+      /** @description Seulement si status vaut completed. Allongement relatif maximal, en pourcentage. */
+      maxStrainPercent?: number;
+      /** @description Seulement si status vaut completed. Vrai si le tissu vient d'un préréglage estimé. */
+      fabricEstimated?: boolean;
+      /** Format: date-time */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Fin du calcul (completed ou failed), en UTC.
+       */
+      completedAt?: string;
+    };
   };
   responses: {
-    /** @description Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent (délai dépassé), réponse hors contrat ou requête refusée par sa validation. */
+    /** @description Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent (délai dépassé), réponse hors contrat ou requête refusée par sa validation. Types stables des drapés : voir getVersionDrape (dont /problems/drape-timeout) et getVersionDrapeModel. */
     Problem: {
       headers: {
         [name: string]: unknown;
@@ -932,6 +1197,7 @@ export interface components {
   parameters: {
     DesignId: string;
     VersionNumber: number;
+    DrapeId: string;
     /** @description Nombre de résumés par page. */
     Limit: number;
     /** @description Curseur opaque rendu par la page précédente (nextCursor). Absent : première page. */
@@ -1194,6 +1460,119 @@ export interface operations {
       404: components['responses']['Problem'];
       422: components['responses']['ManufacturingProblem'];
       502: components['responses']['Problem'];
+    };
+  };
+  createVersionDrape: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['drape-request.schema'];
+      };
+    };
+    responses: {
+      /** @description Drapé existant pour la même demande (pending ou completed). */
+      200: {
+        headers: {
+          'Cache-Control': components['headers']['NoStore'];
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['drape.schema'];
+        };
+      };
+      /** @description Drapé demandé, pending. */
+      202: {
+        headers: {
+          /** @description Chemin du drapé (GET …/drapes/{drapeId}). */
+          Location?: string;
+          'Cache-Control': components['headers']['NoStore'];
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['drape.schema'];
+        };
+      };
+      400: components['responses']['Problem'];
+      404: components['responses']['Problem'];
+    };
+  };
+  getVersionDrape: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+        drapeId: components['parameters']['DrapeId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Le drapé. */
+      200: {
+        headers: {
+          'Cache-Control': components['headers']['NoStore'];
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['drape.schema'];
+        };
+      };
+      404: components['responses']['Problem'];
+    };
+  };
+  getVersionDrapeModel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designId: components['parameters']['DesignId'];
+        versionNumber: components['parameters']['VersionNumber'];
+        drapeId: components['parameters']['DrapeId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Le modèle glTF 2.0 binaire. */
+      200: {
+        headers: {
+          'Cache-Control'?: 'private, no-store';
+          'X-Content-Type-Options'?: 'nosniff';
+          [name: string]: unknown;
+        };
+        content: {
+          'model/gltf-binary': string;
+        };
+      };
+      404: components['responses']['Problem'];
+      /** @description /problems/drape-not-completed (RFC 9457) : le drapé est pending ou failed, aucun modèle à lire. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
+      /** @description /problems/storage-unavailable (RFC 9457) : stockage objet injoignable ou objet absent. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['Problem'];
+        };
+      };
     };
   };
 }
