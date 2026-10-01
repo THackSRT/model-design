@@ -10,6 +10,7 @@ import { PostgresDesignRepository } from '../../src/adapters/persistence/postgre
 import { PostgresOutboxStore } from '../../src/adapters/persistence/postgres/postgres-outbox-store.js';
 import { nodeHasher } from '../../src/adapters/platform/node-hasher.js';
 import { aDesign, aSkirt, clock, ORG, sequentialIds, someMeasurements } from '../builders.js';
+import { FakeManufacturingEngine } from '../doubles/fake-manufacturing-engine.js';
 import { FakePatterningEngine } from '../doubles/fake-patterning-engine.js';
 
 const MIGRATIONS = fileURLToPath(new URL('../../migrations', import.meta.url));
@@ -24,6 +25,7 @@ describe('de la version de modèle à la publication (sans réseau)', () => {
     const created = await designsUseCases({
       designs,
       patterning: new FakePatterningEngine(),
+      manufacturing: new FakeManufacturingEngine(),
       hasher: nodeHasher,
       ids,
       clock,

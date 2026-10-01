@@ -3,6 +3,7 @@ import { loadConfig, type Logger, type OutboxStore } from '@atelier/service-kit'
 import { z } from 'zod';
 import type { DesignRepository } from './application/ports/design-repository.js';
 import { type DesignsDeps, designsUseCases } from './application/use-cases/index.js';
+import { HttpManufacturingEngine } from './adapters/engines/http-manufacturing-engine.js';
 import { HttpPatterningEngine } from './adapters/engines/http-patterning-engine.js';
 import { createHttpApp } from './adapters/http/http-app.js';
 import { fixedOrganization } from './adapters/http/organization-context.js';
@@ -19,6 +20,8 @@ export const configSchema = z.object({
   MIGRATIONS_DIR: z.string().default('migrations'),
   PATTERNING_URL: z.url().default('http://localhost:3201'),
   PATTERNING_TIMEOUT_MS: z.coerce.number().int().positive().default(2000),
+  MANUFACTURING_URL: z.url().default('http://localhost:3202'),
+  MANUFACTURING_TIMEOUT_MS: z.coerce.number().int().positive().default(2000),
   DEV_ORGANIZATION_ID: z.uuid().default('01920000-0000-7000-8000-000000000001'),
   // Absente : pas de relais de l'outbox (le service tourne sans bus).
   NATS_URL: z.url().optional(),
@@ -63,6 +66,10 @@ export function composeDeps(designs: DesignRepository, config: DesignsConfig): D
     patterning: new HttpPatterningEngine({
       baseUrl: config.PATTERNING_URL,
       timeoutMs: config.PATTERNING_TIMEOUT_MS,
+    }),
+    manufacturing: new HttpManufacturingEngine({
+      baseUrl: config.MANUFACTURING_URL,
+      timeoutMs: config.MANUFACTURING_TIMEOUT_MS,
     }),
     hasher: nodeHasher,
     ids: systemIdGenerator,

@@ -12,6 +12,7 @@ import {
   sequentialIds,
   someMeasurements,
 } from '../../builders.js';
+import { FakeManufacturingEngine } from '../../doubles/fake-manufacturing-engine.js';
 import { FakePatterningEngine } from '../../doubles/fake-patterning-engine.js';
 
 describe('créer une version de modèle', () => {
@@ -19,6 +20,7 @@ describe('créer une version de modèle', () => {
   const deps = (patterning = new FakePatterningEngine()): DesignsDeps => ({
     designs,
     patterning,
+    manufacturing: new FakeManufacturingEngine(),
     hasher: nodeHasher,
     ids: sequentialIds(),
     clock,
