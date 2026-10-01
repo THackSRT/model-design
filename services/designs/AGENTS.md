@@ -34,5 +34,6 @@ Rôle : modèles, versions de modèle et spécifications de patron. Données pos
   (2000) ; le service démarre sans le moteur. Types de problème du moteur relayés en 422 seulement s'ils sont dans
   la liste blanche (`MANUFACTURING_PROBLEM_TYPES`), tout le reste en 502 `engine-unavailable`. Type de contenu et
   nom de fichier sont fixés par le service (`domain/export-file-name.ts`), jamais recopiés du moteur. Pas de cache :
-  réponses `Cache-Control: no-store` (données dérivées des mesures d'un client).
+  réponses `Cache-Control: no-store` (données dérivées des mesures d'un client). Les exports sont demandés au moteur
+  en français (`locale: 'fr'`, fixé dans l'adaptateur) tant que le studio n'a qu'une langue.
 - Commandes : `pnpm nx run @atelier/designs:test|lint|typecheck|build`, `pnpm --filter @atelier/designs start`.

@@ -68,6 +68,7 @@ services:
       MIGRATE_ON_START: 'true'
       PATTERNING_URL: http://patterning:8000
       MANUFACTURING_URL: http://manufacturing:8000
+      MANUFACTURING_TIMEOUT_MS: '2000'
       NATS_URL: nats://nats:4222
     ports: ['3101:3101']
     depends_on:
