@@ -9,6 +9,14 @@ Tour de cuisse et tour de genou absents : rapport moyen au tour de hanches par s
 (US Army 2012, domaine public ; moyennes `mean` en cm de `prototype/js/anthro-model.js`).
 Femmes : hanches 102,1, cuisse 61,6, genou 38,1 -> cuisse/hanches 0,603, genou/hanches 0,373.
 Hommes : hanches 102,0, cuisse 62,5, genou 38,9 -> cuisse/hanches 0,613, genou/hanches 0,381.
+
+Tour de poignet absent : rapport moyen au tour de poitrine par sexe (même source).
+Femmes : poitrine 94,7, poignet 15,5 -> 0,164. Hommes : poitrine 105,9, poignet 17,6 -> 0,166.
+
+Longueur taille devant absente : le prototype n'embarque aucune moyenne ANSUR II de cette
+longueur ; elle est estimée par un rapport à la longueur taille dos (à valider par le modéliste) :
+1,06 pour les femmes (le devant couvre la poitrine), 1,03 pour les hommes. L'écart devant - dos
+est la largeur de la pince de poitrine du corsage.
 """
 
 from collections.abc import Sequence
@@ -66,15 +74,17 @@ class Ratios:
     hip_inclination_deg: float
     thigh_of_hip: float
     knee_of_hip: float
+    wrist_of_bust: float
+    front_of_back_waist: float
 
 
 FEMALE_RATIOS = Ratios(
     0.154, 0.215, 0.136, 0.209, 0.31, 0.076, 0.154, 0.166, 0.829, 0.47, 0.47, 0.535, 0.17, 0.107,
-    21.0, 12.7, 0.603, 0.373,
+    21.0, 12.7, 0.603, 0.373, 0.164, 1.06,
 )  # fmt: skip
 MALE_RATIOS = Ratios(
     0.152, 0.214, 0.137, 0.215, 0.318, 0.073, 0.145, 0.173, 0.905, 0.46, 0.49, 0.524, 0.17, 0.114,
-    22.5, 6.7, 0.613, 0.381,
+    22.5, 6.7, 0.613, 0.381, 0.166, 1.03,
 )  # fmt: skip
 RATIOS = {"female": FEMALE_RATIOS, "male": MALE_RATIOS}
 
@@ -104,9 +114,9 @@ class Body:
     hip_inclination_deg: float
     thigh_girth_mm: float
     knee_girth_mm: float
-    wrist_girth_mm: float | None = None
+    wrist_girth_mm: float
+    front_waist_length_mm: float
     crotch_hip_diff_mm: float | None = None
-    front_waist_length_mm: float | None = None
 
 
 class _Fill:
@@ -202,11 +212,11 @@ def complete_body(
         hip_inclination_deg=r.hip_inclination_deg,
         thigh_girth_mm=fill.value("thigh_girth_mm", raw.thigh_girth_mm, r.thigh_of_hip * hip),
         knee_girth_mm=fill.value("knee_girth_mm", raw.knee_girth_mm, r.knee_of_hip * hip),
-        wrist_girth_mm=None if raw.wrist_girth_mm is None else float(raw.wrist_girth_mm),
-        crotch_hip_diff_mm=None if crotch is None else hip_h - crotch,
-        front_waist_length_mm=(
-            None if raw.front_waist_length_mm is None else float(raw.front_waist_length_mm)
+        wrist_girth_mm=fill.value("wrist_girth_mm", raw.wrist_girth_mm, r.wrist_of_bust * bust),
+        front_waist_length_mm=fill.value(
+            "front_waist_length_mm", raw.front_waist_length_mm, r.front_of_back_waist * back_waist
         ),
+        crotch_hip_diff_mm=None if crotch is None else hip_h - crotch,
     )
     _check_positive(body, checked)
     return body, tuple(sorted(fill.estimated))

@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from patterning.main import create_app
@@ -15,7 +16,7 @@ def test_drafts_a_straight_skirt_that_follows_the_contract() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["unit"] == "mm"
-    assert body["engine"] == {"name": "patterning", "version": "0.3.0"}
+    assert body["engine"] == {"name": "patterning", "version": "0.4.0"}
     assert [p["id"] for p in body["panels"]] == ["front", "back-right", "back-left"]
     assert all(p["notches"] for p in body["panels"])
 
@@ -67,13 +68,6 @@ def test_rejects_measurements_outside_plausible_bounds() -> None:
     assert client.post("/v1/patterns", json=request).status_code == 422
 
 
-def test_garment_types_without_a_drafting_yet_are_problem_responses() -> None:
-    for garment in ({"type": "bodice", "params": {}},):
-        response = client.post("/v1/patterns", json=_request(garment))
-        assert response.status_code == 422
-        assert response.json()["type"] == "/problems/garment-type-not-supported"
-
-
 def _trousers_request(**measurements: object) -> dict[str, object]:
     base = reference_request()
     garment = {"type": "trousers", "params": {"lengthMm": 1000, "hemGirthMm": 440}}
@@ -103,3 +97,42 @@ def test_trousers_without_crotch_height_is_a_problem_response() -> None:
     problem = response.json()
     assert problem["type"] == "/problems/measurement-required"
     assert "crotchHeightMm" in problem["detail"]
+
+
+def _bodice_request(params: dict[str, object]) -> dict[str, object]:
+    base = reference_request()["measurements"]
+    return {
+        "measurements": {**base, "bustGirthMm": 900, "backWaistLengthMm": 380},  # type: ignore[dict-item]
+        "garment": {"type": "bodice", "params": params},
+    }
+
+
+def test_drafts_a_sleeveless_bodice_and_one_with_sleeves() -> None:
+    plain = client.post("/v1/patterns", json=_bodice_request({}))
+    assert plain.status_code == 200
+    assert [p["id"] for p in plain.json()["panels"]] == ["front", "back-right", "back-left"]
+    sleeved = client.post("/v1/patterns", json=_bodice_request({"sleeve": {"lengthMm": 600}}))
+    assert sleeved.status_code == 200
+    body = sleeved.json()
+    assert [p["id"] for p in body["panels"]][-1] == "sleeve"
+    assert body["panels"][-1]["quantity"] == 2
+    assert "wristGirthMm" in body["estimatedMeasurements"]
+    eases = {s["id"]: s["easeMm"] for s in body["seams"] if "easeMm" in s}
+    assert eases["armhole-front"] + eases["armhole-back"] == pytest.approx(15, abs=0.01)
+
+
+@pytest.mark.parametrize("missing", ["bustGirthMm", "backWaistLengthMm"])
+def test_bodice_without_an_essential_measurement_is_a_problem_response(missing: str) -> None:
+    request = _bodice_request({})
+    del request["measurements"][missing]  # type: ignore[index]
+    response = client.post("/v1/patterns", json=request)
+    assert response.status_code == 422
+    problem = response.json()
+    assert problem["type"] == "/problems/measurement-required"
+    assert missing in problem["detail"]
+
+
+def test_bodice_with_a_neckline_below_the_bust_is_a_problem_response() -> None:
+    response = client.post("/v1/patterns", json=_bodice_request({"frontNeckDepthMm": 250}))
+    assert response.status_code == 422
+    assert response.json()["type"] == "/problems/neckline-too-deep"

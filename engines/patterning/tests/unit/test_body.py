@@ -52,3 +52,19 @@ def test_cervicale_above_stature_is_refused() -> None:
     with pytest.raises(DraftingError) as error:
         complete_body(replace(minimal_measurements(), cervicale_height_mm=1700))
     assert error.value.kind == "inconsistent-measurements"
+
+
+def test_wrist_and_front_waist_length_are_estimated_by_sex() -> None:
+    female, estimated = complete_body(minimal_measurements("female"))
+    male, _ = complete_body(minimal_measurements("male"))
+    assert {"wrist_girth_mm", "front_waist_length_mm"} <= set(estimated)
+    assert female.wrist_girth_mm == pytest.approx(0.164 * 880)
+    assert male.wrist_girth_mm == pytest.approx(0.166 * 880)
+    assert female.front_waist_length_mm == pytest.approx(1.06 * female.back_waist_length_mm)
+    assert male.front_waist_length_mm == pytest.approx(1.03 * male.back_waist_length_mm)
+
+
+def test_given_wrist_and_front_waist_length_are_kept() -> None:
+    body, estimated = complete_body(full_measurements())
+    assert (body.wrist_girth_mm, body.front_waist_length_mm) == (160, 420)
+    assert not {"wrist_girth_mm", "front_waist_length_mm"} & set(estimated)

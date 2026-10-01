@@ -27,7 +27,7 @@ def test_circle_skirt_uses_no_estimate() -> None:
     assert pattern.estimated_measurements == ()
 
 
-@pytest.mark.parametrize("garment_type", ["bodice"])
+@pytest.mark.parametrize("garment_type", ["kimono"])
 def test_a_type_without_a_drafting_is_refused_with_a_stable_kind(garment_type: str) -> None:
     with pytest.raises(DraftingError) as error:
         draft(garment_type, minimal_measurements(), {"length_mm": 1000})

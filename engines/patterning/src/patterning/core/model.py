@@ -11,6 +11,7 @@ class EdgeRole(StrEnum):
     FOLD = "fold"
     HEM = "hem"
     WAISTLINE = "waistline"
+    OPENING = "opening"
 
 
 @dataclass(frozen=True)

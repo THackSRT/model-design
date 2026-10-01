@@ -179,3 +179,9 @@ essentielle à l'aplomb reste obligatoire. Hauteur d'entrejambe (`crotchHeightMm
 poignet et longueur taille devant : estimés par des rapports moyens par sexe tirés d'ANSUR II (domaine public,
 déjà utilisé par le prototype : `prototype/js/anthro-model.js`), à valider par le modéliste comme les autres
 rapports.
+
+**Décision de l'orchestrateur, sur délégation de l'utilisateur (01/10/2026), corsage.** Mesures obligatoires
+du corsage : tour de poitrine (`bustGirthMm`) et longueur taille dos (`backWaistLengthMm`), qui fixent son aplomb.
+La longueur taille devant absente est estimée à 1,06 (femmes) et 1,03 (hommes) fois la longueur taille dos :
+hypothèse provisoire, **non tirée d'ANSUR II** (le prototype n'en a pas la moyenne), qui ne règle que la largeur
+de la pince de poitrine ; à remplacer par une mesure de référence ou à valider par le modéliste.

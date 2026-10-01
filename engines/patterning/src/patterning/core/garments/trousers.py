@@ -18,18 +18,18 @@ from math import radians, tan
 from patterning.core.body import Body
 from patterning.core.curves import BISECTION_ITERATIONS
 from patterning.core.errors import DraftingError
-from patterning.core.garments.parts import mirror_panel, notch_at_end, notch_at_start, pt
-from patterning.core.garments.parts import vertical_grainline as grain
-from patterning.core.garments.straight_skirt import (
+from patterning.core.garments.darts import (
     MIN_DART_MM,
     Half,
     Shape,
-    _back_half,
-    _dart_seams,
-    _front_half,
-    _hip_waist_split,
-    _waist_edges,
+    back_half,
+    dart_seams,
+    front_half,
+    hip_waist_split,
+    waist_edges,
 )
+from patterning.core.garments.parts import mirror_panel, notch_at_end, notch_at_start, pt
+from patterning.core.garments.parts import vertical_grainline as grain
 from patterning.core.geometry import edge_length
 from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Seam
 
@@ -110,7 +110,7 @@ def _leg_edges(half: Half, leg: Leg, crotch: Crotch) -> tuple[Edge, ...]:
     hip = pt(hip_x, shape.hip_y)
     control = pt(hip_x, shape.hip_y + SIDE_CONTROL_RISE * shape.depth)
     waist_side = pt(hip_x - shape.shift, shape.length)
-    waist = _waist_edges(half, shape.length, waist_side)
+    waist = waist_edges(half, shape.length, waist_side)
     fork, point = pt(0.0, crotch.fork_y), pt(-ext, leg.crotch_y)
     return (
         Edge("hem", hem_in, hem_out, EdgeRole.HEM),
@@ -146,7 +146,7 @@ def _seams(panels: tuple[Panel, ...]) -> tuple[Seam, ...]:
     seams.append(Seam("center-front", ("front-left", "rise"), ("front-right", "rise")))
     seams.append(Seam("center-back", ("back-right", "rise"), ("back-left", "rise")))
     for panel in panels:
-        seams.extend(_dart_seams(panel))
+        seams.extend(dart_seams(panel))
     return tuple(seams)
 
 
@@ -189,7 +189,7 @@ def _legs(
 
 
 def _shift(body: Body, depth: float, params: Mapping[str, float]) -> float:
-    fh, fw, bh, bw = _hip_waist_split(body, *_eases(params))
+    fh, fw, bh, bw = hip_waist_split(body, *_eases(params))
     slope = tan(radians(body.hip_inclination_deg)) * depth
     return min(slope, fh - fw - MIN_DART_MM, bh - bw - MIN_DART_MM)
 
@@ -208,11 +208,11 @@ def _check_hem(leg: Leg, halves: tuple[Half, Half], crotches: tuple[Crotch, Crot
 
 
 def draft_trousers(body: Body, params: Mapping[str, float]) -> Pattern:
-    fh, fw, bh, bw = _hip_waist_split(body, *_eases(params))
+    fh, fw, bh, bw = hip_waist_split(body, *_eases(params))
     leg, extension = _legs(body, params, (fh, bh))
     shift = leg.shape.shift
-    front = _front_half(body, fh, fw, fh - fw - shift)
-    back = _back_half(body, bh, bw, bh - bw - shift)
+    front = front_half(body, fh, fw, fh - fw - shift)
+    back = back_half(body, bh, bw, bh - bw - shift)
     crotch_front, crotch_back = _crotches(leg, extension)
     _check_hem(leg, (front, back), (crotch_front, crotch_back))
     front_left = _leg_panel(("front-left", "Devant gauche"), front, leg, crotch_front)
