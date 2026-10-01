@@ -11,41 +11,41 @@ version du [changelog](changelog.md).
 Objectif : obtenir les patrons, les modifier et les voir sur un mannequin 2D et 3D.
 Porte de sortie : des patrons validés sur toile par un modéliste.
 
-| #    | Travail                                                              | Composant                          | Statut | Version / remarque                          |
-| ---- | -------------------------------------------------------------------- | ---------------------------------- | ------ | ------------------------------------------- |
-| 1.01 | Monorepo, outillage, frontières d'architecture                       | racine                             | ✅     | 0.1.0                                       |
-| 1.02 | Contrats et génération TS / Python                                   | `contracts`, `tools/contracts`     | ✅     | 0.1.0                                       |
-| 1.03 | Service de référence `designs` (PostgreSQL, outbox)                  | `services/designs`                 | ✅     | 0.1.0                                       |
-| 1.04 | Moteur de référence `patterning` (jupe droite provisoire)            | `engines/patterning`               | ✅     | 0.1.0                                       |
-| 1.05 | Moteur mannequin repris du prototype                                 | `engines/mannequin`                | ✅     | 0.1.0                                       |
-| 1.06 | Studio : mesures, patron 2D, mannequin 3D                            | `apps/studio`                      | ✅     | 0.1.0                                       |
-| 1.07 | Générateurs, `AGENTS.md`, ADR                                        | `tools/generators`, `docs`         | ✅     | 0.1.0                                       |
-| 1.08 | Conteneurs Docker et pile locale complète                            | `platform`, Dockerfiles            | ✅     | Non publié                                  |
-| 1.09 | Documentation MkDocs, changelog, tableau des travaux                 | `docs`                             | ✅     | Non publié                                  |
-| 1.10 | Vérifications locales (hook `pre-push`), zéro dépense                | racine                             | ✅     | Non publié                                  |
-| 1.11 | Intégrer GarmentCode (corsage, jupes, manches, pantalons)            | `engines/patterning`               | 🟡     | Jupes livrées ; pantalon et corsage à venir |
-| 1.12 | Découper le moteur mannequin en modules testés                       | `engines/mannequin`                | ✅     | Non publié                                  |
-| 1.13 | Repères de hauteur du mannequin (entrejambe…)                        | `engines/mannequin`                | ✅     | Non publié                                  |
-| 1.14 | Ajustement du mannequin dans un Web Worker                           | `packages/features`, `apps/studio` | ✅     | Non publié                                  |
-| 1.15 | Vues 2D trait du mannequin (silhouettes SVG)                         | `packages/viewer3d`                | ✅     | Non publié                                  |
-| 1.16 | Retouches : paramètres du modèle, liste et comparaison des versions  | `services/designs`, `apps/studio`  | ⬜     | `GET /v1/designs/{id}/versions`             |
-| 1.17 | Valeurs de couture, crans, gradation, plan de coupe                  | `engines/manufacturing`            | ✅     | Non publié                                  |
-| 1.18 | Exports SVG 1:1, PDF A4 tuilé, DXF-AAMA                              | `engines/manufacturing`            | 🟡     | SVG livré ; PDF et DXF à venir              |
-| 1.19 | Drapé 3D (NVIDIA Warp) en tâche, sortie glTF                         | `engines/drape`                    | ⬜     | Version CPU pour les tests                  |
-| 1.20 | Relais de l'outbox vers NATS JetStream                               | `packages/service-kit`             | ✅     | Non publié                                  |
-| 1.21 | Storybook et captures comparées                                      | `packages/ui-web`, `apps/studio`   | ⬜     | —                                           |
-| 1.22 | Bibliothèque de traduction ICU                                       | `apps/studio`                      | ✅     | Non publié                                  |
-| 1.23 | Chargement différé de three.js                                       | `apps/studio`                      | ✅     | Non publié                                  |
-| 1.24 | Tests de bout en bout (Playwright) sur la pile Docker                | `apps/studio`                      | ⬜     | —                                           |
-| 1.25 | Porte : toiles d'essai coupées depuis les exports, écarts corrigés   | équipe + modéliste                 | ⬜     | Fin de phase 1                              |
-| 1.26 | Orchestration des agents Claude Code (Opus, Sonnet, Haiku)           | `CLAUDE.md`, `.claude/`            | ✅     | Non publié — ADR 0007                       |
-| 1.27 | Brancher le relais de l'outbox dans `designs` et déclarer le flux    | `services/designs`, `platform`     | ✅     | Non publié                                  |
-| 1.28 | Afficher les silhouettes 2D dans le studio                           | `apps/studio`                      | ✅     | Non publié                                  |
-| 1.29 | Brancher le moteur de fabrication dans `designs` (pièces, exports)   | `services/designs`                 | ⬜     | Routes `manufacturing`, crans, embu         |
-| 1.30 | Écran des pièces de coupe et téléchargements dans le studio          | `apps/studio`                      | ⬜     | Affichage 2D, téléchargements SVG           |
-| 1.31 | Studio : choix du type de vêtement et formulaires des nouveaux types | `apps/studio`, `packages/features` | ⬜     | Dynamique selon le type                     |
-| 1.32 | Propager le type d'erreur précis du moteur dans `designs`            | `services/designs`                 | ⬜     | RFC 9457, traduction à l'écran              |
-| 1.33 | Test golden de la fabrication : écrire en LF                         | `engines/manufacturing`            | ⬜     | Référence json, SVG, PDF, DXF               |
+| #    | Travail                                                              | Composant                          | Statut | Version / remarque                            |
+| ---- | -------------------------------------------------------------------- | ---------------------------------- | ------ | --------------------------------------------- |
+| 1.01 | Monorepo, outillage, frontières d'architecture                       | racine                             | ✅     | 0.1.0                                         |
+| 1.02 | Contrats et génération TS / Python                                   | `contracts`, `tools/contracts`     | ✅     | 0.1.0                                         |
+| 1.03 | Service de référence `designs` (PostgreSQL, outbox)                  | `services/designs`                 | ✅     | 0.1.0                                         |
+| 1.04 | Moteur de référence `patterning` (jupe droite provisoire)            | `engines/patterning`               | ✅     | 0.1.0                                         |
+| 1.05 | Moteur mannequin repris du prototype                                 | `engines/mannequin`                | ✅     | 0.1.0                                         |
+| 1.06 | Studio : mesures, patron 2D, mannequin 3D                            | `apps/studio`                      | ✅     | 0.1.0                                         |
+| 1.07 | Générateurs, `AGENTS.md`, ADR                                        | `tools/generators`, `docs`         | ✅     | 0.1.0                                         |
+| 1.08 | Conteneurs Docker et pile locale complète                            | `platform`, Dockerfiles            | ✅     | Non publié                                    |
+| 1.09 | Documentation MkDocs, changelog, tableau des travaux                 | `docs`                             | ✅     | Non publié                                    |
+| 1.10 | Vérifications locales (hook `pre-push`), zéro dépense                | racine                             | ✅     | Non publié                                    |
+| 1.11 | Intégrer GarmentCode (corsage, jupes, manches, pantalons)            | `engines/patterning`               | ✅     | 0.5.0 (jupes, pantalon, corsage)              |
+| 1.12 | Découper le moteur mannequin en modules testés                       | `engines/mannequin`                | ✅     | Non publié                                    |
+| 1.13 | Repères de hauteur du mannequin (entrejambe…)                        | `engines/mannequin`                | ✅     | Non publié                                    |
+| 1.14 | Ajustement du mannequin dans un Web Worker                           | `packages/features`, `apps/studio` | ✅     | Non publié                                    |
+| 1.15 | Vues 2D trait du mannequin (silhouettes SVG)                         | `packages/viewer3d`                | ✅     | Non publié                                    |
+| 1.16 | Retouches : paramètres du modèle, liste et comparaison des versions  | `services/designs`, `apps/studio`  | ⬜     | `GET /v1/designs/{id}/versions`               |
+| 1.17 | Valeurs de couture, crans, gradation, plan de coupe                  | `engines/manufacturing`            | ✅     | Non publié                                    |
+| 1.18 | Exports SVG 1:1, PDF A4 tuilé, DXF-AAMA                              | `engines/manufacturing`            | ✅     | 0.4.0 : SVG (1.18a), PDF (1.18b), DXF (1.18c) |
+| 1.19 | Drapé 3D (NVIDIA Warp) en tâche, sortie glTF                         | `engines/drape`                    | ⬜     | Version CPU pour les tests                    |
+| 1.20 | Relais de l'outbox vers NATS JetStream                               | `packages/service-kit`             | ✅     | Non publié                                    |
+| 1.21 | Storybook et captures comparées                                      | `packages/ui-web`, `apps/studio`   | ⬜     | —                                             |
+| 1.22 | Bibliothèque de traduction ICU                                       | `apps/studio`                      | ✅     | Non publié                                    |
+| 1.23 | Chargement différé de three.js                                       | `apps/studio`                      | ✅     | Non publié                                    |
+| 1.24 | Tests de bout en bout (Playwright) sur la pile Docker                | `apps/studio`                      | ⬜     | —                                             |
+| 1.25 | Porte : toiles d'essai coupées depuis les exports, écarts corrigés   | équipe + modéliste                 | ⬜     | Fin de phase 1                                |
+| 1.26 | Orchestration des agents Claude Code (Opus, Sonnet, Haiku)           | `CLAUDE.md`, `.claude/`            | ✅     | Non publié — ADR 0007                         |
+| 1.27 | Brancher le relais de l'outbox dans `designs` et déclarer le flux    | `services/designs`, `platform`     | ✅     | Non publié                                    |
+| 1.28 | Afficher les silhouettes 2D dans le studio                           | `apps/studio`                      | ✅     | Non publié                                    |
+| 1.29 | Brancher le moteur de fabrication dans `designs` (pièces, exports)   | `services/designs`                 | ✅     | Routes `cut-patterns`, `exports` ; ADR 0012   |
+| 1.30 | Écran des pièces de coupe et téléchargements dans le studio          | `apps/studio`                      | ✅     | SVG, PDF A4 tuilé, DXF-AAMA                   |
+| 1.31 | Studio : choix du type de vêtement et formulaires des nouveaux types | `apps/studio`, `packages/features` | ✅     | Jupe droite, cercle, pantalon, corsage        |
+| 1.32 | Propager le type d'erreur précis du moteur dans `designs`            | `services/designs`                 | ⬜     | RFC 9457, traduction à l'écran                |
+| 1.33 | Test golden de la fabrication : écrire en LF                         | `engines/manufacturing`            | ⬜     | Référence json, SVG, PDF, DXF                 |
 
 ## Phases suivantes (à détailler à l'ouverture de chaque phase)
 

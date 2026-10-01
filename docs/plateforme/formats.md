@@ -29,15 +29,16 @@ Types disponibles :
 
 - `straight-skirt` (jupe droite) : `lengthMm`, paramètres par défaut
 - `circle-skirt` (jupe cercle) : `lengthMm`, `waistEaseMm`, `circleFraction`, `waistbandWidthMm` (optionnel)
-- `trousers` (pantalon) : `lengthMm`, `waistEaseMm`, `hipEaseMm`, `hemGirthMm` (optionnel)
+- `trousers` (pantalon) : `lengthMm`, `waistEaseMm`, `hipEaseMm`, `hemGirthMm` (optionnel) ; mesure obligatoire :
+  `crotchHeightMm` (hauteur d'entrejambe)
 - `bodice` (corsage) : `lengthBelowWaistMm`, `bustEaseMm`, `waistEaseMm`, `frontNeckDepthMm`,
-  `backNeckDepthMm`, `sleeve` (optionnel : `SleeveParams` avec `lengthMm`, `capEaseMm`, `hemGirthMm`)
+  `backNeckDepthMm`, `sleeve` (optionnel : `SleeveParams` avec `lengthMm`, `capEaseMm`, `hemGirthMm`) ;
+  mesures obligatoires : `bustGirthMm` (tour de poitrine) et `backWaistLengthMm` (longueur taille dos)
 
-Mesures étendues (ISO 8559-1, millimètres, facultatives) : `bustGirthMm`, `underBustGirthMm`,
-`cervicaleHeightMm`, `waistHeightMm`, `hipHeightMm`, `backWaistLengthMm`, `frontWaistLengthMm`,
-`neckShoulderToBustPointMm`, `bustPointWidthMm`, `shoulderWidthMm`, `armscyeDepthMm`, `armLengthMm`.
-Une mesure absente est estimée par un rapport aux corps moyens (hommes/femmes) et listée dans
-`GarmentSpec.estimatedMeasurements`.
+Mesures étendues (ISO 8559-1, millimètres, facultatives) : `underBustGirthMm`, `cervicaleHeightMm`,
+`waistHeightMm`, `hipHeightMm`, `frontWaistLengthMm`, `neckShoulderToBustPointMm`, `bustPointWidthMm`,
+`shoulderWidthMm`, `armscyeDepthMm`, `armLengthMm`. Une mesure absente est estimée par un rapport aux corps
+moyens (hommes/femmes, ANSUR II) et listée dans `GarmentSpec.estimatedMeasurements`.
 
 ## Pièces de coupe (`CutPattern`)
 
