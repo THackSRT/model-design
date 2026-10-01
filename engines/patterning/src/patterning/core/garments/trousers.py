@@ -4,10 +4,13 @@ Conception d'après GarmentCode (licence MIT, commit d449629) : `assets/garment_
 (`PantPanel`, `PantsHalf`, `Pants`) ; réécriture en Python pur et en mm, sans code copié. Repris :
 prolongement d'entrejambe fondé sur le tour de cuisse, un quart devant et le reste au dos, une pince
 devant et deux au dos (comme la jupe droite), hauteur d'entrejambe issue du corps.
-Différences voulues (ADR 0010) : entrejambe (courbe et jambe) et côtés cousus de même longueur par
-construction (GarmentCode laisse 23 mm d'écart) ; la courbe d'entrejambe est une quadratique à
-tangente verticale sur la ligne du milieu et horizontale au point d'entrejambe ; les rétrécissements
-de la jambe sont les mêmes devant et dos, donc les côtés et l'entrejambe se superposent.
+Différences voulues (ADR 0010) : côtés et entrejambe (`inseam-*`, devant contre dos de la même
+jambe) cousus de même longueur par construction (GarmentCode laisse 23 mm d'écart) ; mêmes
+rétrécissements de jambe devant et dos. La courbe d'entrejambe (`crotch`) fait partie de la couture
+milieu, avec le montant (`rise`) : devant gauche contre devant droit, dos gauche contre dos droit ;
+sa longueur n'est donc pas égalisée entre devant et dos. C'est une quadratique à tangente verticale
+sur la ligne du milieu et horizontale au point d'entrejambe, dont la chute est proportionnelle au
+prolongement : la fourche du dos est plus haute que celle du devant.
 Sans `hemGirthMm`, la jambe est droite depuis le genou (tour de genou + aisance).
 """
 
@@ -16,7 +19,6 @@ from dataclasses import dataclass
 from math import radians, tan
 
 from patterning.core.body import Body
-from patterning.core.curves import BISECTION_ITERATIONS
 from patterning.core.errors import DraftingError
 from patterning.core.garments.darts import (
     MIN_DART_MM,
@@ -30,7 +32,6 @@ from patterning.core.garments.darts import (
 )
 from patterning.core.garments.parts import mirror_panel, notch_at_end, notch_at_start, pt
 from patterning.core.garments.parts import vertical_grainline as grain
-from patterning.core.geometry import edge_length
 from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Seam
 
 MIN_LEG_BELOW_CROTCH_MM = 100
@@ -40,7 +41,7 @@ MIN_EXTENSION_MM = 20.0
 THIGH_EASE_MM = 60.0
 KNEE_EASE_MM = 60.0
 FRONT_EXTENSION_SHARE = 0.25
-CROTCH_CURVE_FACTOR = 1.15  # longueur de la courbe d'entrejambe / prolongement du dos
+CROTCH_DROP_FACTOR = 1.0  # chute de la courbe d'entrejambe / son prolongement
 SIDE_SHARE = 0.4  # part du rétrécissement de la jambe prise sur le côté (le reste : entrejambe)
 KNEE_SHARE = 0.5  # le genou est à mi-hauteur entre l'entrejambe et l'ourlet
 SIDE_CONTROL_RISE = 0.5
@@ -68,29 +69,12 @@ class Crotch:
     fork_y: float
 
 
-def _curve_length(drop: float, extension: float) -> float:
-    curve = Edge("_", (0.0, drop), (-extension, 0.0), EdgeRole.SEAM, ((0.0, 0.0),))
-    return edge_length(curve)
-
-
-def _drop_for_length(extension: float, target: float) -> float:
-    low, high = 0.0, target
-    for _ in range(BISECTION_ITERATIONS):
-        mid = (low + high) / 2
-        if _curve_length(mid, extension) < target:
-            low = mid
-        else:
-            high = mid
-    return (low + high) / 2
-
-
 def _crotches(leg: Leg, extension: float) -> tuple[Crotch, Crotch]:
-    """Devant et dos : même longueur de courbe, donc hauteurs de fourche différentes."""
+    """Devant et dos : chute proportionnelle au prolongement (la plus grande au dos)."""
     front = extension * FRONT_EXTENSION_SHARE
     back = extension - front
-    target = CROTCH_CURVE_FACTOR * back
-    crotches = tuple(Crotch(e, leg.crotch_y + _drop_for_length(e, target)) for e in (front, back))
-    if crotches[0].fork_y > leg.shape.length - MIN_RISE_MM:
+    crotches = tuple(Crotch(e, leg.crotch_y + CROTCH_DROP_FACTOR * e) for e in (front, back))
+    if crotches[1].fork_y > leg.shape.length - MIN_RISE_MM:
         raise DraftingError(
             "inconsistent-measurements",
             "Les mesures données et estimées sont incohérentes : thigh_girth_mm trop grande "
@@ -140,11 +124,14 @@ def _leg_panel(names: tuple[str, str], half: Half, leg: Leg, crotch: Crotch) -> 
 def _seams(panels: tuple[Panel, ...]) -> tuple[Seam, ...]:
     seams: list[Seam] = []
     for side in ("left", "right"):
-        for part in ("side-lower", "side-middle", "side-upper", "crotch", "inseam-upper"):
+        for part in ("side-lower", "side-middle", "side-upper", "inseam-upper"):
             seams.append(_pair(f"{part}-{side}", part, f"front-{side}", f"back-{side}"))
         seams.append(_pair(f"inseam-lower-{side}", "inseam-lower", f"front-{side}", f"back-{side}"))
-    seams.append(Seam("center-front", ("front-left", "rise"), ("front-right", "rise")))
-    seams.append(Seam("center-back", ("back-right", "rise"), ("back-left", "rise")))
+    for middle, (left, right) in {
+        "center-front": ("front-left", "front-right"),
+        "center-back": ("back-left", "back-right"),
+    }.items():  # montant puis courbe d'entrejambe : une seule couture milieu en deux bords
+        seams.extend(_pair(f"{middle}-{part}", part, left, right) for part in ("rise", "crotch"))
     for panel in panels:
         seams.extend(dart_seams(panel))
     return tuple(seams)

@@ -8,8 +8,8 @@ import pytest
 from patterning.core.drafting import draft
 from patterning.core.errors import DraftingError
 from patterning.core.geometry import edge_length, signed_area
-from patterning.core.model import Pattern
-from tests.builders import reference_measurements
+from patterning.core.model import Edge, Pattern, Point
+from tests.builders import minimal_measurements, reference_measurements
 
 PARAMS = {"length_mm": 1000.0, "hem_girth_mm": 440.0}
 PANELS = {"front-left", "front-right", "back-left", "back-right"}
@@ -72,8 +72,10 @@ def test_without_hem_girth_the_leg_is_straight_from_the_knee() -> None:
         )
         assert hem.start[1] == 0
     assert pattern.estimated_measurements == (
+        "back_waist_length_mm",
         "bust_girth_mm",
         "bust_point_width_mm",
+        "cervicale_height_mm",
         "hip_height_mm",
         "knee_girth_mm",
         "thigh_girth_mm",
@@ -84,7 +86,8 @@ def test_without_hem_girth_the_leg_is_straight_from_the_knee() -> None:
 def test_every_seam_is_exact_within_half_a_millimetre() -> None:
     for pattern in (_trousers(), draft("trousers", reference_measurements(), {"length_mm": 900})):
         ids = {s.id for s in pattern.seams}
-        assert {"crotch-left", "inseam-upper-right", "side-upper-left", "center-back"} <= ids
+        assert {"inseam-upper-right", "side-upper-left", "center-back-crotch"} <= ids
+        assert not any(i.startswith("crotch-") for i in ids)
         for seam in pattern.seams:
             a = pattern.panel(seam.a[0]).edge(seam.a[1])
             b = pattern.panel(seam.b[0]).edge(seam.b[1])
@@ -146,3 +149,53 @@ def test_a_given_thigh_girth_is_not_reported_as_estimated() -> None:
     pattern = draft("trousers", raw, PARAMS)
     assert "thigh_girth_mm" not in pattern.estimated_measurements
     assert "knee_girth_mm" not in pattern.estimated_measurements
+
+
+def test_the_middle_seams_join_rise_and_crotch_curve_of_both_sides() -> None:
+    pattern = _trousers()
+    seams = {s.id: s for s in pattern.seams}
+    for middle, (left, right) in {
+        "center-front": ("front-left", "front-right"),
+        "center-back": ("back-left", "back-right"),
+    }.items():
+        total = {}
+        for side in (left, right):
+            total[side] = sum(edge_length(pattern.panel(side).edge(e)) for e in ("rise", "crotch"))
+        assert abs(total[left] - total[right]) < 0.5
+        for part in ("rise", "crotch"):
+            assert seams[f"{middle}-{part}"].a == (left, part)
+            assert seams[f"{middle}-{part}"].b == (right, part)
+
+
+def test_inseam_front_and_back_of_a_leg_have_the_same_length() -> None:
+    pattern = _trousers()
+    for side in ("left", "right"):
+        for part in ("inseam-upper", "inseam-lower"):
+            front = edge_length(pattern.panel(f"front-{side}").edge(part))
+            back = edge_length(pattern.panel(f"back-{side}").edge(part))
+            assert abs(front - back) < 0.5
+
+
+def test_the_back_fork_is_higher_than_the_front_fork() -> None:
+    pattern = _trousers()
+    front = max(p[1] for p in _ends(pattern.panel("front-left").edge("rise")))
+    back = max(p[1] for p in _ends(pattern.panel("back-right").edge("rise")))
+    fork_front = min(p[1] for p in _ends(pattern.panel("front-left").edge("rise")))
+    fork_back = min(p[1] for p in _ends(pattern.panel("back-right").edge("rise")))
+    assert front == back == 1000
+    assert fork_back > fork_front
+
+
+def _ends(edge: Edge) -> tuple[Point, Point]:
+    return edge.start, edge.end
+
+
+def test_estimates_that_move_the_crotch_are_declared() -> None:
+    raw = replace(minimal_measurements(), crotch_height_mm=740)
+    pattern = draft("trousers", raw, {"length_mm": 1000.0})
+    assert {"cervicale_height_mm", "back_waist_length_mm", "waist_height_mm"} <= set(
+        pattern.estimated_measurements
+    )
+    given = replace(raw, back_waist_length_mm=330, cervicale_height_mm=1400)
+    declared = set(draft("trousers", given, {"length_mm": 1000.0}).estimated_measurements)
+    assert not {"cervicale_height_mm", "back_waist_length_mm"} & declared

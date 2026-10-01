@@ -185,3 +185,12 @@ du corsage : tour de poitrine (`bustGirthMm`) et longueur taille dos (`backWaist
 La longueur taille devant absente est estimée à 1,06 (femmes) et 1,03 (hommes) fois la longueur taille dos :
 hypothèse provisoire, **non tirée d'ANSUR II** (le prototype n'en a pas la moyenne), qui ne règle que la largeur
 de la pince de poitrine ; à remplacer par une mesure de référence ou à valider par le modéliste.
+
+**Correction 01/10/2026 (pantalon et manche).** La courbe d'entrejambe fait partie de la couture milieu (comme
+dans GarmentCode `pants.py`) : `center-front` et `center-back` se composent du montant (`rise`) et de la courbe
+(`crotch`), devant gauche contre devant droit, dos gauche contre dos droit. La couture « `crotch` devant contre dos »
+et l'égalisation des longueurs de courbe sont supprimées ; seule l'entrejambe (`inseam-*`) reste cousue devant contre
+dos. La fourche du dos est plus haute que celle du devant. Règle générale : toute mesure estimée qui influe sur la
+sortie est déclarée dans `estimatedMeasurements` (pantalon : cervicale et longueur taille dos incluses quand la
+hauteur de hanches est estimée). La manche se coud à chaque emmanchure : `armhole-back-right` et `armhole-back-left`.
+Version du moteur : 0.5.0.

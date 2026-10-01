@@ -84,7 +84,12 @@ def _edges(width: float, hem: float, under_y: float, length: float) -> tuple[Edg
 def draft_sleeve(
     front_arm: float, back_arm: float, spec: SleeveSpec
 ) -> tuple[Panel, tuple[Seam, ...]]:
-    """Manche (à couper deux fois) et ses coutures : dessous de bras, têtes embuées."""
+    """Manche (à couper deux fois) et ses coutures : dessous de bras, têtes embuées.
+
+    Convention : la manche se coud à chaque emmanchure ; le contrat n'exprime pas « l'une des deux
+    copies », donc les coutures sont déclarées à droite (`armhole-back-right`) et à gauche
+    (`armhole-back-left`) au dos, et une seule fois au devant (le devant est coupé au pli).
+    """
     half_cap = (front_arm + back_arm + spec.cap_ease) / 2
     width = SLEEVE_WIDTH_SHARE * (front_arm + back_arm) / 2
     height = _cap_height(width, spec.length, half_cap)
@@ -110,11 +115,13 @@ def draft_sleeve(
         notches=notches,
     )
     share = spec.cap_ease * front_arm / (front_arm + back_arm)
+    back = spec.cap_ease - share
     seams = (
         Seam("sleeve-underarm", ("sleeve", "underarm-front"), ("sleeve", "underarm-back")),
         Seam("armhole-front", ("sleeve", "cap-front"), ("front", "armhole"), share),
-        Seam(
-            "armhole-back", ("sleeve", "cap-back"), ("back-right", "armhole"), spec.cap_ease - share
+        *(
+            Seam(f"armhole-back-{side}", ("sleeve", "cap-back"), (f"back-{side}", "armhole"), back)
+            for side in ("right", "left")
         ),
     )
     return panel, seams

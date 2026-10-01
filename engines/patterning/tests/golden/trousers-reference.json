@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "garment": {
     "type": "trousers"
@@ -123,7 +123,7 @@
           ],
           "to": [
             0.0,
-            830.66
+            762.32
           ],
           "role": "seam"
         },
@@ -131,7 +131,7 @@
           "id": "crotch",
           "from": [
             0.0,
-            830.66
+            762.32
           ],
           "to": [
             -33.47,
@@ -190,7 +190,7 @@
         },
         {
           "edgeId": "rise",
-          "distanceMm": 169.34,
+          "distanceMm": 237.68,
           "count": 1
         }
       ]
@@ -231,7 +231,7 @@
           ],
           "to": [
             234.82,
-            830.66
+            762.32
           ],
           "controls": [
             [
@@ -245,7 +245,7 @@
           "id": "rise",
           "from": [
             234.82,
-            830.66
+            762.32
           ],
           "to": [
             234.82,
@@ -417,7 +417,7 @@
           ],
           "to": [
             270.18,
-            764.5
+            829.26
           ],
           "controls": [
             [
@@ -431,7 +431,7 @@
           "id": "rise",
           "from": [
             270.18,
-            764.5
+            829.26
           ],
           "to": [
             270.18,
@@ -753,7 +753,7 @@
           ],
           "to": [
             0.0,
-            764.5
+            829.26
           ],
           "role": "seam"
         },
@@ -761,7 +761,7 @@
           "id": "crotch",
           "from": [
             0.0,
-            764.5
+            829.26
           ],
           "to": [
             -100.41,
@@ -820,7 +820,7 @@
         },
         {
           "edgeId": "rise",
-          "distanceMm": 235.5,
+          "distanceMm": 170.74,
           "count": 1
         }
       ]
@@ -858,17 +858,6 @@
       "b": {
         "panelId": "back-left",
         "edgeId": "side-upper"
-      }
-    },
-    {
-      "id": "crotch-left",
-      "a": {
-        "panelId": "front-left",
-        "edgeId": "crotch"
-      },
-      "b": {
-        "panelId": "back-left",
-        "edgeId": "crotch"
       }
     },
     {
@@ -927,17 +916,6 @@
       }
     },
     {
-      "id": "crotch-right",
-      "a": {
-        "panelId": "front-right",
-        "edgeId": "crotch"
-      },
-      "b": {
-        "panelId": "back-right",
-        "edgeId": "crotch"
-      }
-    },
-    {
       "id": "inseam-upper-right",
       "a": {
         "panelId": "front-right",
@@ -960,7 +938,7 @@
       }
     },
     {
-      "id": "center-front",
+      "id": "center-front-rise",
       "a": {
         "panelId": "front-left",
         "edgeId": "rise"
@@ -971,14 +949,36 @@
       }
     },
     {
-      "id": "center-back",
+      "id": "center-front-crotch",
       "a": {
-        "panelId": "back-right",
+        "panelId": "front-left",
+        "edgeId": "crotch"
+      },
+      "b": {
+        "panelId": "front-right",
+        "edgeId": "crotch"
+      }
+    },
+    {
+      "id": "center-back-rise",
+      "a": {
+        "panelId": "back-left",
         "edgeId": "rise"
       },
       "b": {
-        "panelId": "back-left",
+        "panelId": "back-right",
         "edgeId": "rise"
+      }
+    },
+    {
+      "id": "center-back-crotch",
+      "a": {
+        "panelId": "back-left",
+        "edgeId": "crotch"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "crotch"
       }
     },
     {
@@ -1049,8 +1049,10 @@
     }
   ],
   "estimatedMeasurements": [
+    "backWaistLengthMm",
     "bustGirthMm",
     "bustPointWidthMm",
+    "cervicaleHeightMm",
     "hipHeightMm",
     "thighGirthMm",
     "waistHeightMm"

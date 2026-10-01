@@ -145,11 +145,16 @@ def _check_positive(body: Body, checked: Sequence[str] | None) -> None:
 
 
 def used_estimates(estimated: Sequence[str], uses: Sequence[str]) -> tuple[str, ...]:
-    """Mesures estimées qui servent au tracé : `uses` et les mesures dont leur estimation dépend."""
+    """Mesures estimées qui servent au tracé : `uses` et les mesures dont leur estimation dépend.
+
+    `crotch_height_mm` dans `uses` signale un tracé qui compare une hauteur absolue (hanches) à une
+    mesure donnée : la hauteur de hanches estimée dépend alors de la hauteur de taille.
+    """
     used = {name for name in estimated if name in uses}
     if "bust_point_width_mm" in used:
         used |= {"bust_girth_mm"} & set(estimated)
-    if "waist_height_mm" in used and "hip_height_mm" not in estimated:
+    absolute = "crotch_height_mm" in uses  # hauteur absolue des hanches : elle dépend de la taille
+    if "waist_height_mm" in used and ("hip_height_mm" not in estimated or absolute):
         used |= {"cervicale_height_mm", "back_waist_length_mm"} & set(estimated)
     return tuple(sorted(used))
 

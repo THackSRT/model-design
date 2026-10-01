@@ -38,10 +38,11 @@ def test_cap_is_longer_than_the_armhole_by_the_ease(ease: int) -> None:
 def test_the_ease_is_declared_on_the_armhole_seams_and_shared_in_proportion() -> None:
     pattern = _sleeved(sleeve_cap_ease_mm=20)
     seams = {s.id: s for s in pattern.seams}
-    front, back = seams["armhole-front"], seams["armhole-back"]
+    front, back = seams["armhole-front"], seams["armhole-back-right"]
     assert front.ease_mm + back.ease_mm == pytest.approx(20, abs=1e-9)
     assert front.ease_mm == pytest.approx(10, abs=0.1)
-    for seam in (front, back):
+    assert seams["armhole-back-left"].ease_mm == back.ease_mm
+    for seam in (front, back, seams["armhole-back-left"]):
         a = pattern.panel(seam.a[0]).edge(seam.a[1])
         b = pattern.panel(seam.b[0]).edge(seam.b[1])
         assert edge_length(a) - edge_length(b) == pytest.approx(seam.ease_mm, abs=0.5)

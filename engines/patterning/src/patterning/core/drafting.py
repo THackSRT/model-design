@@ -63,7 +63,13 @@ DRAFTERS: dict[str, GarmentDrafter] = {
     "circle-skirt": GarmentDrafter(draft_circle_skirt, uses=(), checks=("waist_girth_mm",)),
     "trousers": GarmentDrafter(
         draft_trousers,
-        uses=("waist_height_mm", "hip_height_mm", "bust_point_width_mm", "thigh_girth_mm"),
+        uses=(
+            "waist_height_mm",
+            "hip_height_mm",
+            "bust_point_width_mm",
+            "thigh_girth_mm",
+            "crotch_height_mm",  # hauteur absolue : l'entrejambe se mesure depuis le sol
+        ),
         checks=(*SKIRT_CHECKS, "crotch_hip_diff_mm", "thigh_girth_mm", "knee_girth_mm"),
         uses_without_param=(("hem_girth_mm", "knee_girth_mm"),),
     ),

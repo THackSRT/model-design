@@ -16,7 +16,7 @@ def test_drafts_a_straight_skirt_that_follows_the_contract() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["unit"] == "mm"
-    assert body["engine"] == {"name": "patterning", "version": "0.4.0"}
+    assert body["engine"] == {"name": "patterning", "version": "0.5.0"}
     assert [p["id"] for p in body["panels"]] == ["front", "back-right", "back-left"]
     assert all(p["notches"] for p in body["panels"])
 
@@ -118,7 +118,8 @@ def test_drafts_a_sleeveless_bodice_and_one_with_sleeves() -> None:
     assert body["panels"][-1]["quantity"] == 2
     assert "wristGirthMm" in body["estimatedMeasurements"]
     eases = {s["id"]: s["easeMm"] for s in body["seams"] if "easeMm" in s}
-    assert eases["armhole-front"] + eases["armhole-back"] == pytest.approx(15, abs=0.01)
+    assert eases["armhole-back-left"] == eases["armhole-back-right"]
+    assert eases["armhole-front"] + eases["armhole-back-right"] == pytest.approx(15, abs=0.01)
 
 
 @pytest.mark.parametrize("missing", ["bustGirthMm", "backWaistLengthMm"])

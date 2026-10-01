@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "garment": {
     "type": "bodice"
@@ -821,13 +821,25 @@
       "easeMm": 7.500000000000001
     },
     {
-      "id": "armhole-back",
+      "id": "armhole-back-right",
       "a": {
         "panelId": "sleeve",
         "edgeId": "cap-back"
       },
       "b": {
         "panelId": "back-right",
+        "edgeId": "armhole"
+      },
+      "easeMm": 7.499999999999999
+    },
+    {
+      "id": "armhole-back-left",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-back"
+      },
+      "b": {
+        "panelId": "back-left",
         "edgeId": "armhole"
       },
       "easeMm": 7.499999999999999
