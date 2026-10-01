@@ -1,7 +1,7 @@
 # Service designs (service de référence)
 
 Rôle : modèles, versions de modèle et spécifications de patron. Données possédées : tables `designs`,
-`design_versions`, `outbox`. Événement publié : `design.versioned`. Appelle : moteur `patterning` (HTTP, 2 s).
+`design_versions`, `outbox`. Événement publié : `design.versioned`. Appelle : moteurs `patterning` et `manufacturing` (HTTP, 2 s).
 
 - `src/domain` : `Design`, `DesignVersion`, `addVersion` (invariants, événement), `canonicalJson` (empreinte).
 - `src/application` : un fichier par cas d'usage ; ports `DesignRepository`, `PatterningEngine`, `Hasher`.
@@ -27,4 +27,13 @@ Rôle : modèles, versions de modèle et spécifications de patron. Données pos
   `enableShutdownHooks` de NestJS).
 - Intégration avec NATS réel (hors `pnpm check`) : `pnpm dev:infra` puis
   `pnpm nx run @atelier/designs:test:integration` (`NATS_URL`, défaut `nats://localhost:4222`).
+- Fabrication (ADR 0012) : `POST /v1/designs/{id}/versions/{n}/cut-patterns` (pièces de coupe) et `.../exports`
+  (SVG, PDF A4 tuilé, DXF-AAMA) envoient la `spec` de la version au moteur `manufacturing`
+  (`adapters/engines/http-manufacturing-engine.ts`, `requestBytes` de service-kit pour les fichiers). Variables :
+  `MANUFACTURING_URL` (`http://localhost:3202`, `http://manufacturing:8000` dans la pile), `MANUFACTURING_TIMEOUT_MS`
+  (2000) ; le service démarre sans le moteur. Types de problème du moteur relayés en 422 seulement s'ils sont dans
+  la liste blanche (`MANUFACTURING_PROBLEM_TYPES`), tout le reste en 502 `engine-unavailable`. Type de contenu et
+  nom de fichier sont fixés par le service (`domain/export-file-name.ts`), jamais recopiés du moteur. Pas de cache :
+  réponses `Cache-Control: no-store` (données dérivées des mesures d'un client). Les exports sont demandés au moteur
+  en français (`locale: 'fr'`, fixé dans l'adaptateur) tant que le studio n'a qu'une langue.
 - Commandes : `pnpm nx run @atelier/designs:test|lint|typecheck|build`, `pnpm --filter @atelier/designs start`.

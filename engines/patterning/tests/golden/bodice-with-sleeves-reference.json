@@ -1,0 +1,855 @@
+{
+  "specVersion": "1.0",
+  "unit": "mm",
+  "engine": {
+    "name": "patterning",
+    "version": "0.5.0"
+  },
+  "garment": {
+    "type": "bodice"
+  },
+  "panels": [
+    {
+      "id": "front",
+      "name": "Devant",
+      "edges": [
+        {
+          "id": "hem-1",
+          "from": [
+            0.0,
+            -60.0
+          ],
+          "to": [
+            56.76,
+            -60.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [
+            56.76,
+            -60.0
+          ],
+          "to": [
+            74.7,
+            123.7
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [
+            74.7,
+            123.7
+          ],
+          "to": [
+            92.64,
+            -60.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "hem-2",
+          "from": [
+            92.64,
+            -60.0
+          ],
+          "to": [
+            216.08,
+            -60.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-below",
+          "from": [
+            216.08,
+            -60.0
+          ],
+          "to": [
+            216.08,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-lower",
+          "from": [
+            216.08,
+            0.0
+          ],
+          "to": [
+            240.0,
+            137.3
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bust-dart-lower",
+          "from": [
+            240.0,
+            137.3
+          ],
+          "to": [
+            74.7,
+            148.7
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bust-dart-upper",
+          "from": [
+            74.7,
+            148.7
+          ],
+          "to": [
+            240.0,
+            160.1
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [
+            240.0,
+            160.1
+          ],
+          "to": [
+            240.0,
+            245.1
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "armhole",
+          "from": [
+            240.0,
+            245.1
+          ],
+          "to": [
+            172.42,
+            370.5
+          ],
+          "controls": [
+            [
+              145.39,
+              245.1
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "shoulder",
+          "from": [
+            172.42,
+            370.5
+          ],
+          "to": [
+            88.27,
+            402.8
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "neck",
+          "from": [
+            88.27,
+            402.8
+          ],
+          "to": [
+            0.0,
+            319.84
+          ],
+          "controls": [
+            [
+              88.27,
+              319.84
+            ]
+          ],
+          "role": "opening"
+        },
+        {
+          "id": "fold",
+          "from": [
+            0.0,
+            319.84
+          ],
+          "to": [
+            0.0,
+            -60.0
+          ],
+          "role": "fold"
+        }
+      ],
+      "grainline": [
+        [
+          28.8,
+          76.0
+        ],
+        [
+          28.8,
+          304.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": true,
+      "notches": [
+        {
+          "edgeId": "armhole",
+          "distanceMm": 68.51,
+          "count": 1
+        },
+        {
+          "edgeId": "armhole",
+          "distanceMm": 171.29,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "back-right",
+      "name": "Dos droit",
+      "edges": [
+        {
+          "id": "hem-1",
+          "from": [
+            0.0,
+            -60.0
+          ],
+          "to": [
+            79.9,
+            -60.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [
+            79.9,
+            -60.0
+          ],
+          "to": [
+            108.04,
+            109.84
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [
+            108.04,
+            109.84
+          ],
+          "to": [
+            136.18,
+            -60.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "hem-2",
+          "from": [
+            136.18,
+            -60.0
+          ],
+          "to": [
+            216.08,
+            -60.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-below",
+          "from": [
+            216.08,
+            -60.0
+          ],
+          "to": [
+            216.08,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-lower",
+          "from": [
+            216.08,
+            0.0
+          ],
+          "to": [
+            240.0,
+            137.3
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [
+            240.0,
+            137.3
+          ],
+          "to": [
+            240.0,
+            222.3
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "armhole",
+          "from": [
+            240.0,
+            222.3
+          ],
+          "to": [
+            172.42,
+            347.7
+          ],
+          "controls": [
+            [
+              145.39,
+              222.3
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "shoulder",
+          "from": [
+            172.42,
+            347.7
+          ],
+          "to": [
+            88.27,
+            380.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "neck",
+          "from": [
+            88.27,
+            380.0
+          ],
+          "to": [
+            0.0,
+            357.93
+          ],
+          "controls": [
+            [
+              88.27,
+              357.93
+            ]
+          ],
+          "role": "opening"
+        },
+        {
+          "id": "center-back",
+          "from": [
+            0.0,
+            357.93
+          ],
+          "to": [
+            0.0,
+            -60.0
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          28.8,
+          76.0
+        ],
+        [
+          28.8,
+          304.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "armhole",
+          "distanceMm": 68.51,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "back-left",
+      "name": "Dos gauche",
+      "edges": [
+        {
+          "id": "center-back",
+          "from": [
+            240.0,
+            -60.0
+          ],
+          "to": [
+            240.0,
+            357.93
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "neck",
+          "from": [
+            240.0,
+            357.93
+          ],
+          "to": [
+            151.73,
+            380.0
+          ],
+          "controls": [
+            [
+              151.73,
+              357.93
+            ]
+          ],
+          "role": "opening"
+        },
+        {
+          "id": "shoulder",
+          "from": [
+            151.73,
+            380.0
+          ],
+          "to": [
+            67.58,
+            347.7
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "armhole",
+          "from": [
+            67.58,
+            347.7
+          ],
+          "to": [
+            0.0,
+            222.3
+          ],
+          "controls": [
+            [
+              94.61,
+              222.3
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [
+            0.0,
+            222.3
+          ],
+          "to": [
+            0.0,
+            137.3
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-lower",
+          "from": [
+            0.0,
+            137.3
+          ],
+          "to": [
+            23.92,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-below",
+          "from": [
+            23.92,
+            0.0
+          ],
+          "to": [
+            23.92,
+            -60.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "hem-2",
+          "from": [
+            23.92,
+            -60.0
+          ],
+          "to": [
+            103.82,
+            -60.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [
+            103.82,
+            -60.0
+          ],
+          "to": [
+            131.96,
+            109.84
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [
+            131.96,
+            109.84
+          ],
+          "to": [
+            160.1,
+            -60.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "hem-1",
+          "from": [
+            160.1,
+            -60.0
+          ],
+          "to": [
+            240.0,
+            -60.0
+          ],
+          "role": "hem"
+        }
+      ],
+      "grainline": [
+        [
+          211.2,
+          76.0
+        ],
+        [
+          211.2,
+          304.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "armhole",
+          "distanceMm": 102.78,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "id": "sleeve",
+      "name": "Manche",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [
+            -120.0,
+            0.0
+          ],
+          "to": [
+            120.0,
+            0.0
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "underarm-front",
+          "from": [
+            120.0,
+            0.0
+          ],
+          "to": [
+            94.21,
+            457.19
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "cap-front",
+          "from": [
+            94.21,
+            457.19
+          ],
+          "to": [
+            0.0,
+            600.0
+          ],
+          "controls": [
+            [
+              47.1,
+              600.0
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "cap-back",
+          "from": [
+            0.0,
+            600.0
+          ],
+          "to": [
+            -94.21,
+            457.19
+          ],
+          "controls": [
+            [
+              -47.1,
+              600.0
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "underarm-back",
+          "from": [
+            -94.21,
+            457.19
+          ],
+          "to": [
+            -120.0,
+            0.0
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          0.0,
+          120.0
+        ],
+        [
+          0.0,
+          480.0
+        ]
+      ],
+      "quantity": 2,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "cap-front",
+          "distanceMm": 71.51,
+          "count": 1
+        },
+        {
+          "edgeId": "cap-front",
+          "distanceMm": 178.78,
+          "count": 1
+        },
+        {
+          "edgeId": "cap-back",
+          "distanceMm": 107.27,
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "id": "side-lower-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-lower"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "side-lower"
+      }
+    },
+    {
+      "id": "side-upper-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-upper"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "side-upper"
+      }
+    },
+    {
+      "id": "shoulder-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "shoulder"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "shoulder"
+      }
+    },
+    {
+      "id": "side-below-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-below"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "side-below"
+      }
+    },
+    {
+      "id": "side-lower-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-lower"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "side-lower"
+      }
+    },
+    {
+      "id": "side-upper-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-upper"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "side-upper"
+      }
+    },
+    {
+      "id": "shoulder-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "shoulder"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "shoulder"
+      }
+    },
+    {
+      "id": "side-below-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-below"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "side-below"
+      }
+    },
+    {
+      "id": "center-back",
+      "a": {
+        "panelId": "back-right",
+        "edgeId": "center-back"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "center-back"
+      }
+    },
+    {
+      "id": "bust-dart",
+      "a": {
+        "panelId": "front",
+        "edgeId": "bust-dart-lower"
+      },
+      "b": {
+        "panelId": "front",
+        "edgeId": "bust-dart-upper"
+      }
+    },
+    {
+      "id": "front-dart-1",
+      "a": {
+        "panelId": "front",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "front",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "back-right-dart-1",
+      "a": {
+        "panelId": "back-right",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "back-left-dart-1",
+      "a": {
+        "panelId": "back-left",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "sleeve-underarm",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "underarm-front"
+      },
+      "b": {
+        "panelId": "sleeve",
+        "edgeId": "underarm-back"
+      }
+    },
+    {
+      "id": "armhole-front",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-front"
+      },
+      "b": {
+        "panelId": "front",
+        "edgeId": "armhole"
+      },
+      "easeMm": 7.500000000000001
+    },
+    {
+      "id": "armhole-back-right",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-back"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "armhole"
+      },
+      "easeMm": 7.499999999999999
+    },
+    {
+      "id": "armhole-back-left",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-back"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "armhole"
+      },
+      "easeMm": 7.499999999999999
+    }
+  ],
+  "estimatedMeasurements": [
+    "armscyeDepthMm",
+    "bustPointWidthMm",
+    "frontWaistLengthMm",
+    "neckShoulderToBustPointMm",
+    "shoulderWidthMm"
+  ]
+}

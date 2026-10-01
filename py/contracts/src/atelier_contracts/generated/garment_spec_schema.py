@@ -50,6 +50,46 @@ class Edge(BaseModel):
     role: Role | None = None
 
 
+class EdgeRef(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    panelId: str
+    edgeId: str
+
+
+class Seam(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    id: str
+    a: EdgeRef
+    b: EdgeRef
+    easeMm: float | None = Field(
+        None,
+        description="Embu : le bord a est plus long que le bord b de cette valeur, qui se répartit en le cousant sur b (ex. tête de manche). Absent : 0, les deux bords ont la même longueur.",
+        ge=0.0,
+        le=50.0,
+    )
+
+
+class NotchPlacement(BaseModel):
+    edgeId: str
+    distanceMm: float = Field(..., ge=0.0, le=10000.0)
+    count: int | None = Field(
+        1,
+        description="Cran simple, double (dos, par convention) ou triple.",
+        ge=1,
+        le=3,
+    )
+
+
+class Notch(NotchPlacement):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+
+
 class Panel(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -66,23 +106,11 @@ class Panel(BaseModel):
     )
     quantity: int = Field(..., description="Nombre de pièces à couper.", ge=1)
     cutOnFold: bool | None = False
-
-
-class EdgeRef(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
+    notches: list[Notch] | None = Field(
+        None,
+        description="Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux).",
+        max_length=200,
     )
-    panelId: str
-    edgeId: str
-
-
-class Seam(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    id: str
-    a: EdgeRef
-    b: EdgeRef
 
 
 class GarmentSpec(BaseModel):
@@ -95,3 +123,7 @@ class GarmentSpec(BaseModel):
     garment: Garment
     panels: list[Panel] = Field(..., min_length=1)
     seams: list[Seam]
+    estimatedMeasurements: list[str] | None = Field(
+        None,
+        description="Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation.",
+    )

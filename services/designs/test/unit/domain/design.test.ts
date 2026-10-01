@@ -50,6 +50,11 @@ describe('une nouvelle version', () => {
     ]);
   });
 
+  it('refuse une demande d’un autre type que celui du modèle', () => {
+    const added = addVersion(aDesign({ garmentType: 'bodice' }), draft);
+    expect(added.isErr() && added.error.kind).toBe('garment-type-mismatch');
+  });
+
   it('refuse un patron d’un autre type de vêtement', () => {
     const added = addVersion(aDesign(), { ...draft, spec: aSpec('shirt') });
     expect(added.isErr() && added.error.kind).toBe('garment-type-mismatch');

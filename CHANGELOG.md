@@ -9,6 +9,22 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Moteur `manufacturing` (port 3202, ENGINE_VERSION 0.4.0) : pièces de coupe avec valeurs de couture par bord,
+  crans demandés ou automatiques, droit fil et pliure ; gradation par recalcul ; plan de coupe simple et
+  déterministe ; exports SVG 1:1 (1.18a), PDF A4 tuilé (1.18b) et DXF-AAMA (1.18c) ; routes RFC 9457 typées.
+- Patronage : quatre types de vêtements (`straight-skirt`, `circle-skirt`, `trousers`, `bodice`) et douze mesures
+  facultatives (ISO 8559-1) ; GarmentCode réécrit en Python pur sans dépendance nouvelle (ADR 0010) : jupe droite
+  à pinces, jupe cercle, pantalon et corsage avec ou sans manches, coutures justes à 0,5 mm près ; mesures
+  obligatoires par type, estimations déclarées ; références « candidates » à valider par le modéliste.
+- `designs` accepte les quatre types de modèle et sert les pièces de coupe et les exports SVG, PDF A4 et DXF d'une
+  version (`POST …/versions/{n}/cut-patterns` et `…/exports`, ADR 0012) en relayant le moteur de fabrication.
+- Studio : `three.js` chargé à la demande dans un `Suspense` (`lazy-mannequin-view.tsx`, paquet initial réduit de
+  806 kB à 303 kB) ; messages ICU avec pluriels, genres et formatage de nombres (ADR 0011) ; erreurs de saisie
+  affichées sous les champs (`intl-messageformat` v12.1.2, BSD-3).
+- Studio : pièces de coupe affichées (SVG), téléchargements (SVG, PDF A4 tuilé, DXF-AAMA), choix du type
+  de vêtement et formulaires dynamiques (1.30, 1.31).
+- Hook `pre-push` activé sous Windows (script `prepare` en Node, sans Git Bash externe).
+- Licence permise PSF-2.0 ajoutée (typing_extensions, requise par Pydantic).
 - Service `docs` dans `platform/docker-compose.yml` (profil « app », `pnpm stack:up`) : documentation MkDocs
   construite puis servie par nginx sur http://localhost:8000.
 - Documentation MkDocs de la plateforme (`pnpm docs:serve`) : architecture, directives de codage, plateforme,
@@ -33,6 +49,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 - Moteur mannequin remplacé par modules TypeScript testés (geometry, morph, measure, fit, render, pose) ;
   exception au lint levée.
+- `engines/patterning` : GarmentCode est la référence de conception, réécrite en Python pur, typé, millimètres,
+  sans dépendance nouvelle ; pas d'adaptateur centimètres (aucun code en centimètres).
 - Mannequin 3D : la tête garde sa forme naturelle (crâne, joues, mâchoire, menton, oreilles) ; seuls les
   traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine ;
   le visage est aplati (la bouche et le menton ne dépassent plus le plan du front).
@@ -46,6 +64,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Corrigé
 
+- Manufacturing : doublon de cran sur une pièce en miroir (comparaison par position, ENGINE_VERSION 0.3.1 → 0.4.0).
+- Dépôt : fichiers `.dxf` et `.pdf` stockés en binaire (`.gitattributes`) pour éviter la conversion LF.
 - `pnpm stack:up` sous Windows : le certificat d'autorité facultatif vaut par défaut un fichier vide
   (`platform/empty-ca.crt`) au lieu de `/dev/null`.
 - `pnpm check` passe sous Windows : fins de ligne LF imposées (`.gitattributes`, ruff), Prettier lancé sans

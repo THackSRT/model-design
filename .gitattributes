@@ -1,3 +1,6 @@
 # LF partout, quel que soit le poste : Prettier, ruff et le générateur de contrats écrivent en LF.
 * text=auto eol=lf
 *.mhz binary
+# Exports de fabrication : octets exacts (le DXF exige CRLF, le PDF des décalages xref exacts).
+*.dxf binary
+*.pdf binary

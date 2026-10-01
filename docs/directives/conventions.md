@@ -37,5 +37,5 @@ celles qu'un outil ne peut pas deviner, et les limites chiffrées sont vérifié
 - **Commentaires** : ils disent pourquoi, pas quoi ; les exports publics des bibliothèques ont une TSDoc ou une
   docstring ; un `TODO` cite son ticket.
 - **Dépendances** : une nouvelle bibliothèque passe par une ADR courte ; seules les licences permissives (MIT,
-  Apache 2.0, BSD, ISC, CC0, Unlicense — ADR 0008) sont acceptées.
+  Apache 2.0, BSD, ISC, CC0, Unlicense — ADR 0008, PSF-2.0 — ADR 0009) sont acceptées.
 - **Commits** : Conventional Commits, avec le projet en portée (`feat(designs): liste des versions`).

@@ -30,7 +30,10 @@ const actions = (): PatternStudioActions => ({
   setDisplay: vi.fn(),
   setSex: vi.fn(),
   setMeasurement: vi.fn(),
-  setSkirt: vi.fn(),
+  setGarmentType: vi.fn(),
+  setParam: vi.fn(),
+  setWithSleeve: vi.fn(),
+  setSleeveParam: vi.fn(),
   generate: vi.fn(),
 });
 
@@ -78,6 +81,7 @@ describe('vue de l’atelier de patron', () => {
     );
     expect(screen.getByRole('img', { name: 'Patron' }).querySelectorAll('path')).toHaveLength(1);
     expect(screen.getByText('Version 3')).toBeTruthy();
+    expect(screen.getByText('1 pièce')).toBeTruthy();
   });
 
   it('échec : traduit le problème rendu par le service', () => {
@@ -95,11 +99,12 @@ describe('vue de l’atelier de patron', () => {
   it('champ invalide : il est signalé', () => {
     render(
       <PatternStudioView
-        state={{ ...base, errors: { hipGirthMm: 'entre 60 et 190 cm' } }}
+        state={{ ...base, errors: { hipGirthMm: { code: 'range', minMm: 600, maxMm: 1900 } } }}
         actions={actions()}
       />,
     );
     expect(screen.getByLabelText('Tour de bassin').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByRole('alert').textContent).toBe('Entre 60 cm et 190 cm');
   });
 
   it('ajustement en cours : indique « en cours » et garde l’écran utilisable', () => {
@@ -129,14 +134,14 @@ describe('vue de l’atelier de patron', () => {
     ).toBe(false);
   });
 
-  it('bascule 3D : affiche la vue 3D, pas les silhouettes', () => {
+  it('bascule 3D : affiche la vue 3D, pas les silhouettes', async () => {
     render(
       <PatternStudioView
         state={{ ...base, mannequin: fitted, mannequinStatus: 'ready' }}
         actions={actions()}
       />,
     );
-    expect(screen.getByTestId('mannequin-3d')).toBeTruthy();
+    expect(await screen.findByTestId('mannequin-3d')).toBeTruthy();
     expect(screen.queryByRole('img', { name: 'Face' })).toBeNull();
   });
 
@@ -159,5 +164,89 @@ describe('vue de l’atelier de patron', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Silhouettes' }));
     expect(a.setDisplay).toHaveBeenCalledWith('outline');
     expect(screen.getByRole('button', { name: '3D' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('le sélecteur liste les quatre types, tous tracés', () => {
+    render(<PatternStudioView state={base} actions={actions()} />);
+    const options = screen.getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(
+      expect.arrayContaining(['Jupe droite', 'Jupe cercle', 'Pantalon', 'Corsage']),
+    );
+    expect(options.some((o) => o.hasAttribute('disabled'))).toBe(false);
+  });
+
+  it('corsage : mesures de buste, champs du corsage, manches en option', async () => {
+    const a = actions();
+    const form = { ...initialForm, garmentType: 'bodice' as const };
+    const { rerender } = render(<PatternStudioView state={{ ...base, form }} actions={a} />);
+    expect(screen.getByLabelText('Tour de buste')).toBeTruthy();
+    expect(screen.getByLabelText('Longueur taille dos')).toBeTruthy();
+    expect(screen.getByLabelText('Aisance poitrine')).toBeTruthy();
+    expect(screen.queryByLabelText('Longueur de manche')).toBeNull();
+    await userEvent.click(screen.getByLabelText('Avec manches'));
+    expect(a.setWithSleeve).toHaveBeenCalledWith(true);
+    rerender(
+      <PatternStudioView
+        state={{
+          ...base,
+          form: { ...form, withSleeve: true },
+          errors: { 'sleeve.lengthMm': { code: 'range', minMm: 100, maxMm: 900 } },
+        }}
+        actions={a}
+      />,
+    );
+    expect(screen.getByLabelText('Longueur de manche').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByLabelText('Embu de la tête de manche')).toBeTruthy();
+    expect(screen.getByLabelText('Tour du bas de manche')).toBeTruthy();
+  });
+
+  it('choisir « Jupe cercle » appelle setGarmentType', async () => {
+    const a = actions();
+    render(<PatternStudioView state={base} actions={a} />);
+    await userEvent.selectOptions(screen.getByLabelText('Vêtement'), 'circle-skirt');
+    expect(a.setGarmentType).toHaveBeenCalledWith('circle-skirt');
+  });
+
+  it('les champs suivent le type : fraction de cercle, sans unité', async () => {
+    const a = actions();
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    render(<PatternStudioView state={{ ...base, form }} actions={a} />);
+    expect(screen.getByLabelText('Fraction de cercle')).toBeTruthy();
+    expect(screen.getByLabelText('Hauteur de ceinture')).toBeTruthy();
+    expect(screen.queryByLabelText('Aisance bassin')).toBeNull();
+    expect(screen.queryByLabelText('Hauteur d’entrejambe')).toBeNull();
+    await userEvent.type(screen.getByLabelText('Fraction de cercle'), '5');
+    expect(a.setParam).toHaveBeenCalledWith('circleFraction', 15);
+  });
+
+  it('pantalon : demande la hauteur d’entrejambe et le tour du bas de jambe', () => {
+    const form = { ...initialForm, garmentType: 'trousers' as const };
+    render(<PatternStudioView state={{ ...base, form }} actions={actions()} />);
+    expect(screen.getByLabelText('Hauteur d’entrejambe')).toBeTruthy();
+    expect(screen.getByLabelText('Tour du bas de jambe')).toBeTruthy();
+  });
+
+  it('erreur de ceinture : bornes dans l’unité du champ (cm)', () => {
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    const errors = { waistbandWidthMm: { code: 'zeroOrRange', minMm: 20, maxMm: 80 } } as const;
+    render(<PatternStudioView state={{ ...base, form, errors }} actions={actions()} />);
+    expect(screen.getByRole('alert').textContent).toBe('0 ou entre 2 cm et 8 cm');
+  });
+
+  it('erreur de fraction : bornes sans unité', () => {
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    const errors = { circleFraction: { code: 'ratioRange', min: 0.25, max: 1 } } as const;
+    render(<PatternStudioView state={{ ...base, form, errors }} actions={actions()} />);
+    expect(screen.getByRole('alert').textContent).toBe('Entre 0,25 et 1');
+  });
+
+  it('type non tracé rendu par le service : message traduit', () => {
+    const problem = { type: '/problems/garment-type-not-supported', title: 'x', status: 422 };
+    render(
+      <PatternStudioView state={{ ...base, status: 'failed', problem }} actions={actions()} />,
+    );
+    expect(screen.getByRole('alert').textContent).toBe(
+      'Ce type de vêtement n’est pas encore tracé par le moteur.',
+    );
   });
 });

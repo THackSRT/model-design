@@ -11,7 +11,11 @@ const STATUS: Record<string, number> = {
 };
 
 /** Traduit une erreur prévue du métier en réponse RFC 9457. */
-export function failWith(error: { kind: string; detail?: string } | Problem): never {
+export function failWith(error: { kind: string; detail?: string; type?: string } | Problem): never {
   if ('status' in error) throw new ProblemException(error);
+  if (error.kind === 'manufacturing-problem' && error.type) {
+    // Le type est celui du moteur, déjà filtré par la liste blanche de l'adaptateur.
+    throw new ProblemException(problem(error.type, 422, error.detail));
+  }
   throw new ProblemException(problem(error.kind, STATUS[error.kind] ?? 500, error.detail));
 }

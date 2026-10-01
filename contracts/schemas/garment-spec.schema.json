@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://atelier.example/schemas/garment-spec.schema.json",
   "title": "GarmentSpec",
-  "description": "Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat.",
+  "description": "Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique.",
   "type": "object",
   "additionalProperties": false,
   "required": ["specVersion", "unit", "engine", "garment", "panels", "seams"],
@@ -47,6 +47,14 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/Seam"
+      }
+    },
+    "estimatedMeasurements": {
+      "type": "array",
+      "description": "Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation.",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
       }
     }
   },
@@ -124,6 +132,14 @@
         "cutOnFold": {
           "type": "boolean",
           "default": false
+        },
+        "notches": {
+          "type": "array",
+          "description": "Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux).",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/Notch"
+          }
         }
       }
     },
@@ -153,8 +169,46 @@
         },
         "b": {
           "$ref": "#/$defs/EdgeRef"
+        },
+        "easeMm": {
+          "type": "number",
+          "description": "Embu : le bord a est plus long que le bord b de cette valeur, qui se répartit en le cousant sur b (ex. tête de manche). Absent : 0, les deux bords ont la même longueur.",
+          "minimum": 0,
+          "maximum": 50
         }
       }
+    },
+    "NotchPlacement": {
+      "type": "object",
+      "description": "Emplacement d'un cran, seule définition partagée par Panel.notches (Notch) et la fabrication (NotchRequest) : sur la ligne de couture du bord edgeId, à distanceMm de son début (from), mesurée le long du bord. Ouvert pour être étendu (allOf) ; Notch et NotchRequest le ferment.",
+      "required": ["edgeId", "distanceMm"],
+      "properties": {
+        "edgeId": {
+          "type": "string"
+        },
+        "distanceMm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "count": {
+          "type": "integer",
+          "description": "Cran simple, double (dos, par convention) ou triple.",
+          "minimum": 1,
+          "maximum": 3,
+          "default": 1
+        }
+      }
+    },
+    "Notch": {
+      "type": "object",
+      "description": "Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/NotchPlacement"
+        }
+      ],
+      "unevaluatedProperties": false
     }
   }
 }

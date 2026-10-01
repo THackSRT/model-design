@@ -53,6 +53,32 @@ describe('API HTTP du service designs', () => {
     expect(await again.json()).toEqual(version);
   });
 
+  it.each(['straight-skirt', 'circle-skirt', 'trousers', 'bodice'])(
+    'crée un modèle de type %s',
+    async (garmentType) => {
+      const response = await post('/v1/designs', { name: 'Modèle', garmentType });
+      expect(response.status).toBe(201);
+      const design = (await response.json()) as Design;
+      expect(isDesign(design).isOk()).toBe(true);
+      expect(design.garmentType).toBe(garmentType);
+    },
+  );
+
+  it('refuse en 422 une version dont la demande ne correspond pas au type du modèle', async () => {
+    const design = (await (
+      await post('/v1/designs', { name: 'Pantalon', garmentType: 'trousers' })
+    ).json()) as Design;
+    const response = await post(`/v1/designs/${design.id}/versions`, {
+      measurements: someMeasurements(),
+      garment: aSkirt(),
+    });
+    expect(response.status).toBe(422);
+    expect(response.headers.get('content-type')).toContain('application/problem+json');
+    expect(((await response.json()) as { type: string }).type).toBe(
+      '/problems/garment-type-mismatch',
+    );
+  });
+
   it('refuse une requête hors contrat avec une erreur RFC 9457', async () => {
     const response = await post('/v1/designs', { name: '', garmentType: 'robe' });
     expect(response.status).toBe(400);

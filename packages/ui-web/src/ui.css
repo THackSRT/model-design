@@ -59,3 +59,7 @@
 .ui-message[data-tone='danger'] {
   color: var(--color-danger);
 }
+.ui-field-error {
+  grid-column: 1 / -1;
+  color: var(--color-danger);
+}

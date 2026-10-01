@@ -2,7 +2,8 @@
 
 Un moteur est un cœur de calcul pur entouré d'adaptateurs minces : une API pour les appels rapides, un worker pour
 les tâches de la file _(à venir)_. Il ne possède pas de base de données et ne connaît aucun service : il reçoit
-des entrées, rend un résultat. Le moteur de référence est `engines/patterning`.
+des entrées, rend un résultat. Les moteurs de référence sont `engines/patterning` (patronage) et
+`engines/manufacturing` (fabrication).
 
 ```text
 engines/patterning/
@@ -19,8 +20,9 @@ engines/patterning/
   hasard dans `core/` ; les coordonnées sont arrondies à 0,01 mm en sortie.
 - **Versionné** : chaque résultat porte la version du moteur (`ENGINE_VERSION`), qui entre dans l'empreinte ;
   changer un calcul, c'est changer de version.
-- **Unités** : millimètres partout dans le cœur ; les conversions (centimètres de GarmentCode ou de MakeHuman)
-  restent dans `spec/` ou l'API du moteur.
+- **Unités** : millimètres partout dans le cœur et dans le code métier ; aucun code en centimètres. Le moteur
+  de patronage est réécrit en Python pur (ADR 0010) sans dépendance à GarmentCode, donc pas d'adaptateur
+  centimètres ↔ mm. Les conversions depuis le navigateur (MakeHuman) restent dans `engines/mannequin/spec/`.
 - **Frontières** : import-linter vérifie que `core/` n'importe ni FastAPI, ni Pydantic, ni les contrats, et que
   les couches ne remontent pas.
 - **GPU isolé** : le code GPU (drapé, rendu) passe par une interface avec une version CPU plus lente, utilisée

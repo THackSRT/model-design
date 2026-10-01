@@ -24,6 +24,9 @@ Méthode :
 7. Lance la vérification de la fiche, puis `pnpm nx run <projet>:lint`, `:typecheck` et `:test` ; corrige
    jusqu'au vert. Ne désactive jamais une règle ni un test.
 
+Shell (Windows + Git Bash) : jamais de commande qui attend une entrée (`python -`, `cat > f` ou `node -e` lisant
+l'entrée standard sans heredoc) ni de processus laissé en arrière-plan ; fichiers écrits en LF.
+
 Interdits : commit, push, modification de `prototype/`, d'un autre service, du code généré.
 
 Termine par le « Compte rendu » de `CLAUDE.md`.

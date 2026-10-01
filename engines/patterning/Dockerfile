@@ -14,6 +14,8 @@ RUN --mount=type=secret,id=ca,required=false --mount=type=cache,target=/root/.ca
 
 FROM python:3.12-slim-bookworm
 COPY --from=build /app/.venv /app/.venv
+# Licence MIT de GarmentCode (référence de conception des tracés, ADR 0010).
+COPY --from=build /repo/engines/patterning/THIRD_PARTY_NOTICES.md /app/THIRD_PARTY_NOTICES.md
 ENV PATH=/app/.venv/bin:$PATH PYTHONUNBUFFERED=1 PORT=8000
 USER nobody
 EXPOSE 8000

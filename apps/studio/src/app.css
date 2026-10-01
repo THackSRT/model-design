@@ -54,6 +54,34 @@ body {
   fill: var(--color-ink-muted);
   font-size: var(--font-size-pattern-label);
 }
+.studio-cut {
+  width: 100%;
+  max-height: 80vh;
+}
+.studio-cut path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-width: var(--stroke-pattern);
+}
+.studio-cut .studio-cut-line {
+  fill: var(--color-pattern-fill);
+  stroke: var(--color-pattern-stroke);
+}
+.studio-cut .studio-seam-line {
+  stroke: var(--color-ink-muted);
+  stroke-dasharray: 6 4;
+}
+.studio-cut .studio-notch {
+  stroke: var(--color-accent);
+}
+.studio-cut .studio-grain,
+.studio-cut .studio-fold {
+  stroke: var(--color-ink-muted);
+}
+.studio-cut text {
+  fill: var(--color-ink-muted);
+  font-size: var(--font-size-pattern-label);
+}
 .studio-toggle {
   display: flex;
   gap: var(--space-2);

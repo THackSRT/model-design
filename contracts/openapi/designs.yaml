@@ -4,7 +4,9 @@ info:
   version: 1.0.0
   description: >
     Modèles, versions de modèle et spécifications de patron. Le service est le seul à écrire
-    dans sa base ; il publie design.versioned à chaque nouvelle version.
+    dans sa base ; il publie design.versioned à chaque nouvelle version. Il est aussi la porte des
+    applications vers les moteurs de patronage et de fabrication, qu'elles n'appellent jamais
+    directement (ADR 0001, 0012).
 servers:
   - url: http://localhost:3101
 paths:
@@ -87,6 +89,71 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/DesignVersion' }
         '404': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/cut-patterns:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+    post:
+      operationId: createVersionCutPattern
+      summary: Calculer les pièces de coupe d'une version
+      description: >
+        Envoie la spécification de patron de la version au moteur de fabrication (ADR 0012) et rend ses
+        pièces de coupe. Rien n'est enregistré : mêmes entrées, même version du moteur, même résultat.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CutPatternOptions' }
+      responses:
+        '200':
+          description: Les pièces de coupe (mm).
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CutPattern' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ManufacturingProblem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/exports:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+    post:
+      operationId: createVersionExport
+      summary: Exporter les pièces de coupe d'une version (SVG 1:1, PDF A4 tuilé, DXF-AAMA)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DesignExportRequest' }
+      responses:
+        '200':
+          description: >
+            Le fichier, dans le type de contenu du format demandé : image/svg+xml (svg),
+            application/pdf (pdf-a4-tiled), image/vnd.dxf (dxf-aama). Type de contenu et nom de fichier
+            sont fixés par le service, jamais recopiés de la réponse du moteur.
+          headers:
+            Content-Disposition:
+              description: >
+                attachment; filename="<garmentType>-v<versionNumber>[-<sizeLabel>].<svg|pdf|dxf>", où
+                sizeLabel est réduit à [a-z0-9-] ; jamais de nom de modèle ni de client.
+              schema: { type: string }
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+            X-Content-Type-Options:
+              schema: { type: string, enum: [nosniff] }
+          content:
+            image/svg+xml:
+              schema: { type: string }
+            application/pdf:
+              schema: { type: string, contentMediaType: application/pdf }
+            image/vnd.dxf:
+              schema: { type: string }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/ManufacturingProblem' }
+        '502': { $ref: '#/components/responses/Problem' }
 components:
   parameters:
     DesignId:
@@ -94,9 +161,34 @@ components:
       in: path
       required: true
       schema: { type: string, format: uuid }
+    VersionNumber:
+      name: versionNumber
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  headers:
+    NoStore:
+      description: >
+        Pièces et fichiers dérivés des mesures d'un client : jamais gardés par le navigateur ni par un
+        intermédiaire.
+      schema: { type: string, enum: [no-store] }
   responses:
     Problem:
-      description: Erreur au format RFC 9457.
+      description: >
+        Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent
+        (délai dépassé), réponse hors contrat ou requête refusée par sa validation.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ManufacturingProblem:
+      description: >
+        Pièces impossibles à finir avec ces options, au format RFC 9457. Le service relaie le type
+        stable du moteur de fabrication (contracts/openapi/manufacturing.yaml), seulement s'il est dans
+        cette liste : /problems/unknown-edge, /problems/allowance-on-fold, /problems/allowance-on-dart,
+        /problems/adjacent-darts, /problems/notch-outside-edge, /problems/open-contour,
+        /problems/fold-edge-missing, /problems/cut-line-self-intersects,
+        /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur,
+        devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -122,3 +214,9 @@ components:
       $ref: '../schemas/designs/create-design-version-request.schema.json'
     DesignVersion:
       $ref: '../schemas/designs/design-version.schema.json'
+    CutPatternOptions:
+      $ref: '../schemas/designs/cut-pattern-options.schema.json'
+    DesignExportRequest:
+      $ref: '../schemas/designs/design-export-request.schema.json'
+    CutPattern:
+      $ref: '../schemas/manufacturing/cut-pattern.schema.json'

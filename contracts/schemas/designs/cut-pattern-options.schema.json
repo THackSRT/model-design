@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/designs/cut-pattern-options.schema.json",
+  "title": "CutPatternOptions",
+  "description": "Comment finir les pièces d'une version de modèle. Corps vide ({}) : valeurs par défaut du moteur de fabrication (10 mm partout, 30 mm aux ourlets, crans aux raccords). Longueurs en millimètres.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "finishing": { "$ref": "../manufacturing/finishing-options.schema.json" },
+    "sizeLabel": {
+      "$ref": "../manufacturing/size-label.schema.json",
+      "description": "Taille ou repère reporté sur les pièces. Jamais de nom de client."
+    }
+  }
+}

@@ -17,7 +17,7 @@
       "options": { "cwd": "{workspaceRoot}" }
     },
     "dev": {
-      "command": "uv run uvicorn manufacturing.main:app --reload",
+      "command": "uv run uvicorn manufacturing.main:app --reload --port 3202",
       "options": { "cwd": "{workspaceRoot}" }
     }
   }

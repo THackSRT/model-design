@@ -1,6 +1,8 @@
 import type { FittedMannequin } from '@atelier/mannequin';
 import { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import type { ApiProblem } from '../api/designs-client.js';
+import type { GarmentType } from '@atelier/contracts-ts';
+import { isDraftedGarmentType } from './garment-fields.js';
 import {
   type FieldErrors,
   initialForm,
@@ -27,24 +29,42 @@ export interface PatternStudioState {
   display: MannequinDisplay;
   problem?: ApiProblem;
   versionNumber?: number;
+  /** Modèle de la version calculée : avec `versionNumber`, ce qu'il faut pour les pièces de coupe. */
+  designId?: string;
 }
 
 export interface PatternStudioActions {
   setSex(sex: StudioForm['sex']): void;
   setMeasurement(key: MeasurementKey, cm: number | undefined): void;
-  setSkirt(key: keyof StudioForm['skirtCm'], cm: number | undefined): void;
+  setGarmentType(type: GarmentType): void;
+  /** Saisie d'un paramètre du type choisi : cm pour une longueur, nombre sans unité sinon. */
+  setParam(param: string, value: number | undefined): void;
+  /** Corsage : avec ou sans manches. */
+  setWithSleeve(enabled: boolean): void;
+  /** Saisie d'un paramètre des manches (cm). */
+  setSleeveParam(param: string, value: number | undefined): void;
   setDisplay(display: MannequinDisplay): void;
   generate(): void;
 }
 
-type FormActions = Omit<PatternStudioActions, 'generate' | 'setDisplay'>;
+type FormActions = Omit<PatternStudioActions, 'generate' | 'setDisplay' | 'setGarmentType'>;
 
 function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions {
   return {
     setSex: (sex) => setForm((f) => ({ ...f, sex })),
     setMeasurement: (key, cm) =>
       setForm((f) => ({ ...f, measurementsCm: { ...f.measurementsCm, [key]: cm } })),
-    setSkirt: (key, cm) => setForm((f) => ({ ...f, skirtCm: { ...f.skirtCm, [key]: cm } })),
+    setParam: (param, value) =>
+      setForm((f) => ({
+        ...f,
+        paramsByType: {
+          ...f.paramsByType,
+          [f.garmentType]: { ...f.paramsByType[f.garmentType], [param]: value },
+        },
+      })),
+    setWithSleeve: (withSleeve) => setForm((f) => ({ ...f, withSleeve })),
+    setSleeveParam: (param, value) =>
+      setForm((f) => ({ ...f, sleeveCm: { ...f.sleeveCm, [param]: value } })),
   };
 }
 
@@ -61,7 +81,7 @@ export function usePatternStudio(deps: PatternStudioDeps): {
 } {
   const [form, setForm] = useState(initialForm);
   const [display, setDisplay] = useState<MannequinDisplay>('3d');
-  const { patron, body, run } = useStudioRun(deps);
+  const { patron, body, run, clearPatron } = useStudioRun(deps);
   const request = toVersionRequest(form);
   const result = patron.result;
   const layout = useMemo(
@@ -71,6 +91,11 @@ export function usePatternStudio(deps: PatternStudioDeps): {
   const actions: PatternStudioActions = {
     ...formActions(setForm),
     setDisplay,
+    setGarmentType: (type) => {
+      if (type === form.garmentType || !isDraftedGarmentType(type)) return;
+      setForm((f) => ({ ...f, garmentType: type }));
+      clearPatron();
+    },
     generate: () => {
       if (request.isOk()) run(request.value);
     },
@@ -85,6 +110,7 @@ export function usePatternStudio(deps: PatternStudioDeps): {
     display,
     problem: result?.problem,
     versionNumber: result?.version?.number,
+    designId: result?.version?.designId,
   };
   return { state, actions };
 }

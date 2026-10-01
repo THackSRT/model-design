@@ -1,0 +1,381 @@
+{
+  "specVersion": "1.0",
+  "unit": "mm",
+  "engine": {
+    "name": "patterning",
+    "version": "0.2.0"
+  },
+  "garment": {
+    "type": "straight-skirt"
+  },
+  "panels": [
+    {
+      "id": "front",
+      "name": "Devant",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [0.0, 0.0],
+          "to": [232.5, 0.0],
+          "role": "hem"
+        },
+        {
+          "id": "side-lower",
+          "from": [232.5, 0.0],
+          "to": [232.5, 375.6],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [232.5, 375.6],
+          "to": [181.93, 600.0],
+          "controls": [[232.5, 487.8]],
+          "role": "seam"
+        },
+        {
+          "id": "waist-1",
+          "from": [181.93, 600.0],
+          "to": [77.88, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [77.88, 600.0],
+          "to": [73.04, 420.48],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [73.04, 420.48],
+          "to": [68.2, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-2",
+          "from": [68.2, 600.0],
+          "to": [0.0, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "fold",
+          "from": [0.0, 600.0],
+          "to": [0.0, 0.0],
+          "role": "fold"
+        }
+      ],
+      "grainline": [
+        [116.25, 120.0],
+        [116.25, 480.0]
+      ],
+      "quantity": 1,
+      "cutOnFold": true,
+      "notches": [
+        {
+          "edgeId": "side-upper",
+          "distanceMm": 0.0,
+          "count": 1
+        },
+        {
+          "edgeId": "waist-2",
+          "distanceMm": 68.2,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "back-right",
+      "name": "Dos droit",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [0.0, 0.0],
+          "to": [267.5, 0.0],
+          "role": "hem"
+        },
+        {
+          "id": "side-lower",
+          "from": [267.5, 0.0],
+          "to": [267.5, 375.6],
+          "role": "seam"
+        },
+        {
+          "id": "side-upper",
+          "from": [267.5, 375.6],
+          "to": [216.93, 600.0],
+          "controls": [[267.5, 487.8]],
+          "role": "seam"
+        },
+        {
+          "id": "waist-1",
+          "from": [216.93, 600.0],
+          "to": [124.61, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "dart-2-right",
+          "from": [124.61, 600.0],
+          "to": [108.56, 428.33],
+          "role": "seam"
+        },
+        {
+          "id": "dart-2-left",
+          "from": [108.56, 428.33],
+          "to": [92.52, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-2",
+          "from": [92.52, 600.0],
+          "to": [77.24, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [77.24, 600.0],
+          "to": [61.2, 409.26],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [61.2, 409.26],
+          "to": [45.16, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-3",
+          "from": [45.16, 600.0],
+          "to": [0.0, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "center-back",
+          "from": [0.0, 600.0],
+          "to": [0.0, 0.0],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [133.75, 120.0],
+        [133.75, 480.0]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "side-upper",
+          "distanceMm": 0.0,
+          "count": 1
+        },
+        {
+          "edgeId": "waist-3",
+          "distanceMm": 45.16,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "back-left",
+      "name": "Dos gauche",
+      "edges": [
+        {
+          "id": "center-back",
+          "from": [267.5, 0.0],
+          "to": [267.5, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-3",
+          "from": [267.5, 600.0],
+          "to": [222.34, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "dart-1-left",
+          "from": [222.34, 600.0],
+          "to": [206.3, 409.26],
+          "role": "seam"
+        },
+        {
+          "id": "dart-1-right",
+          "from": [206.3, 409.26],
+          "to": [190.26, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-2",
+          "from": [190.26, 600.0],
+          "to": [174.98, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "dart-2-left",
+          "from": [174.98, 600.0],
+          "to": [158.94, 428.33],
+          "role": "seam"
+        },
+        {
+          "id": "dart-2-right",
+          "from": [158.94, 428.33],
+          "to": [142.89, 600.0],
+          "role": "seam"
+        },
+        {
+          "id": "waist-1",
+          "from": [142.89, 600.0],
+          "to": [50.57, 600.0],
+          "role": "waistline"
+        },
+        {
+          "id": "side-upper",
+          "from": [50.57, 600.0],
+          "to": [0.0, 375.6],
+          "controls": [[0.0, 487.8]],
+          "role": "seam"
+        },
+        {
+          "id": "side-lower",
+          "from": [0.0, 375.6],
+          "to": [0.0, 0.0],
+          "role": "seam"
+        },
+        {
+          "id": "hem",
+          "from": [0.0, 0.0],
+          "to": [267.5, 0.0],
+          "role": "hem"
+        }
+      ],
+      "grainline": [
+        [133.75, 120.0],
+        [133.75, 480.0]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "side-upper",
+          "distanceMm": 231.78,
+          "count": 1
+        },
+        {
+          "edgeId": "waist-3",
+          "distanceMm": 0.0,
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "id": "side-lower-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-lower"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "side-lower"
+      }
+    },
+    {
+      "id": "side-upper-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-upper"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "side-upper"
+      }
+    },
+    {
+      "id": "side-lower-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-lower"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "side-lower"
+      }
+    },
+    {
+      "id": "side-upper-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-upper"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "side-upper"
+      }
+    },
+    {
+      "id": "center-back",
+      "a": {
+        "panelId": "back-right",
+        "edgeId": "center-back"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "center-back"
+      }
+    },
+    {
+      "id": "front-dart-1",
+      "a": {
+        "panelId": "front",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "front",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "back-right-dart-2",
+      "a": {
+        "panelId": "back-right",
+        "edgeId": "dart-2-right"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "dart-2-left"
+      }
+    },
+    {
+      "id": "back-right-dart-1",
+      "a": {
+        "panelId": "back-right",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "back-right",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "back-left-dart-1",
+      "a": {
+        "panelId": "back-left",
+        "edgeId": "dart-1-right"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "dart-1-left"
+      }
+    },
+    {
+      "id": "back-left-dart-2",
+      "a": {
+        "panelId": "back-left",
+        "edgeId": "dart-2-right"
+      },
+      "b": {
+        "panelId": "back-left",
+        "edgeId": "dart-2-left"
+      }
+    }
+  ],
+  "estimatedMeasurements": ["bustPointWidthMm", "hipHeightMm", "waistHeightMm"]
+}

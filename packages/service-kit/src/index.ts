@@ -1,6 +1,13 @@
 export { loadConfig } from './config.js';
 export { type EnvelopeInput, toCloudEvent } from './events.js';
-export { type HttpFailure, type JsonRequest, requestJson } from './http-client.js';
+export {
+  type BytesRequest,
+  type BytesResponse,
+  type HttpFailure,
+  type JsonRequest,
+  requestBytes,
+  requestJson,
+} from './http-client.js';
 export {
   createLogger,
   type LogFields,

@@ -33,6 +33,22 @@ describe('composants', () => {
     expect(screen.getByLabelText('Stature').getAttribute('aria-invalid')).toBe('true');
   });
 
+  it("un message d'erreur est annoncé et relié au champ", () => {
+    render(
+      <NumberField
+        label="Stature"
+        value={10}
+        unit="cm"
+        error="Entre 60 et 190 cm"
+        onChange={() => undefined}
+      />,
+    );
+    const input = screen.getByLabelText('Stature');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByRole('alert').textContent).toBe('Entre 60 et 190 cm');
+    expect(input.getAttribute('aria-describedby')).toBe(screen.getByRole('alert').id);
+  });
+
   it('un panneau est une région nommée ; une erreur est une alerte', () => {
     render(
       <Panel title="Mesures">

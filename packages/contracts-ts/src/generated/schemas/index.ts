@@ -1,10 +1,22 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
-export type * from './create-design-request.js';
+export type { CreateDesignRequest } from './create-design-request.js';
 export type { CreateDesignVersionRequest } from './create-design-version-request.js';
+export type { CutPatternOptions } from './cut-pattern-options.js';
+export type { DesignExportRequest } from './design-export-request.js';
 export type { DesignVersion } from './design-version.js';
-export type * from './design.js';
+export type { Design } from './design.js';
 export type * from './cloud-event.js';
 export type * from './design-versioned.js';
 export type * from './garment-request.js';
 export type * from './garment-spec.js';
+export type * from './garment-type.js';
+export type { CutPatternRequest } from './cut-pattern-request.js';
+export type { CutPattern } from './cut-pattern.js';
+export type { CuttingPlanRequest } from './cutting-plan-request.js';
+export type { CuttingPlan } from './cutting-plan.js';
+export type { ExportRequest } from './export-request.js';
+export type { FinishingOptions } from './finishing-options.js';
+export type { GradedPatternRequest } from './graded-pattern-request.js';
+export type { GradedPattern } from './graded-pattern.js';
+export type * from './size-label.js';
 export type * from './measurement-set.js';
