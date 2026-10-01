@@ -1,0 +1,801 @@
+{
+  "specVersion": "1.0",
+  "unit": "mm",
+  "engine": {
+    "name": "patterning",
+    "version": "0.2.1"
+  },
+  "garment": {
+    "type": "circle-skirt"
+  },
+  "panels": [
+    {
+      "id": "front",
+      "name": "Devant",
+      "edges": [
+        {
+          "id": "hem-1",
+          "from": [
+            0.0,
+            753.45
+          ],
+          "to": [
+            220.68,
+            220.68
+          ],
+          "controls": [
+            [
+              0.0,
+              553.62
+            ],
+            [
+              79.38,
+              361.98
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-2",
+          "from": [
+            220.68,
+            220.68
+          ],
+          "to": [
+            753.45,
+            0.0
+          ],
+          "controls": [
+            [
+              361.98,
+              79.38
+            ],
+            [
+              553.62,
+              0.0
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-3",
+          "from": [
+            753.45,
+            0.0
+          ],
+          "to": [
+            1286.22,
+            220.68
+          ],
+          "controls": [
+            [
+              953.28,
+              0.0
+            ],
+            [
+              1144.92,
+              79.38
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-4",
+          "from": [
+            1286.22,
+            220.68
+          ],
+          "to": [
+            1506.9,
+            753.45
+          ],
+          "controls": [
+            [
+              1427.52,
+              361.98
+            ],
+            [
+              1506.9,
+              553.62
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-right",
+          "from": [
+            1506.9,
+            753.45
+          ],
+          "to": [
+            856.9,
+            753.45
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-1",
+          "from": [
+            856.9,
+            753.45
+          ],
+          "to": [
+            826.6,
+            680.3
+          ],
+          "controls": [
+            [
+              856.9,
+              726.01
+            ],
+            [
+              846.0,
+              699.7
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-2",
+          "from": [
+            826.6,
+            680.3
+          ],
+          "to": [
+            753.45,
+            650.0
+          ],
+          "controls": [
+            [
+              807.2,
+              660.9
+            ],
+            [
+              780.89,
+              650.0
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-3",
+          "from": [
+            753.45,
+            650.0
+          ],
+          "to": [
+            680.3,
+            680.3
+          ],
+          "controls": [
+            [
+              726.01,
+              650.0
+            ],
+            [
+              699.7,
+              660.9
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-4",
+          "from": [
+            680.3,
+            680.3
+          ],
+          "to": [
+            650.0,
+            753.45
+          ],
+          "controls": [
+            [
+              660.9,
+              699.7
+            ],
+            [
+              650.0,
+              726.01
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-left",
+          "from": [
+            650.0,
+            753.45
+          ],
+          "to": [
+            0.0,
+            753.45
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          753.45,
+          130.0
+        ],
+        [
+          753.45,
+          520.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "waist-2",
+          "distanceMm": 81.25,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "back",
+      "name": "Dos",
+      "edges": [
+        {
+          "id": "hem-1",
+          "from": [
+            0.0,
+            753.45
+          ],
+          "to": [
+            220.68,
+            220.68
+          ],
+          "controls": [
+            [
+              0.0,
+              553.62
+            ],
+            [
+              79.38,
+              361.98
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-2",
+          "from": [
+            220.68,
+            220.68
+          ],
+          "to": [
+            753.45,
+            0.0
+          ],
+          "controls": [
+            [
+              361.98,
+              79.38
+            ],
+            [
+              553.62,
+              0.0
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-3",
+          "from": [
+            753.45,
+            0.0
+          ],
+          "to": [
+            1286.22,
+            220.68
+          ],
+          "controls": [
+            [
+              953.28,
+              0.0
+            ],
+            [
+              1144.92,
+              79.38
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "hem-4",
+          "from": [
+            1286.22,
+            220.68
+          ],
+          "to": [
+            1506.9,
+            753.45
+          ],
+          "controls": [
+            [
+              1427.52,
+              361.98
+            ],
+            [
+              1506.9,
+              553.62
+            ]
+          ],
+          "role": "hem"
+        },
+        {
+          "id": "side-right",
+          "from": [
+            1506.9,
+            753.45
+          ],
+          "to": [
+            856.9,
+            753.45
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-1",
+          "from": [
+            856.9,
+            753.45
+          ],
+          "to": [
+            826.6,
+            680.3
+          ],
+          "controls": [
+            [
+              856.9,
+              726.01
+            ],
+            [
+              846.0,
+              699.7
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-2",
+          "from": [
+            826.6,
+            680.3
+          ],
+          "to": [
+            753.45,
+            650.0
+          ],
+          "controls": [
+            [
+              807.2,
+              660.9
+            ],
+            [
+              780.89,
+              650.0
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-3",
+          "from": [
+            753.45,
+            650.0
+          ],
+          "to": [
+            680.3,
+            680.3
+          ],
+          "controls": [
+            [
+              726.01,
+              650.0
+            ],
+            [
+              699.7,
+              660.9
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "waist-4",
+          "from": [
+            680.3,
+            680.3
+          ],
+          "to": [
+            650.0,
+            753.45
+          ],
+          "controls": [
+            [
+              660.9,
+              699.7
+            ],
+            [
+              650.0,
+              726.01
+            ]
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-left",
+          "from": [
+            650.0,
+            753.45
+          ],
+          "to": [
+            0.0,
+            753.45
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          753.45,
+          130.0
+        ],
+        [
+          753.45,
+          520.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false,
+      "notches": [
+        {
+          "edgeId": "waist-2",
+          "distanceMm": 81.25,
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "waistband-front",
+      "name": "Ceinture devant",
+      "edges": [
+        {
+          "id": "bottom-4",
+          "from": [
+            0.0,
+            0.0
+          ],
+          "to": [
+            81.25,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-3",
+          "from": [
+            81.25,
+            0.0
+          ],
+          "to": [
+            162.5,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-2",
+          "from": [
+            162.5,
+            0.0
+          ],
+          "to": [
+            243.75,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-1",
+          "from": [
+            243.75,
+            0.0
+          ],
+          "to": [
+            325.0,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-right",
+          "from": [
+            325.0,
+            0.0
+          ],
+          "to": [
+            325.0,
+            40.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "top",
+          "from": [
+            325.0,
+            40.0
+          ],
+          "to": [
+            0.0,
+            40.0
+          ],
+          "role": "waistline"
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0.0,
+            40.0
+          ],
+          "to": [
+            0.0,
+            0.0
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          32.5,
+          20.0
+        ],
+        [
+          292.5,
+          20.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false
+    },
+    {
+      "id": "waistband-back",
+      "name": "Ceinture dos",
+      "edges": [
+        {
+          "id": "bottom-4",
+          "from": [
+            0.0,
+            0.0
+          ],
+          "to": [
+            81.25,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-3",
+          "from": [
+            81.25,
+            0.0
+          ],
+          "to": [
+            162.5,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-2",
+          "from": [
+            162.5,
+            0.0
+          ],
+          "to": [
+            243.75,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "bottom-1",
+          "from": [
+            243.75,
+            0.0
+          ],
+          "to": [
+            325.0,
+            0.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "side-right",
+          "from": [
+            325.0,
+            0.0
+          ],
+          "to": [
+            325.0,
+            40.0
+          ],
+          "role": "seam"
+        },
+        {
+          "id": "top",
+          "from": [
+            325.0,
+            40.0
+          ],
+          "to": [
+            0.0,
+            40.0
+          ],
+          "role": "waistline"
+        },
+        {
+          "id": "side-left",
+          "from": [
+            0.0,
+            40.0
+          ],
+          "to": [
+            0.0,
+            0.0
+          ],
+          "role": "seam"
+        }
+      ],
+      "grainline": [
+        [
+          32.5,
+          20.0
+        ],
+        [
+          292.5,
+          20.0
+        ]
+      ],
+      "quantity": 1,
+      "cutOnFold": false
+    }
+  ],
+  "seams": [
+    {
+      "id": "side-right",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-right"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "side-left"
+      }
+    },
+    {
+      "id": "side-left",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side-left"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "side-right"
+      }
+    },
+    {
+      "id": "front-waistband-1",
+      "a": {
+        "panelId": "front",
+        "edgeId": "waist-1"
+      },
+      "b": {
+        "panelId": "waistband-front",
+        "edgeId": "bottom-1"
+      }
+    },
+    {
+      "id": "front-waistband-2",
+      "a": {
+        "panelId": "front",
+        "edgeId": "waist-2"
+      },
+      "b": {
+        "panelId": "waistband-front",
+        "edgeId": "bottom-2"
+      }
+    },
+    {
+      "id": "front-waistband-3",
+      "a": {
+        "panelId": "front",
+        "edgeId": "waist-3"
+      },
+      "b": {
+        "panelId": "waistband-front",
+        "edgeId": "bottom-3"
+      }
+    },
+    {
+      "id": "front-waistband-4",
+      "a": {
+        "panelId": "front",
+        "edgeId": "waist-4"
+      },
+      "b": {
+        "panelId": "waistband-front",
+        "edgeId": "bottom-4"
+      }
+    },
+    {
+      "id": "back-waistband-1",
+      "a": {
+        "panelId": "back",
+        "edgeId": "waist-1"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "bottom-1"
+      }
+    },
+    {
+      "id": "back-waistband-2",
+      "a": {
+        "panelId": "back",
+        "edgeId": "waist-2"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "bottom-2"
+      }
+    },
+    {
+      "id": "back-waistband-3",
+      "a": {
+        "panelId": "back",
+        "edgeId": "waist-3"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "bottom-3"
+      }
+    },
+    {
+      "id": "back-waistband-4",
+      "a": {
+        "panelId": "back",
+        "edgeId": "waist-4"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "bottom-4"
+      }
+    },
+    {
+      "id": "waistband-side-right",
+      "a": {
+        "panelId": "waistband-front",
+        "edgeId": "side-right"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "side-left"
+      }
+    },
+    {
+      "id": "waistband-side-left",
+      "a": {
+        "panelId": "waistband-front",
+        "edgeId": "side-left"
+      },
+      "b": {
+        "panelId": "waistband-back",
+        "edgeId": "side-right"
+      }
+    }
+  ]
+}

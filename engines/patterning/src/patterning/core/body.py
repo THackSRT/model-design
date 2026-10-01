@@ -6,6 +6,7 @@ par le modéliste. Une mesure estimée est listée dans `estimated`, sous le nom
 `RawMeasurements`.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass, fields
 
 from patterning.core.errors import DraftingError
@@ -21,7 +22,7 @@ class RawMeasurements:
     waist_girth_mm: float
     hip_girth_mm: float
     bust_girth_mm: float | None = None
-    underbust_girth_mm: float | None = None
+    under_bust_girth_mm: float | None = None
     thigh_girth_mm: float | None = None
     wrist_girth_mm: float | None = None
     cervicale_height_mm: float | None = None
@@ -112,24 +113,41 @@ class _Fill:
         return estimate
 
 
-def _check_positive(body: Body) -> None:
+def _check_positive(body: Body, checked: Sequence[str] | None) -> None:
+    """Refuse une mesure nulle ou négative ; le détail cite le champ, jamais sa valeur."""
     for f in fields(body):
         value = getattr(body, f.name)
-        if isinstance(value, float) and value <= 0:
+        if (checked is None or f.name in checked) and isinstance(value, float) and value <= 0:
             raise DraftingError(
                 "inconsistent-measurements",
-                f"Les mesures données et estimées sont incohérentes : {f.name} vaut {value:.1f}.",
+                f"Les mesures données et estimées sont incohérentes : {f.name} doit être "
+                "strictement positive.",
             )
 
 
-def complete_body(raw: RawMeasurements) -> tuple[Body, tuple[str, ...]]:
-    """Complète les mesures ; rend le corps et les champs estimés, triés."""
+def used_estimates(estimated: Sequence[str], uses: Sequence[str]) -> tuple[str, ...]:
+    """Mesures estimées qui servent au tracé : `uses` et les mesures dont leur estimation dépend."""
+    used = {name for name in estimated if name in uses}
+    if "bust_point_width_mm" in used:
+        used |= {"bust_girth_mm"} & set(estimated)
+    if "waist_height_mm" in used and "hip_height_mm" not in estimated:
+        used |= {"cervicale_height_mm", "back_waist_length_mm"} & set(estimated)
+    return tuple(sorted(used))
+
+
+def complete_body(
+    raw: RawMeasurements, checked: Sequence[str] | None = None
+) -> tuple[Body, tuple[str, ...]]:
+    """Complète les mesures ; rend le corps et les champs estimés, triés.
+
+    `checked` : champs du corps dont la cohérence est contrôlée (par défaut tous).
+    """
     if raw.sex not in RATIOS:
         raise DraftingError("unknown-sex", f"Sexe inconnu : {raw.sex}.")
     r = RATIOS[raw.sex]
     fill = _Fill()
     stature = float(raw.stature_mm)
-    bust = float(raw.bust_girth_mm if raw.bust_girth_mm is not None else raw.chest_girth_mm)
+    bust = fill.value("bust_girth_mm", raw.bust_girth_mm, float(raw.chest_girth_mm))
     waist = float(raw.waist_girth_mm)
     hip = float(raw.hip_girth_mm)
     cervicale = fill.value("cervicale_height_mm", raw.cervicale_height_mm, stature * (1 - r.head))
@@ -144,7 +162,7 @@ def complete_body(raw: RawMeasurements) -> tuple[Body, tuple[str, ...]]:
         stature_mm=stature,
         bust_girth_mm=bust,
         underbust_girth_mm=fill.value(
-            "underbust_girth_mm", raw.underbust_girth_mm, r.underbust_of_bust * bust
+            "under_bust_girth_mm", raw.under_bust_girth_mm, r.underbust_of_bust * bust
         ),
         waist_girth_mm=waist,
         hip_girth_mm=hip,
@@ -180,5 +198,5 @@ def complete_body(raw: RawMeasurements) -> tuple[Body, tuple[str, ...]]:
             None if raw.front_waist_length_mm is None else float(raw.front_waist_length_mm)
         ),
     )
-    _check_positive(body)
+    _check_positive(body, checked)
     return body, tuple(sorted(fill.estimated))

@@ -15,7 +15,7 @@ def test_complete_measurements_need_no_estimation() -> None:
 def test_minimal_measurements_list_the_estimated_fields_sorted() -> None:
     _, estimated = complete_body(minimal_measurements())
     assert estimated == tuple(sorted(estimated))
-    assert {"cervicale_height_mm", "arm_length_mm", "underbust_girth_mm"} <= set(estimated)
+    assert {"cervicale_height_mm", "arm_length_mm", "under_bust_girth_mm"} <= set(estimated)
     assert "crotch_height_mm" not in estimated
 
 
@@ -38,7 +38,7 @@ def test_given_measurements_win_over_estimates() -> None:
 def test_bust_girth_falls_back_to_chest_girth() -> None:
     body, estimated = complete_body(minimal_measurements())
     assert body.bust_girth_mm == 880
-    assert "bust_girth_mm" not in estimated
+    assert "bust_girth_mm" in estimated
 
 
 def test_hip_height_below_crotch_height_is_refused() -> None:

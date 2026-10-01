@@ -6,13 +6,50 @@ from tests.builders import reference_request
 client = TestClient(create_app())
 
 
-def test_drafts_a_pattern_that_follows_the_contract() -> None:
+def _request(garment: dict[str, object]) -> dict[str, object]:
+    return {**reference_request(), "garment": garment}
+
+
+def test_drafts_a_straight_skirt_that_follows_the_contract() -> None:
     response = client.post("/v1/patterns", json=reference_request())
     assert response.status_code == 200
     body = response.json()
     assert body["unit"] == "mm"
-    assert body["engine"]["name"] == "patterning"
-    assert [p["id"] for p in body["panels"]] == ["front", "back"]
+    assert body["engine"] == {"name": "patterning", "version": "0.2.1"}
+    assert [p["id"] for p in body["panels"]] == ["front", "back-right", "back-left"]
+    assert all(p["notches"] for p in body["panels"])
+
+
+def test_straight_skirt_lists_its_estimated_measurements_and_no_ease() -> None:
+    body = client.post("/v1/patterns", json=reference_request()).json()
+    assert body["estimatedMeasurements"] == [
+        "bustGirthMm",
+        "bustPointWidthMm",
+        "hipHeightMm",
+        "waistHeightMm",
+    ]
+    assert all("easeMm" not in seam for seam in body["seams"])
+
+
+def test_drafts_a_circle_skirt_with_a_waistband() -> None:
+    garment = {"type": "circle-skirt", "params": {"lengthMm": 650, "waistbandWidthMm": 40}}
+    response = client.post("/v1/patterns", json=_request(garment))
+    assert response.status_code == 200
+    body = response.json()
+    assert [p["id"] for p in body["panels"]] == [
+        "front",
+        "back",
+        "waistband-front",
+        "waistband-back",
+    ]
+    assert "estimatedMeasurements" not in body
+
+
+def test_drafts_a_circle_skirt_without_a_waistband() -> None:
+    garment = {"type": "circle-skirt", "params": {"lengthMm": 650, "waistbandWidthMm": 0}}
+    response = client.post("/v1/patterns", json=_request(garment))
+    assert response.status_code == 200
+    assert [p["id"] for p in response.json()["panels"]] == ["front", "back"]
 
 
 def test_impossible_pattern_is_a_problem_response() -> None:
@@ -30,16 +67,11 @@ def test_rejects_measurements_outside_plausible_bounds() -> None:
     assert client.post("/v1/patterns", json=request).status_code == 422
 
 
-def test_garment_type_without_a_drafting_yet_is_a_problem_response() -> None:
-    request = reference_request()
-    request["garment"] = {"type": "trousers", "params": {"lengthMm": 1000}}
-    response = client.post("/v1/patterns", json=request)
-    assert response.status_code == 422
-    assert response.json()["type"] == "/problems/garment-type-not-supported"
-
-
-def test_straight_skirt_output_has_no_estimation_nor_notch_fields() -> None:
-    body = client.post("/v1/patterns", json=reference_request()).json()
-    assert "estimatedMeasurements" not in body
-    assert all("notches" not in panel for panel in body["panels"])
-    assert all("easeMm" not in seam for seam in body["seams"])
+def test_garment_types_without_a_drafting_yet_are_problem_responses() -> None:
+    for garment in (
+        {"type": "trousers", "params": {"lengthMm": 1000}},
+        {"type": "bodice", "params": {}},
+    ):
+        response = client.post("/v1/patterns", json=_request(garment))
+        assert response.status_code == 422
+        assert response.json()["type"] == "/problems/garment-type-not-supported"

@@ -3,13 +3,16 @@
 from dataclasses import replace
 
 from patterning.core.body import RawMeasurements
-from patterning.core.straight_skirt import SkirtInputs
 
-REFERENCE_SKIRT = SkirtInputs(stature_mm=1650, waist_girth_mm=700, hip_girth_mm=960, length_mm=600)
+REFERENCE_PARAMS: dict[str, dict[str, float]] = {
+    "straight-skirt": {"length_mm": 600},
+    "circle-skirt": {"length_mm": 650, "circle_fraction": 1, "waistband_width_mm": 40},
+}
 
 
-def a_skirt(**changes: int) -> SkirtInputs:
-    return replace(REFERENCE_SKIRT, **changes)
+def reference_measurements() -> RawMeasurements:
+    """Mesures synthétiques des références golden : la taille est assez fine pour des pinces."""
+    return replace(minimal_measurements(), waist_girth_mm=640)
 
 
 def reference_request() -> dict[str, object]:
@@ -18,7 +21,7 @@ def reference_request() -> dict[str, object]:
             "sex": "female",
             "statureMm": 1650,
             "chestGirthMm": 880,
-            "waistGirthMm": 700,
+            "waistGirthMm": 640,
             "hipGirthMm": 960,
         },
         "garment": {"type": "straight-skirt", "params": {"lengthMm": 600}},
@@ -37,7 +40,7 @@ def full_measurements() -> RawMeasurements:
     return replace(
         minimal_measurements(),
         bust_girth_mm=900,
-        underbust_girth_mm=750,
+        under_bust_girth_mm=750,
         thigh_girth_mm=560,
         wrist_girth_mm=160,
         cervicale_height_mm=1400,
