@@ -26,7 +26,8 @@ export const fr = {
   'pattern.pieces': '{count, plural, =0 {Aucune pièce} one {# pièce} other {# pièces}}',
   'measurements.value': '{valueMm, number, ::unit/millimeter}',
   'error.required': 'Valeur obligatoire',
-  'error.range': 'Entre {minMm, number, ::unit/millimeter} et {maxMm, number, ::unit/millimeter}',
+  'error.range':
+    '{unit, select, cm {Entre {min, number, ::unit/centimeter} et {max, number, ::unit/centimeter}} other {Entre {min, number, ::unit/millimeter} et {max, number, ::unit/millimeter}}}',
   'mannequin.title': 'Mannequin',
   'mannequin.loading3d': 'Chargement de la vue 3D…',
   'mannequin.fitting': 'Ajustement du mannequin en cours…',

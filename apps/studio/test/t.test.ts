@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fr } from '../src/i18n/fr.js';
-import { formatMessage, problemMessage, t } from '../src/i18n/t.js';
+import { fieldErrorMessage, formatMessage, problemMessage, t } from '../src/i18n/t.js';
 
 describe('traduction ICU', () => {
   it('accorde le pluriel des pièces', () => {
@@ -30,5 +30,14 @@ describe('traduction ICU', () => {
     // @ts-expect-error clé absente du catalogue
     const call = () => t('cle.inconnue');
     expect(call).toBeTypeOf('function');
+  });
+});
+
+describe('erreurs de saisie', () => {
+  const range = { code: 'range', minMm: 600, maxMm: 1900 } as const;
+  it('affiche les bornes dans l’unité du champ', () => {
+    expect(fieldErrorMessage(range, 'cm')).toBe('Entre 60 cm et 190 cm');
+    expect(fieldErrorMessage(range, 'mm')).toBe('Entre 600 mm et 1 900 mm');
+    expect(fieldErrorMessage({ code: 'required' }, 'cm')).toBe('Valeur obligatoire');
   });
 });

@@ -101,7 +101,7 @@ describe('vue de l’atelier de patron', () => {
       />,
     );
     expect(screen.getByLabelText('Tour de bassin').getAttribute('aria-invalid')).toBe('true');
-    expect(screen.getByRole('alert').textContent).toBe('Entre 600 mm et 1 900 mm');
+    expect(screen.getByRole('alert').textContent).toBe('Entre 60 cm et 190 cm');
   });
 
   it('ajustement en cours : indique « en cours » et garde l’écran utilisable', () => {

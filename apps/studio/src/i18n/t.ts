@@ -28,9 +28,12 @@ export function problemMessage(type: string): string {
   return key in fr ? t(key as MessageKey) : t('problem.default');
 }
 
-/** Traduit une erreur de saisie du modèle de vue (code et bornes en mm). */
-export function fieldErrorMessage(error: FieldError): string {
-  return error.code === 'required'
-    ? t('error.required')
-    : t('error.range', { minMm: error.minMm, maxMm: error.maxMm });
+/** Unité dans laquelle le champ est saisi (et donc dans laquelle ses bornes s'affichent). */
+export type FieldUnit = 'cm' | 'mm';
+
+/** Traduit une erreur de saisie : les bornes du modèle de vue (mm) sont converties vers l'unité du champ. */
+export function fieldErrorMessage(error: FieldError, unit: FieldUnit): string {
+  if (error.code === 'required') return t('error.required');
+  const divisor = unit === 'cm' ? 10 : 1;
+  return t('error.range', { unit, min: error.minMm / divisor, max: error.maxMm / divisor });
 }

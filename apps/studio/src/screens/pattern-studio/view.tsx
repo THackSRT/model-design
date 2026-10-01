@@ -16,7 +16,8 @@ export interface PatternStudioViewProps {
   actions: PatternStudioActions;
 }
 
-const errorText = (error: FieldError | undefined) => error && fieldErrorMessage(error);
+const FIELD_UNIT = 'cm' as const; // les champs du formulaire se saisissent en cm
+const errorText = (error: FieldError | undefined) => error && fieldErrorMessage(error, FIELD_UNIT);
 const SKIRT_FIELDS = ['length', 'waistEase', 'hipEase', 'hemFlare'] as const;
 
 function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
@@ -36,7 +37,7 @@ function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
         <NumberField
           key={key}
           label={t(`measurements.${key}`)}
-          unit={t('unit.cm')}
+          unit={t(`unit.${FIELD_UNIT}`)}
           step={0.5}
           value={state.form.measurementsCm[key]}
           error={errorText(state.errors[key])}
@@ -54,7 +55,7 @@ function SkirtPanel({ state, actions }: PatternStudioViewProps) {
         <NumberField
           key={key}
           label={t(`skirt.${key}`)}
-          unit={t('unit.cm')}
+          unit={t(`unit.${FIELD_UNIT}`)}
           step={0.5}
           value={state.form.skirtCm[key]}
           error={key === 'length' ? errorText(state.errors.length) : undefined}
