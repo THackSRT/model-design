@@ -5,12 +5,12 @@ from fastapi import FastAPI
 from atelier_engine_kit import EngineInfo, create_engine_app
 from atelier_engine_kit.logging import configure_logging
 from manufacturing import ENGINE_NAME, ENGINE_VERSION
-from manufacturing.api.routes import router
+from manufacturing.api.cut_patterns import router as cut_patterns_router
 
 
 def create_app() -> FastAPI:
     app = create_engine_app(EngineInfo(name=ENGINE_NAME, version=ENGINE_VERSION))
-    app.include_router(router)
+    app.include_router(cut_patterns_router)
     return app
 
 

@@ -3,6 +3,8 @@
 OPEN_CONTOUR = "open-contour"
 UNKNOWN_EDGE = "unknown-edge"
 ALLOWANCE_ON_FOLD = "allowance-on-fold"
+NOTCH_OUTSIDE_EDGE = "notch-outside-edge"
+FOLD_EDGE_MISSING = "fold-edge-missing"
 CUT_LINE_SELF_INTERSECTS = "cut-line-self-intersects"
 
 

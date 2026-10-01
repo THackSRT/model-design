@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from manufacturing.core.model import Edge, EdgeRole, Panel, Pattern, Point, Seam
+from manufacturing.core.model import Edge, EdgeRole, NotchPlacement, Panel, Pattern, Point, Seam
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -50,8 +50,13 @@ def skirt_pattern() -> Pattern:
                 )
                 for e in p["edges"]
             ),
+            grainline=(_point(p["grainline"][0]), _point(p["grainline"][1])),
             quantity=p["quantity"],
             cut_on_fold=p.get("cutOnFold", False),
+            notches=tuple(
+                NotchPlacement(n["edgeId"], n["distanceMm"], n.get("count", 1))
+                for n in p.get("notches", [])
+            ),
         )
         for p in spec["panels"]
     )
@@ -60,3 +65,9 @@ def skirt_pattern() -> Pattern:
         for s in spec["seams"]
     )
     return Pattern(spec["garment"]["type"], panels, seams)
+
+
+def skirt_spec() -> dict[str, Any]:
+    """Spécification JSON de la jupe de référence."""
+    spec: dict[str, Any] = json.loads((FIXTURES / "straight-skirt-spec.json").read_text("utf-8"))
+    return spec
