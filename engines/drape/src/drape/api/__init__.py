@@ -1,1 +1,0 @@
-"""Adaptateur HTTP du moteur."""
