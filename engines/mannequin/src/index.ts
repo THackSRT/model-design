@@ -116,3 +116,6 @@ export async function loadMannequinEngine(
     },
   };
 }
+
+export { dressMannequin } from './garment/dress.js';
+export type { DressOptions, GarmentMesh, TightZone } from './garment/types.js';
