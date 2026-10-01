@@ -37,19 +37,35 @@ paths:
           content:
             application/json:
               schema: { $ref: '../schemas/garment-spec.schema.json' }
-        '422':
-          description: Entrées valides mais impossibles à tracer (ex. taille plus petite que le bassin).
-          content:
-            application/problem+json:
-              schema:
-                type: object
-                required: [type, title, status]
-                properties:
-                  type: { type: string }
-                  title: { type: string }
-                  status: { type: integer }
-                  detail: { type: string }
+        '422': { $ref: '#/components/responses/DraftingProblem' }
 components:
+  responses:
+    DraftingProblem:
+      description: >
+        Entrées valides mais impossibles à tracer, au format RFC 9457. Types stables :
+        /problems/measurement-required (mesure obligatoire absente pour ce vêtement ; le détail cite le
+        champ, jamais sa valeur), /problems/inconsistent-measurements (mesures données et estimées
+        incohérentes entre elles), /problems/garment-type-not-supported (type de vêtement pas encore
+        tracé par cette version du moteur), /problems/skirt-shorter-than-hip-depth (jupe droite plus
+        courte que la ligne des hanches), /problems/trousers-shorter-than-crotch (pantalon trop court
+        sous l'entrejambe), /problems/trousers-hem-too-narrow (tour d'ourlet trop petit pour la jambe),
+        /problems/neckline-too-deep (encolure creusée sous la ligne de poitrine ou sous l'aisselle),
+        /problems/sleeve-shorter-than-cap (manche plus courte que sa tête), /problems/curve-tangents-parallel
+        et /problems/curve-tangents-diverge (courbe impossible à construire avec ces valeurs). Le détail
+        ne contient jamais de valeur de mesure. Un nouveau type est un ajout compatible ; un type ne
+        change jamais de sens. Une requête hors schéma reçoit la réponse 422 de validation de FastAPI
+        (sans type /problems/), qui peut recopier les valeurs reçues : elle ne se relaie ni ne se journalise.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, description: 'Identifiant stable, ex. /problems/neckline-too-deep' }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
     DraftPatternRequest:
       $ref: '../schemas/designs/create-design-version-request.schema.json'

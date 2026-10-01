@@ -17,6 +17,8 @@ export type {
   SeamLineEdge,
 } from './generated/schemas/cut-pattern.js';
 export type { ExportFormat } from './generated/schemas/export-request.js';
+// design-version-changes référence le résumé de version : ses lignes de différence, utiles à designs et au studio.
+export type { MeasurementChange, ParamChange } from './generated/schemas/design-version-changes.js';
 export type {
   paths as ManufacturingApiPaths,
   components as ManufacturingApiComponents,

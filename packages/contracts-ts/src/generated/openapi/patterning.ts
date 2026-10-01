@@ -37,6 +37,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    Problem: {
+      /** @description Identifiant stable, ex. /problems/neckline-too-deep */
+      type: string;
+      title: string;
+      status: number;
+      detail?: string;
+    };
     DraftPatternRequest: components['schemas']['create-design-version-request.schema'];
     /**
      * MeasurementSet
@@ -406,7 +413,17 @@ export interface components {
       };
     };
   };
-  responses: never;
+  responses: {
+    /** @description Entrées valides mais impossibles à tracer, au format RFC 9457. Types stables : /problems/measurement-required (mesure obligatoire absente pour ce vêtement ; le détail cite le champ, jamais sa valeur), /problems/inconsistent-measurements (mesures données et estimées incohérentes entre elles), /problems/garment-type-not-supported (type de vêtement pas encore tracé par cette version du moteur), /problems/skirt-shorter-than-hip-depth (jupe droite plus courte que la ligne des hanches), /problems/trousers-shorter-than-crotch (pantalon trop court sous l'entrejambe), /problems/trousers-hem-too-narrow (tour d'ourlet trop petit pour la jambe), /problems/neckline-too-deep (encolure creusée sous la ligne de poitrine ou sous l'aisselle), /problems/sleeve-shorter-than-cap (manche plus courte que sa tête), /problems/curve-tangents-parallel et /problems/curve-tangents-diverge (courbe impossible à construire avec ces valeurs). Le détail ne contient jamais de valeur de mesure. Un nouveau type est un ajout compatible ; un type ne change jamais de sens. Une requête hors schéma reçoit la réponse 422 de validation de FastAPI (sans type /problems/), qui peut recopier les valeurs reçues : elle ne se relaie ni ne se journalise. */
+    DraftingProblem: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
+  };
   parameters: never;
   requestBodies: never;
   headers: never;
@@ -460,20 +477,7 @@ export interface operations {
           'application/json': components['schemas']['garment-spec.schema'];
         };
       };
-      /** @description Entrées valides mais impossibles à tracer (ex. taille plus petite que le bassin). */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/problem+json': {
-            type: string;
-            title: string;
-            status: number;
-            detail?: string;
-          };
-        };
-      };
+      422: components['responses']['DraftingProblem'];
     };
   };
 }

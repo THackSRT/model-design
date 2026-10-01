@@ -51,6 +51,24 @@ paths:
   /v1/designs/{designId}/versions:
     parameters:
       - $ref: '#/components/parameters/DesignId'
+    get:
+      operationId: listDesignVersions
+      summary: Lister les versions d'un modèle (résumés, la plus récente d'abord)
+      description: >
+        Résumés seulement : ni mesures ni patron (lire une version pour les obtenir). Ordre : numéro
+        décroissant. Pagination par curseur : rappeler avec cursor = nextCursor tant que nextCursor est
+        présent.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Une page de résumés de versions (vide si le modèle n'a pas encore de version).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DesignVersionPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
     post:
       operationId: createDesignVersion
       summary: Créer une version (calcule le patron)
@@ -70,7 +88,7 @@ paths:
               schema: { $ref: '#/components/schemas/DesignVersion' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
-        '422': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/DraftingProblem' }
         '502': { $ref: '#/components/responses/Problem' }
   /v1/designs/{designId}/versions/{versionNumber}:
     parameters:
@@ -82,12 +100,44 @@ paths:
     get:
       operationId: getDesignVersion
       summary: Lire une version
+      description: >
+        Mesures du client comprises : réservée à l'organisation propriétaire du modèle (404 sinon).
       responses:
         '200':
           description: La version et son patron.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DesignVersion' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/designs/{designId}/versions/{versionNumber}/changes:
+    parameters:
+      - $ref: '#/components/parameters/DesignId'
+      - $ref: '#/components/parameters/VersionNumber'
+      - name: since
+        in: query
+        required: true
+        description: Numéro de la version de référence (avant ou après versionNumber).
+        schema: { type: integer, minimum: 1 }
+    get:
+      operationId: getDesignVersionChanges
+      summary: Comparer une version à une autre (paramètres et mesures)
+      description: >
+        Ce qui change des entrées entre la version since et la version versionNumber : paramètres du
+        vêtement et mesures, valeurs telles qu'envoyées (sans appliquer les défauts). Les mesures du
+        client n'y figurent que pour l'organisation propriétaire (404 sinon). La géométrie (pièces,
+        aires, périmètres) n'est pas comparée ici : le client la compare depuis les spécifications des
+        deux versions (ADR 0014).
+      responses:
+        '200':
+          description: Les différences, triées par chemin de paramètre puis par nom de mesure.
+          headers:
+            Cache-Control: { $ref: '#/components/headers/NoStore' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DesignVersionChanges' }
+        '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /v1/designs/{designId}/versions/{versionNumber}/cut-patterns:
     parameters:
@@ -166,6 +216,18 @@ components:
       in: path
       required: true
       schema: { type: integer, minimum: 1 }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Nombre de résumés par page.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: 'Curseur opaque rendu par la page précédente (nextCursor). Absent : première page.'
+      schema: { type: string, minLength: 1, maxLength: 64 }
   headers:
     NoStore:
       description: >
@@ -177,6 +239,22 @@ components:
       description: >
         Erreur au format RFC 9457. 502 /problems/engine-unavailable : moteur injoignable, trop lent
         (délai dépassé), réponse hors contrat ou requête refusée par sa validation.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    DraftingProblem:
+      description: >
+        Version impossible à créer, au format RFC 9457. /problems/garment-type-mismatch : le type de
+        vêtement demandé n'est pas celui du modèle. Sinon, le service relaie le type stable du moteur de
+        patronage (contracts/openapi/patterning.yaml), seulement s'il est dans cette liste :
+        /problems/measurement-required, /problems/inconsistent-measurements,
+        /problems/garment-type-not-supported, /problems/skirt-shorter-than-hip-depth,
+        /problems/trousers-shorter-than-crotch, /problems/trousers-hem-too-narrow,
+        /problems/neckline-too-deep, /problems/sleeve-shorter-than-cap ; le détail est relayé (il ne
+        contient jamais de mesure). Un autre type /problems/… du moteur devient
+        /problems/pattern-impossible, avec un détail fixé par le service. Une erreur de validation du
+        moteur (422 sans type /problems/…), un délai dépassé ou une réponse hors contrat deviennent 502
+        /problems/engine-unavailable ; leur corps n'est ni relayé ni journalisé.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -214,6 +292,12 @@ components:
       $ref: '../schemas/designs/create-design-version-request.schema.json'
     DesignVersion:
       $ref: '../schemas/designs/design-version.schema.json'
+    DesignVersionSummary:
+      $ref: '../schemas/designs/design-version-summary.schema.json'
+    DesignVersionPage:
+      $ref: '../schemas/designs/design-version-page.schema.json'
+    DesignVersionChanges:
+      $ref: '../schemas/designs/design-version-changes.schema.json'
     CutPatternOptions:
       $ref: '../schemas/designs/cut-pattern-options.schema.json'
     DesignExportRequest:
