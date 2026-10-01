@@ -157,4 +157,16 @@ describe('choix du type de vêtement', () => {
     expect(result.current.state.form.sleeveCm.lengthMm).toBe(55);
     expect(result.current.state.errors).toEqual({});
   });
+
+  it('deux calculs rapides avant la première réponse ne créent qu’un modèle', async () => {
+    const designs = fakeDesigns();
+    const deps = { designs, mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => {
+      result.current.actions.generate();
+      result.current.actions.generate();
+    });
+    await waitFor(() => expect(result.current.state.status).toBe('ready'));
+    expect(designs.created).toHaveLength(1);
+  });
 });
