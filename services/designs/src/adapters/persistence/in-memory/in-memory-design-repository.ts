@@ -1,7 +1,12 @@
 import type { DomainEvent } from '@atelier/kernel';
 import type { DesignRepository } from '../../../application/ports/design-repository.js';
 import type { Design, DesignId, OrganizationId } from '../../../domain/design.js';
-import type { DesignVersion, VersionAdded } from '../../../domain/design-version.js';
+import {
+  summaryOf,
+  type DesignVersion,
+  type VersionAdded,
+  type VersionSummary,
+} from '../../../domain/design-version.js';
 
 /** Dépôt en mémoire : développement local sans base, et doublure des tests. */
 export class InMemoryDesignRepository implements DesignRepository {
@@ -31,5 +36,19 @@ export class InMemoryDesignRepository implements DesignRepository {
   ): Promise<DesignVersion | undefined> {
     if (!(await this.byId(organizationId, designId))) return undefined;
     return this.versions.get(`${designId}#${number}`);
+  }
+
+  async versionSummaries(
+    organizationId: OrganizationId,
+    designId: DesignId,
+    page: { limit: number; before?: number },
+  ): Promise<VersionSummary[]> {
+    if (!(await this.byId(organizationId, designId))) return [];
+    const before = page.before ?? Number.POSITIVE_INFINITY;
+    return [...this.versions.values()]
+      .filter((v) => v.designId === designId && v.number < before)
+      .sort((a, b) => b.number - a.number)
+      .slice(0, page.limit)
+      .map(summaryOf);
   }
 }
