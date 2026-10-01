@@ -31,7 +31,19 @@ from patterning.core.garments.darts import (
 from patterning.core.garments.parts import mirror_panel, pt, vertical_grainline
 from patterning.core.garments.sleeve import NOTCH_SHARE, SleeveSpec, draft_sleeve
 from patterning.core.geometry import edge_length
-from patterning.core.model import Edge, EdgeRole, Notch, Panel, Pattern, Seam
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    EdgeRole,
+    Facing,
+    Landmark,
+    Notch,
+    Panel,
+    Pattern,
+    Placement,
+    Seam,
+    Zone,
+)
 
 MIN_BUST_DART_MM = 4.0
 MAX_BUST_DART_MM = 100.0
@@ -196,6 +208,14 @@ def _panel(panel_id: str, name: str, f: Frame, half: Half) -> Panel:
         vertical_grainline(FRONT_DART_CLEARANCE * f.xs, f.top),
         cut_on_fold=front,
         notches=_armhole_notches(front, upper[0]) if f.sleeved else (),
+        # milieu devant (pli) ou milieu dos, à la hauteur de la taille (y = 0)
+        placement=Placement(
+            Zone.TORSO,
+            BodySide.CENTER if front else BodySide.RIGHT,
+            Facing.FRONT if front else Facing.BACK,
+            pt(0.0, 0.0),
+            Landmark.WAIST,
+        ),
     )
 
 

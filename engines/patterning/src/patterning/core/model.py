@@ -14,6 +14,53 @@ class EdgeRole(StrEnum):
     OPENING = "opening"
 
 
+class Zone(StrEnum):
+    TORSO = "torso"
+    LEG = "leg"
+    ARM = "arm"
+
+
+class BodySide(StrEnum):
+    LEFT = "left"
+    RIGHT = "right"
+    CENTER = "center"
+
+
+class Facing(StrEnum):
+    FRONT = "front"
+    BACK = "back"
+    OUTER = "outer"
+
+
+class Landmark(StrEnum):
+    NECK = "neck"
+    SHOULDER = "shoulder"
+    WAIST = "waist"
+    HIP = "hip"
+    CROTCH = "crotch"
+    KNEE = "knee"
+    ANKLE = "ankle"
+    WRIST = "wrist"
+
+
+@dataclass(frozen=True)
+class Placement:
+    """Pose d'une pièce autour du corps (ADR 0013), pour l'habillage et le drapé.
+
+    `anchor` est un point de la pièce (mm, repère de la pièce) qui va sur la ligne médiane de la
+    face `facing`, à la hauteur du repère `landmark` plus `offset_mm`. Une pièce au pli est dépliée
+    sur son bord `fold` ; une pièce en deux exemplaires a une copie retournée de l'autre côté.
+    """
+
+    zone: Zone
+    body_side: BodySide
+    facing: Facing
+    anchor: Point
+    landmark: Landmark
+    offset_mm: float = 0.0
+    clearance_mm: float = 30.0
+
+
 @dataclass(frozen=True)
 class Edge:
     id: str
@@ -41,6 +88,7 @@ class Panel:
     quantity: int = 1
     cut_on_fold: bool = False
     notches: tuple[Notch, ...] = ()
+    placement: Placement | None = None
 
     def edge(self, edge_id: str) -> Edge:
         return next(e for e in self.edges if e.id == edge_id)

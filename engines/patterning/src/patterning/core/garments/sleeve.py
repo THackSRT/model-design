@@ -16,7 +16,18 @@ from patterning.core.curves import BISECTION_ITERATIONS
 from patterning.core.errors import DraftingError
 from patterning.core.garments.parts import pt, vertical_grainline
 from patterning.core.geometry import edge_length
-from patterning.core.model import Edge, EdgeRole, Notch, Panel, Seam
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    EdgeRole,
+    Facing,
+    Landmark,
+    Notch,
+    Panel,
+    Placement,
+    Seam,
+    Zone,
+)
 
 SLEEVE_WIDTH_SHARE = (
     0.55  # largeur de manche sous l'aisselle / emmanchure moyenne (aisance de biceps)
@@ -113,6 +124,10 @@ def draft_sleeve(
         vertical_grainline(0.0, spec.length),
         quantity=2,
         notches=notches,
+        # sommet de la tête de manche sur le repère d'épaule ; copie droite telle que dessinée
+        placement=Placement(
+            Zone.ARM, BodySide.RIGHT, Facing.OUTER, pt(0.0, spec.length), Landmark.SHOULDER
+        ),
     )
     share = spec.cap_ease * front_arm / (front_arm + back_arm)
     back = spec.cap_ease - share

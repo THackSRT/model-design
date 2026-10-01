@@ -2,7 +2,7 @@
   {
     "file": "straight-skirt-reference.json",
     "garmentType": "straight-skirt",
-    "engineVersion": "0.5.0",
+    "engineVersion": "0.6.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Jupe droite à pinces, mesures synthétiques de tests/builders.py (taille 640, hanches 960, longueur 600). À valider sur toile (1.25)."
@@ -10,7 +10,7 @@
   {
     "file": "circle-skirt-reference.json",
     "garmentType": "circle-skirt",
-    "engineVersion": "0.5.0",
+    "engineVersion": "0.6.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Jupe cercle entier avec ceinture de 40 mm, mesures synthétiques de tests/builders.py (taille 640, longueur 650). À valider sur toile (1.25)."
@@ -18,7 +18,7 @@
   {
     "file": "trousers-reference.json",
     "garmentType": "trousers",
-    "engineVersion": "0.5.0",
+    "engineVersion": "0.6.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Pantalon à pinces, mesures synthétiques de tests/builders.py (taille 640, hanches 960, entrejambe 770, longueur 1000, ourlet 440). À valider sur toile (1.25)."
@@ -26,7 +26,7 @@
   {
     "file": "bodice-reference.json",
     "garmentType": "bodice",
-    "engineVersion": "0.5.0",
+    "engineVersion": "0.6.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Corsage sans manches, 60 mm sous la taille, encolure devant creusée de 30 mm ; mesures synthétiques de tests/builders.py (poitrine 900, taille 640, longueur taille dos 380). À valider sur toile (1.25)."
@@ -35,7 +35,7 @@
     "file": "bodice-with-sleeves-reference.json",
     "garmentType": "bodice",
     "case": "bodice-with-sleeves",
-    "engineVersion": "0.5.0",
+    "engineVersion": "0.6.0",
     "status": "candidate",
     "validatedOn": null,
     "note": "Même corsage avec manche montée (longueur 600, embu 15, ourlet 240). À valider sur toile (1.25)."

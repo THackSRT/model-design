@@ -10,7 +10,7 @@ Contrat : `contracts/openapi/patterning.yaml`. Temps visé : moins de 100 ms par
   communs : points arrondis, pièce en miroir, crans ; `darts.py` pour les briques partagées par jupes, pantalon
   et corsage : demi-pièces `Half`, pinces, bords de taille ou de bas). Interdit d'y importer FastAPI, Pydantic ou les contrats
   (vérifié par `.importlinter`).
-- Tracés disponibles (version 0.5.0) : `straight-skirt` (`garments/straight_skirt.py`), `circle-skirt`
+- Tracés disponibles (version 0.6.0) : `straight-skirt` (`garments/straight_skirt.py`), `circle-skirt`
   (`garments/circle_skirt.py`), `trousers` (`garments/trousers.py`), `bodice` (`garments/bodice.py`,
   `garments/sleeve.py`).
 - Les tracés sont réécrits depuis GarmentCode (MIT, commit `d449629`, ADR 0010) : chaque module cite son fichier
@@ -61,6 +61,17 @@ Contrat : `contracts/openapi/patterning.yaml`. Temps visé : moins de 100 ms par
   manche vaut poignet + 40 mm. Coutures de la manche (quantité 2, une copie par bras) : `armhole-front` (devant, coupé au pli) et, au dos,
   `armhole-back-right` et `armhole-back-left`, à embu égal ; le contrat n'exprime pas « l'une des deux copies »,
   la manche est donc cousue à chaque emmanchure. Erreurs 422 propres : `neckline-too-deep`, `sleeve-shorter-than-cap`.
+- Placement (`Panel.placement`, ADR 0013, version 0.6.0) : décidé par le cœur (`Placement` de `core/model.py`, posé par
+  `place()` de `garments/parts.py`), traduit par `spec/convert.py`. Le dessin est vu de l'endroit : de face (`front`)
+  la gauche du porteur est à droite du dessin, de dos (`back`) à gauche. Jupes, pantalon et corsage : zone `torso`
+  ou `leg`, repère `waist`, ancre sur la ligne du milieu à la hauteur de la taille (haut du pli ou du milieu dos,
+  `rise` du pantalon, `y = 0` du corsage) ; devant coupé au pli et jupe cercle : `center` ; dos et jambes : le côté
+  du porteur, la pièce en miroir (`mirror_panel`) prenant le côté opposé et l'ancre retournée. Jupe cercle : ancre
+  au milieu de l'arc de taille ; ceinture : ancre au milieu de son bas, posé sur la taille. Manche : `arm`, `right`,
+  `outer`, sommet de la tête au repère `shoulder` (copie gauche retournée). `tests/unit/test_placement_seams.py`
+  vérifie la convention des coutures (même côté, sens opposés, mêmes hauteurs relatives) ; la pince de poitrine
+  décale de son ouverture les bords du devant du corsage au-dessus d'elle (normal, la pince se ferme à la couture) ;
+  aucun `EdgeRef.side` n'est nécessaire : la règle « bord des deux côtés contre bord d'un seul côté » suffit.
 - `spec/request.py` (requête → entrées du cœur) et `spec/convert.py` (patron → `GarmentSpec`) : seuls endroits qui connaissent le format des contrats.
 - `api/routes.py` : valide avec les modèles générés, appelle le cœur, traduit `DraftingError` en RFC 9457.
 - Tests : `tests/unit`, `tests/property` (Hypothesis : contours fermés, coutures justes, sortie conforme au contrat),

@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "garment": {
     "type": "circle-skirt"
@@ -232,7 +232,21 @@
           "distanceMm": 81.25,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            753.45,
+            650.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back",
@@ -457,7 +471,21 @@
           "distanceMm": 81.25,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            753.45,
+            650.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "waistband-front",
@@ -559,7 +587,21 @@
         ]
       ],
       "quantity": 1,
-      "cutOnFold": false
+      "cutOnFold": false,
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            162.5,
+            0.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "waistband-back",
@@ -661,7 +703,21 @@
         ]
       ],
       "quantity": 1,
-      "cutOnFold": false
+      "cutOnFold": false,
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            162.5,
+            0.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     }
   ],
   "seams": [
