@@ -92,6 +92,12 @@ export const fr = {
   'problem./problems/engine-unavailable':
     'Un moteur de calcul ne répond pas. Réessayez dans un instant.',
   'problem./problems/measurement-required': 'Une mesure nécessaire à ce vêtement manque.',
+  'problem./problems/skirt-shorter-than-hip-depth':
+    'La jupe est trop courte : elle doit descendre sous la ligne des hanches.',
+  'problem./problems/trousers-shorter-than-crotch':
+    'Le pantalon est trop court : il doit descendre sous l’entrejambe.',
+  'problem./problems/trousers-hem-too-narrow':
+    'Le bas du pantalon est trop étroit pour ces mesures.',
   'problem./problems/neckline-too-deep': 'L’encolure est trop creusée pour ces mesures.',
   'problem./problems/sleeve-shorter-than-cap': 'La manche est plus courte que sa tête.',
   'problem./problems/inconsistent-measurements': 'Ces mesures sont incohérentes entre elles.',
