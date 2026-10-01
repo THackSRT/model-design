@@ -1,3 +1,4 @@
+import type { GarmentType } from '@atelier/contracts-ts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
@@ -120,7 +121,7 @@ describe('choix du type de vêtement', () => {
   it('un type non tracé ne se choisit pas', () => {
     const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
-    act(() => result.current.actions.setGarmentType('bodice'));
+    act(() => result.current.actions.setGarmentType('coat' as GarmentType));
     expect(result.current.state.form.garmentType).toBe('straight-skirt');
   });
 
@@ -142,5 +143,18 @@ describe('choix du type de vêtement', () => {
     const [first, second, third] = designs.versionDesignIds;
     expect(second).toBe(first);
     expect(third).not.toBe(first);
+  });
+
+  it('corsage : manches facultatives, saisie gardée', () => {
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.setGarmentType('bodice'));
+    act(() => result.current.actions.setWithSleeve(true));
+    act(() => result.current.actions.setSleeveParam('lengthMm', 55));
+    expect(result.current.state.form.withSleeve).toBe(true);
+    expect(result.current.state.form.sleeveCm.lengthMm).toBe(55);
+    act(() => result.current.actions.setWithSleeve(false));
+    expect(result.current.state.form.sleeveCm.lengthMm).toBe(55);
+    expect(result.current.state.errors).toEqual({});
   });
 });

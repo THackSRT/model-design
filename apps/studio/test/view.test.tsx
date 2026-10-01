@@ -32,6 +32,8 @@ const actions = (): PatternStudioActions => ({
   setMeasurement: vi.fn(),
   setGarmentType: vi.fn(),
   setParam: vi.fn(),
+  setWithSleeve: vi.fn(),
+  setSleeveParam: vi.fn(),
   generate: vi.fn(),
 });
 
@@ -164,15 +166,38 @@ describe('vue de l’atelier de patron', () => {
     expect(screen.getByRole('button', { name: '3D' }).getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('le sélecteur liste les quatre types ; le corsage est désactivé « à venir »', () => {
+  it('le sélecteur liste les quatre types, tous tracés', () => {
     render(<PatternStudioView state={base} actions={actions()} />);
-    const options = screen.getAllByRole('option', { hidden: false }).map((o) => o.textContent);
-    expect(options).toEqual(
-      expect.arrayContaining(['Jupe droite', 'Jupe cercle', 'Pantalon', 'Corsage — à venir']),
+    const options = screen.getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(
+      expect.arrayContaining(['Jupe droite', 'Jupe cercle', 'Pantalon', 'Corsage']),
     );
-    const bodice = screen.getByRole('option', { name: 'Corsage — à venir' });
-    expect(bodice.hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('option', { name: 'Pantalon' }).hasAttribute('disabled')).toBe(false);
+    expect(options.some((o) => o.hasAttribute('disabled'))).toBe(false);
+  });
+
+  it('corsage : mesures de buste, champs du corsage, manches en option', async () => {
+    const a = actions();
+    const form = { ...initialForm, garmentType: 'bodice' as const };
+    const { rerender } = render(<PatternStudioView state={{ ...base, form }} actions={a} />);
+    expect(screen.getByLabelText('Tour de buste')).toBeTruthy();
+    expect(screen.getByLabelText('Longueur taille dos')).toBeTruthy();
+    expect(screen.getByLabelText('Aisance poitrine')).toBeTruthy();
+    expect(screen.queryByLabelText('Longueur de manche')).toBeNull();
+    await userEvent.click(screen.getByLabelText('Avec manches'));
+    expect(a.setWithSleeve).toHaveBeenCalledWith(true);
+    rerender(
+      <PatternStudioView
+        state={{
+          ...base,
+          form: { ...form, withSleeve: true },
+          errors: { 'sleeve.lengthMm': { code: 'range', minMm: 100, maxMm: 900 } },
+        }}
+        actions={a}
+      />,
+    );
+    expect(screen.getByLabelText('Longueur de manche').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByLabelText('Embu de la tête de manche')).toBeTruthy();
+    expect(screen.getByLabelText('Tour du bas de manche')).toBeTruthy();
   });
 
   it('choisir « Jupe cercle » appelle setGarmentType', async () => {

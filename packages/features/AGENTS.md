@@ -13,3 +13,9 @@ Formulaire du patron : `garment-fields.ts` décrit les champs de chaque type tra
 défauts lus dans `jsonSchemas.garmentRequest.$defs`, jamais recopiés) ; `DRAFTED_GARMENT_TYPES` dit quels types sont
 tracés (les autres restent visibles mais désactivés). `StudioForm.paramsByType` garde la saisie de chaque type ; la
 session garde un `designId` par type et le nom du modèle vient de `PatternStudioDeps.designName`.
+
+Pièces de coupe : `cut-pieces/` (`useCutPieces`, `layoutCutPieces` pure) demande les pièces d'une version
+(`POST …/cut-patterns`, corps `{}`) et lance les téléchargements (`exportFile`). L'enregistrement d'un fichier passe
+par le port `FileSaver`, branché par l'application ; le nom de fichier vient de `Content-Disposition` par un motif
+strict (`exportFileName`, repli `patron.<ext>`). Corsage : `sleeve` est un sous-objet facultatif (`withSleeve`,
+`sleeveCm`, champs de `sleeveFields()`) ; ses erreurs sont indexées `sleeve.<champ>`.

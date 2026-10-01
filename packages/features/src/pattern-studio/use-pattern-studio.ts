@@ -29,6 +29,8 @@ export interface PatternStudioState {
   display: MannequinDisplay;
   problem?: ApiProblem;
   versionNumber?: number;
+  /** Modèle de la version calculée : avec `versionNumber`, ce qu'il faut pour les pièces de coupe. */
+  designId?: string;
 }
 
 export interface PatternStudioActions {
@@ -37,6 +39,10 @@ export interface PatternStudioActions {
   setGarmentType(type: GarmentType): void;
   /** Saisie d'un paramètre du type choisi : cm pour une longueur, nombre sans unité sinon. */
   setParam(param: string, value: number | undefined): void;
+  /** Corsage : avec ou sans manches. */
+  setWithSleeve(enabled: boolean): void;
+  /** Saisie d'un paramètre des manches (cm). */
+  setSleeveParam(param: string, value: number | undefined): void;
   setDisplay(display: MannequinDisplay): void;
   generate(): void;
 }
@@ -56,6 +62,9 @@ function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions
           [f.garmentType]: { ...f.paramsByType[f.garmentType], [param]: value },
         },
       })),
+    setWithSleeve: (withSleeve) => setForm((f) => ({ ...f, withSleeve })),
+    setSleeveParam: (param, value) =>
+      setForm((f) => ({ ...f, sleeveCm: { ...f.sleeveCm, [param]: value } })),
   };
 }
 
@@ -101,6 +110,7 @@ export function usePatternStudio(deps: PatternStudioDeps): {
     display,
     problem: result?.problem,
     versionNumber: result?.version?.number,
+    designId: result?.version?.designId,
   };
   return { state, actions };
 }

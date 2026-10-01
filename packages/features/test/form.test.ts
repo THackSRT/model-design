@@ -1,4 +1,4 @@
-import type { CreateDesignVersionRequest } from '@atelier/contracts-ts';
+import type { CreateDesignVersionRequest, GarmentType } from '@atelier/contracts-ts';
 import { describe, expect, it } from 'vitest';
 import { initialForm, type StudioForm, toVersionRequest } from '../src/pattern-studio/form.js';
 
@@ -123,7 +123,68 @@ describe('saisie de l’atelier', () => {
   });
 
   it('un type non tracé n’est pas demandé', () => {
-    const request = toVersionRequest({ ...initialForm, garmentType: 'bodice' });
+    const request = toVersionRequest({ ...initialForm, garmentType: 'coat' as GarmentType });
     expect(request.isErr() && request.error).toEqual({ garmentType: { code: 'unavailable' } });
+  });
+});
+
+describe('corsage', () => {
+  const bodice: StudioForm = { ...initialForm, garmentType: 'bodice' };
+  const bodiceMeasurements = { ...measurements, bustGirthMm: 920, backWaistLengthMm: 400 };
+
+  it('sans manches : requête complète, pas de sleeve', () => {
+    const expected: CreateDesignVersionRequest = {
+      measurements: bodiceMeasurements,
+      garment: {
+        type: 'bodice',
+        params: {
+          lengthBelowWaistMm: 0,
+          bustEaseMm: 60,
+          waistEaseMm: 40,
+          frontNeckDepthMm: 0,
+          backNeckDepthMm: 0,
+        },
+      },
+    };
+    const request = toVersionRequest(bodice);
+    expect(request.isOk() && request.value).toEqual(expected);
+  });
+
+  it('avec manches : sous-objet sleeve, bas de manche vide omis', () => {
+    const request = toVersionRequest({ ...bodice, withSleeve: true });
+    const garment = request.isOk() ? request.value.garment : undefined;
+    expect(garment?.type === 'bodice' && garment.params.sleeve).toEqual({
+      lengthMm: 600,
+      capEaseMm: 15,
+    });
+  });
+
+  it('mesures du corsage obligatoires, bornes du contrat', () => {
+    const request = toVersionRequest({
+      ...bodice,
+      measurementsCm: {
+        ...initialForm.measurementsCm,
+        bustGirthMm: undefined,
+        backWaistLengthMm: 5,
+      },
+    });
+    expect(request.isErr() && request.error).toEqual({
+      bustGirthMm: { code: 'required' },
+      backWaistLengthMm: { code: 'range', minMm: 300, maxMm: 600 },
+    });
+  });
+
+  it('manches hors bornes : erreur sous la clé sleeve.<champ>', () => {
+    const request = toVersionRequest({
+      ...bodice,
+      withSleeve: true,
+      sleeveCm: { ...bodice.sleeveCm, lengthMm: 2 },
+    });
+    expect(request.isErr() && request.error['sleeve.lengthMm']).toEqual({
+      code: 'range',
+      minMm: 100,
+      maxMm: 900,
+    });
+    expect(toVersionRequest({ ...bodice, sleeveCm: { lengthMm: 2 } }).isOk()).toBe(true);
   });
 });

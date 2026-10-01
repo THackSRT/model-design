@@ -51,6 +51,8 @@ const design: Design = {
 
 export const designName = (type: string) => `Modèle ${type}`;
 
+const unused = { type: '/problems/unused', title: 'unused', status: 500 };
+
 export interface FakeDesigns extends DesignsClient {
   versions: number;
   versionDesignIds: string[];
@@ -66,6 +68,8 @@ export function fakeDesigns(problem?: ApiProblem): FakeDesigns {
       client.created.push(body);
       return ok({ ...design, ...body, id: `${design.id.slice(0, -4)}d00${client.created.length}` });
     },
+    cutPattern: async () => err(unused),
+    exportFile: async () => err(unused),
     createVersion: async (id: string, body: Pick<DesignVersion, 'measurements' | 'garment'>) => {
       if (problem) return err(problem);
       client.versions += 1;

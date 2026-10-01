@@ -9,8 +9,11 @@ import { cmToMm, err, ok, type Result } from '@atelier/kernel';
 import {
   DRAFTED_GARMENT_TYPES,
   garmentFields,
+  sleeveFields,
   type GarmentField,
   initialParams,
+  initialSleeve,
+  type DraftedGarmentType,
   isDraftedGarmentType,
   type ParamValues,
 } from './garment-fields.js';
@@ -22,10 +25,19 @@ export interface StudioForm {
   measurementsCm: Partial<Record<MeasurementKey, number>>;
   /** Saisie de chaque type (cm, ou ratio) : changer de type puis revenir ne perd rien. */
   paramsByType: Partial<Record<GarmentType, ParamValues>>;
+  /** Corsage : manches facultatives (case cochée) et leur saisie, gardée même décochée. */
+  withSleeve: boolean;
+  sleeveCm: ParamValues;
 }
 
 export type MeasurementKey =
-  'statureMm' | 'chestGirthMm' | 'waistGirthMm' | 'hipGirthMm' | 'crotchHeightMm';
+  | 'statureMm'
+  | 'chestGirthMm'
+  | 'waistGirthMm'
+  | 'hipGirthMm'
+  | 'crotchHeightMm'
+  | 'bustGirthMm'
+  | 'backWaistLengthMm';
 export const MEASUREMENT_KEYS: MeasurementKey[] = [
   'statureMm',
   'chestGirthMm',
@@ -33,9 +45,14 @@ export const MEASUREMENT_KEYS: MeasurementKey[] = [
   'hipGirthMm',
 ];
 
-/** Mesures demandées pour un type : les quatre du contrat, et l'entrejambe pour le pantalon. */
+const EXTRA_MEASUREMENTS: Partial<Record<GarmentType, MeasurementKey[]>> = {
+  trousers: ['crotchHeightMm'],
+  bodice: ['bustGirthMm', 'backWaistLengthMm'],
+};
+
+/** Mesures demandées : les quatre du contrat, plus celles que le tracé du type exige (ADR 0010). */
 export function measurementKeys(type: GarmentType): MeasurementKey[] {
-  return type === 'trousers' ? [...MEASUREMENT_KEYS, 'crotchHeightMm'] : MEASUREMENT_KEYS;
+  return [...MEASUREMENT_KEYS, ...(EXTRA_MEASUREMENTS[type] ?? [])];
 }
 
 /** Erreur de saisie : un code et ses paramètres (mm), traduits par l'application. */
@@ -57,8 +74,12 @@ export const initialForm: StudioForm = {
     waistGirthMm: 70,
     hipGirthMm: 96,
     crotchHeightMm: 78,
+    bustGirthMm: 92,
+    backWaistLengthMm: 40,
   },
   paramsByType: Object.fromEntries(DRAFTED_GARMENT_TYPES.map((t) => [t, initialParams(t)])),
+  withSleeve: false,
+  sleeveCm: initialSleeve(),
 };
 
 type Bounds = { minimum: number; maximum: number };
@@ -110,16 +131,29 @@ function checkMeasurements(form: StudioForm, errors: FieldErrors): Record<string
   return measurements;
 }
 
-function checkParams(
+function checkFields(
+  fields: GarmentField[],
   inputs: ParamValues,
-  type: Parameters<typeof garmentFields>[0],
   errors: FieldErrors,
-) {
+  prefix = '',
+): Record<string, number> {
   const params: Record<string, number> = {};
-  for (const field of garmentFields(type)) {
+  for (const field of fields) {
     const { value, error } = checkField(field, inputs[field.param]);
-    if (error) errors[field.param] = error;
+    if (error) errors[`${prefix}${field.param}`] = error;
     else if (value !== undefined) params[field.param] = value;
+  }
+  return params;
+}
+
+function checkParams(form: StudioForm, type: DraftedGarmentType, errors: FieldErrors) {
+  const params: Record<string, unknown> = checkFields(
+    garmentFields(type),
+    form.paramsByType[type] ?? {},
+    errors,
+  );
+  if (type === 'bodice' && form.withSleeve) {
+    params.sleeve = checkFields(sleeveFields(), form.sleeveCm, errors, 'sleeve.');
   }
   return params;
 }
@@ -132,7 +166,7 @@ export function toVersionRequest(
   if (!isDraftedGarmentType(type)) return err({ garmentType: { code: 'unavailable' } });
   const errors: FieldErrors = {};
   const measurements = checkMeasurements(form, errors);
-  const params = checkParams(form.paramsByType[type] ?? {}, type, errors);
+  const params = checkParams(form, type, errors);
   if (Object.keys(errors).length > 0) return err(errors);
   return ok({
     // params est bâti champ par champ depuis les schémas du contrat : le service revalide.

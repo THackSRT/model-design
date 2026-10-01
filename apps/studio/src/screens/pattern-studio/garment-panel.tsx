@@ -1,5 +1,6 @@
 import {
   garmentFields,
+  sleeveFields,
   GARMENT_TYPES,
   isDraftedGarmentType,
   type FieldError,
@@ -34,18 +35,67 @@ function GarmentSelect({ state, actions }: PatternStudioViewProps) {
   );
 }
 
-function ParamField({ field, props }: { field: GarmentField; props: PatternStudioViewProps }) {
-  const { state, actions } = props;
-  const type = state.form.garmentType;
+interface ParamFieldProps {
+  field: GarmentField;
+  label: string;
+  value: number | undefined;
+  error: FieldError | undefined;
+  onChange(value: number | undefined): void;
+}
+
+function ParamField({ field, label, value, error, onChange }: ParamFieldProps) {
   return (
     <NumberField
-      label={paramLabel(type, field.param)}
+      label={label}
       unit={field.unit === 'cm' ? t('unit.cm') : ''}
       step={field.unit === 'cm' ? 0.5 : 0.05}
+      value={value}
+      error={errorText(error)}
+      onChange={onChange}
+    />
+  );
+}
+
+function TypeFields({ state, actions }: PatternStudioViewProps) {
+  const type = state.form.garmentType;
+  if (!isDraftedGarmentType(type)) return null;
+  return garmentFields(type).map((field) => (
+    <ParamField
+      key={`${type}.${field.param}`}
+      field={field}
+      label={paramLabel(type, field.param)}
       value={state.form.paramsByType[type]?.[field.param]}
-      error={errorText(state.errors[field.param])}
+      error={state.errors[field.param]}
       onChange={(value) => actions.setParam(field.param, value)}
     />
+  ));
+}
+
+/** Corsage : manches facultatives, champs de `$defs.SleeveParams`. */
+function SleeveFields({ state, actions }: PatternStudioViewProps) {
+  if (state.form.garmentType !== 'bodice') return null;
+  return (
+    <>
+      <label className="studio-select">
+        {t('garment.withSleeve')}
+        <input
+          type="checkbox"
+          checked={state.form.withSleeve}
+          onChange={(e) => actions.setWithSleeve(e.target.checked)}
+        />
+      </label>
+      {state.form.withSleeve &&
+        sleeveFields().map((field) => (
+          <ParamField
+            key={`sleeve.${field.param}`}
+            field={field}
+            label={paramLabel('sleeve', field.param)}
+            value={state.form.sleeveCm[field.param]}
+            error={state.errors[`sleeve.${field.param}`]}
+            onChange={(value) => actions.setSleeveParam(field.param, value)}
+          />
+        ))}
+    </>
   );
 }
 
@@ -59,14 +109,11 @@ function StatusMessage({ state }: Pick<PatternStudioViewProps, 'state'>) {
 /** Choix du type de vêtement, champs de ce type (décrits par le contrat) et lancement du calcul. */
 export function GarmentPanel(props: PatternStudioViewProps) {
   const { state, actions } = props;
-  const type = state.form.garmentType;
-  const fields = isDraftedGarmentType(type) ? garmentFields(type) : [];
   return (
     <Panel title={t('garment.title')}>
       <GarmentSelect {...props} />
-      {fields.map((field) => (
-        <ParamField key={`${type}.${field.param}`} field={field} props={props} />
-      ))}
+      <TypeFields {...props} />
+      <SleeveFields {...props} />
       <Button emphasis="high" disabled={state.status === 'working'} onClick={actions.generate}>
         {t('action.generate')}
       </Button>

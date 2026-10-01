@@ -6,14 +6,16 @@ import {
   garmentFields,
   initialParams,
   isDraftedGarmentType,
+  sleeveFields,
 } from '../src/pattern-studio/garment-fields.js';
 
 const defs = jsonSchemas.garmentRequest.$defs;
 
 describe('champs du formulaire par type de vêtement', () => {
-  it('liste les types du contrat, dont le corsage non tracé', () => {
+  it('liste les types du contrat ; un type inconnu n’est pas tracé', () => {
     expect(GARMENT_TYPES).toEqual(jsonSchemas.garmentType.enum);
-    expect(isDraftedGarmentType('bodice')).toBe(false);
+    expect(isDraftedGarmentType('coat')).toBe(false);
+    expect(isDraftedGarmentType('bodice')).toBe(true);
     expect(DRAFTED_GARMENT_TYPES.every((type) => GARMENT_TYPES.includes(type))).toBe(true);
   });
 
@@ -70,6 +72,23 @@ describe('champs du formulaire par type de vêtement', () => {
     });
     expect(initialParams('circle-skirt').circleFraction).toBe(1);
     expect(initialParams('trousers').hemGirthMm).toBeUndefined();
+  });
+});
+
+describe('corsage', () => {
+  it('champs du corsage sans le sous-objet manches', () => {
+    const names = garmentFields('bodice').map((f) => f.param);
+    expect(names).toEqual(Object.keys(defs.BodiceParams.properties).filter((n) => n !== 'sleeve'));
+    expect(garmentFields('bodice').every((f) => !f.required)).toBe(true);
+  });
+
+  it('manches : bornes du contrat, longueur obligatoire, bas de manche facultatif', () => {
+    const { properties } = defs.SleeveParams;
+    expect(sleeveFields()).toEqual([
+      { param: 'lengthMm', unit: 'cm', ...pick(properties.lengthMm), required: true },
+      { param: 'capEaseMm', unit: 'cm', ...pick(properties.capEaseMm), required: false },
+      { param: 'hemGirthMm', unit: 'cm', ...pick(properties.hemGirthMm), required: false },
+    ]);
   });
 });
 

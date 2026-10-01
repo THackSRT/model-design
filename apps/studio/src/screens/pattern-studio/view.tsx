@@ -9,12 +9,15 @@ import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
 import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline';
 import { Suspense, useMemo } from 'react';
 import { fieldErrorMessage, t } from '../../i18n/t.js';
+import { CutPiecesPanel, type CutPiecesPanelProps } from './cut-pieces-panel.js';
 import { GarmentPanel } from './garment-panel.js';
 import { LazyMannequinView } from './lazy-mannequin-view.js';
 
 export interface PatternStudioViewProps {
   state: PatternStudioState;
   actions: PatternStudioActions;
+  /** Pièces de coupe et téléchargements de la version calculée ; absents : pas de panneau. */
+  cutPieces?: CutPiecesPanelProps;
 }
 
 const FIELD_UNIT = 'cm' as const; // les champs du formulaire se saisissent en cm
@@ -145,6 +148,7 @@ export function PatternStudioView(props: PatternStudioViewProps) {
         <GarmentPanel {...props} />
       </div>
       <PatternPanel state={props.state} />
+      {props.cutPieces && <CutPiecesPanel {...props.cutPieces} />}
       <MannequinPanel {...props} />
     </main>
   );

@@ -31,6 +31,8 @@ const actions: PatternStudioActions = {
   setMeasurement: vi.fn(),
   setGarmentType: vi.fn(),
   setParam: vi.fn(),
+  setWithSleeve: vi.fn(),
+  setSleeveParam: vi.fn(),
   generate: vi.fn(),
 };
 const state: PatternStudioState = {

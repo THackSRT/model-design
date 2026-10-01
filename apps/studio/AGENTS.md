@@ -15,3 +15,6 @@ Rôle : écran de la phase 1 — mesures, choix du vêtement (jupe droite, jupe 
 - Les services sont appelés via `/api/<service>` (proxy Vite en local, passerelle en production).
 - Tests : `test/view.test.tsx`, un test par état de la vue (repos, calcul, prêt, échec, champ invalide).
 - Commandes : `pnpm nx run @atelier/studio:dev|test|lint|typecheck|build`.
+- Pièces de coupe : `cut-pieces-panel.tsx` dessine le SVG depuis le JSON `CutPattern` (jamais en injectant le SVG
+  exporté : pas de `dangerouslySetInnerHTML`) ; `platform/download.ts` enregistre un fichier (Blob + lien temporaire,
+  URL libérée). Rien n'est gardé en local (pièces et fichiers dérivent des mesures d'un client).

@@ -1,4 +1,9 @@
-import { DRAFTED_GARMENT_TYPES, GARMENT_TYPES, garmentFields } from '@atelier/features';
+import {
+  DRAFTED_GARMENT_TYPES,
+  GARMENT_TYPES,
+  garmentFields,
+  sleeveFields,
+} from '@atelier/features';
 import { describe, expect, it } from 'vitest';
 import { fr } from '../src/i18n/fr.js';
 import {
@@ -58,6 +63,32 @@ describe('catalogue des vêtements', () => {
         expect(`param.${type}.${param}` in fr).toBe(true);
         expect(paramLabel(type, param)).not.toBe(param);
       }
+    }
+  });
+
+  it('chaque champ des manches a son libellé', () => {
+    for (const { param } of sleeveFields()) expect(paramLabel('sleeve', param)).not.toBe(param);
+  });
+
+  it('chaque problème relayé par le service ou le moteur est traduit', () => {
+    const types = [
+      'unknown-edge',
+      'allowance-on-fold',
+      'allowance-on-dart',
+      'adjacent-darts',
+      'notch-outside-edge',
+      'open-contour',
+      'fold-edge-missing',
+      'cut-line-self-intersects',
+      'export-format-unavailable',
+      'measurement-required',
+      'neckline-too-deep',
+      'sleeve-shorter-than-cap',
+      'inconsistent-measurements',
+      'engine-unavailable',
+    ];
+    for (const type of types) {
+      expect(problemMessage(`/problems/${type}`)).not.toBe(fr['problem.default']);
     }
   });
 

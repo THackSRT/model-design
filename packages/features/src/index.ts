@@ -1,4 +1,26 @@
-export { type ApiProblem, createDesignsClient, type DesignsClient } from './api/designs-client.js';
+export {
+  type ApiProblem,
+  createDesignsClient,
+  type DesignsClient,
+  type ExportedFile,
+} from './api/designs-client.js';
+export { exportFileName } from './api/file-name.js';
+export {
+  type CutPieceLabel,
+  type CutPieceShape,
+  type CutPiecesLayout,
+  layoutCutPieces,
+} from './cut-pieces/layout.js';
+export {
+  type CutPiecesActions,
+  type CutPiecesDeps,
+  type CutPiecesState,
+  EXPORT_FORMATS,
+  type ExportState,
+  type FileSaver,
+  useCutPieces,
+  type VersionRef,
+} from './cut-pieces/use-cut-pieces.js';
 export {
   DRAFTED_GARMENT_TYPES,
   type DraftedGarmentType,
@@ -6,6 +28,8 @@ export {
   type GarmentField,
   garmentFields,
   initialParams,
+  initialSleeve,
+  sleeveFields,
   isDraftedGarmentType,
   type ParamValues,
 } from './pattern-studio/garment-fields.js';
