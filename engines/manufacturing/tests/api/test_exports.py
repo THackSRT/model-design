@@ -3,7 +3,6 @@
 import xml.etree.ElementTree as ET
 from typing import Any
 
-import pytest
 from fastapi.testclient import TestClient
 
 from manufacturing.main import create_app
@@ -40,14 +39,6 @@ def test_file_name_without_size() -> None:
 def test_two_identical_calls_give_the_same_bytes() -> None:
     body = {"format": "svg", "spec": skirt_spec(), "reference": "MOD-002"}
     assert _post(body).content == _post(body).content
-
-
-@pytest.mark.parametrize("export_format", ["pdf-a4-tiled", "dxf-aama"])
-def test_formats_not_delivered_yet_are_422(export_format: str) -> None:
-    response = _post({"format": export_format, "spec": skirt_spec()})
-    assert response.status_code == 422
-    assert response.headers["content-type"].startswith("application/problem+json")
-    assert response.json()["type"] == "/problems/export-format-unavailable"
 
 
 def test_finishing_errors_are_422() -> None:

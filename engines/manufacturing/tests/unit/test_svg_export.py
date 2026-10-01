@@ -105,7 +105,7 @@ def test_output_is_identical_between_calls() -> None:
     assert render_svg(_skirt_job()) == render_svg(_skirt_job())
 
 
-def test_formats_dispatch_is_a_dictionary_with_svg_only_for_now() -> None:
-    assert set(EXPORTERS) == {"svg"}
+def test_formats_dispatch_is_a_dictionary_of_exporters() -> None:
+    assert {"svg", "dxf-aama"} <= set(EXPORTERS)
     assert exporter_for("svg") is render_svg
     assert set(CATALOGS) == {"fr"}

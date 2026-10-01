@@ -19,6 +19,7 @@ dev = [
   "import-linter>=2.5",
   "datamodel-code-generator>=0.34",
   "httpx2>=2.13",
+  "pypdf>=6.19",
 ]
 
 # MkDocs 2.0 casse thèmes et plugins : on reste sur la branche 1.x tant que Material ne la supporte pas.

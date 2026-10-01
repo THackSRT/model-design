@@ -21,11 +21,22 @@ laize. Temps visé : 1 à 30 s (imbrication en tâche).
   `spec/` conversions avec les contrats (`cut_patterns.py`) ; `api/` FastAPI, un module par ressource
   (`cut_patterns.py`) ; `main.py` : assemblage. Les frontières sont vérifiées par import-linter.
 - `POST /v1/exports` : `format: "svg"` rend une planche SVG 1:1 (mm, `image/svg+xml`, `Content-Disposition`
-  `<garment.type>[-<sizeLabel>].svg`, octet pour octet identique) ; `pdf-a4-tiled` et `dxf-aama` : 422
-  `export-format-unavailable` jusqu'à 1.18b et 1.18c. Paquet `export/` (pur, rend des `bytes`) : `sheet.py` (planche
+  `<garment.type>[-<sizeLabel>].svg`, octet pour octet identique) ; formats `pdf-a4-tiled` et `dxf-aama`
+  ci-dessous. Paquet `export/` (pur, rend des `bytes`) : `sheet.py` (planche
   en étagères, réutilisée par PDF et DXF), `svg.py`, `labels.py` (annotations par langue, `fr`) ; la répartition par
   format est le dictionnaire `EXPORTERS` de `export/__init__.py`. Tout texte de la requête est échappé en XML.
   Référence golden : `tests/golden/straight-skirt.svg` (test dans `tests/api/test_reference_svg.py`).
+- PDF A4 tuilé (`format: "pdf-a4-tiled"`, `application/pdf`, `.pdf`) : `export/pdf_writer.py` (PDF 1.4 minimal, sans
+  compression, date, `/ID` ni `/Info`, Helvetica WinAnsi, matrice `cm` 72/25,4) + `pdf_tiles.py` ; pages A4 bord à bord
+  (zone utile 190 x 277 mm, marge 10 mm, sans recouvrement), repères de raccord, tuiles nommées A1, A2, B1 ; page 1 =
+  plan d'assemblage + carré de contrôle de 100 mm. Tests avec `pypdf` (dépendance `dev`). Référence golden :
+  `tests/golden/straight-skirt.pdf` (`tests/api/test_pdf_export.py`).
+- DXF-AAMA (`format: "dxf-aama"`, `image/vnd.dxf`, `.dxf`) : `export/dxf_aama.py` + `dxf_writer.py`, DXF R12 ASCII
+  (AC1009), mm, une taille par fichier, sans handle, fins de ligne CRLF, cp1252, caractères de contrôle des textes
+  supprimés. Un bloc par pièce (nom = `panelId` en majuscules, `[A-Z0-9_-]`, doublons suffixés `_2`), inséré à sa place
+  sur la planche. Calques : 1 coupe et textes, 2 points d'angle, 3 points de courbe, 4 crans, 6 pliure, 7 droit fil,
+  14 couture (jambes de pince comprises). Référence golden : `tests/golden/straight-skirt.dxf`
+  (`tests/api/test_reference_dxf.py`) ; lecteur de test : `tests/dxf_reader.py`.
 - Crans : demandés (`finishing.notches`), de la spécification (`Panel.notches`, traités comme demandés, source
   `requested`) et automatiques `seam-junctions` ; priorité à un même endroit : demande > spécification > auto.
 - Pinces : deux bords consécutifs cousus l'un à l'autre (couture dont a et b sont sur la même pièce). Valeur de couture 0 sur les jambes (une valeur non nulle explicite : `allowance-on-dart`) ; la ligne de coupe franchit la pince par un pont (corde, valeur = max des deux bords voisins), la ligne de couture garde les jambes ; crans automatiques aux deux bouts du pont.
