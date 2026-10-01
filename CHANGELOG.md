@@ -9,6 +9,18 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Moteur `manufacturing` (port 3202, ENGINE_VERSION 0.3.0) : pièces de coupe avec valeurs de couture par bord,
+  crans demandés ou automatiques, droit fil et pliure ; gradation par recalcul ; plan de coupe simple et
+  déterministe ; exports SVG 1:1 (1.18a), PDF A4 tuilé et DXF-AAMA à venir (1.18b/c) ; routes RFC 9457 typées.
+- Patronage : quatre types de vêtements (`straight-skirt`, `circle-skirt`, `trousers`, `bodice`) et douze mesures
+  facultatives (ISO 8559-1) ; GarmentCode réécrit en Python pur sans dépendance nouvelle (ADR 0010) ; jupes droite
+  à pinces et cercle livrées (ENGINE_VERSION 0.2.0, références « candidates »), pantalon et corsage à venir (1.11d/e).
+- `designs` accepte les quatre types de modèle et leurs paramètres.
+- Studio : `three.js` chargé à la demande dans un `Suspense` (`lazy-mannequin-view.tsx`, paquet initial réduit de
+  806 kB à 303 kB) ; messages ICU avec pluriels, genres et formatage de nombres (ADR 0011) ; erreurs de saisie
+  affichées sous les champs (`intl-messageformat` v12.1.2, BSD-3).
+- Hook `pre-push` activé sous Windows (script `prepare` en Node, sans Git Bash externe).
+- Licence permise PSF-2.0 ajoutée (typing_extensions, requise par Pydantic).
 - Service `docs` dans `platform/docker-compose.yml` (profil « app », `pnpm stack:up`) : documentation MkDocs
   construite puis servie par nginx sur http://localhost:8000.
 - Documentation MkDocs de la plateforme (`pnpm docs:serve`) : architecture, directives de codage, plateforme,
@@ -33,6 +45,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 - Moteur mannequin remplacé par modules TypeScript testés (geometry, morph, measure, fit, render, pose) ;
   exception au lint levée.
+- `engines/patterning` : GarmentCode est la référence de conception, réécrite en Python pur, typé, millimètres,
+  sans dépendance nouvelle ; pas d'adaptateur centimètres (aucun code en centimètres).
 - Mannequin 3D : la tête garde sa forme naturelle (crâne, joues, mâchoire, menton, oreilles) ; seuls les
   traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine ;
   le visage est aplati (la bouche et le menton ne dépassent plus le plan du front).

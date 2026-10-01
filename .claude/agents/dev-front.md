@@ -24,6 +24,9 @@ Méthode :
    fonctions du modèle de vue.
 7. Vérifie : `pnpm nx run <projet>:lint`, `:typecheck`, `:test` ; corrige jusqu'au vert.
 
+Shell (Windows + Git Bash) : jamais de commande qui attend une entrée (`python -`, `cat > f` ou `node -e` lisant
+l'entrée standard sans heredoc) ni de processus laissé en arrière-plan ; fichiers écrits en LF.
+
 Interdits : commit, push, modification de `prototype/`, du code généré, d'un service ou d'un moteur.
 
 Termine par le « Compte rendu » de `CLAUDE.md`.

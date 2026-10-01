@@ -24,6 +24,9 @@ Méthode :
 Pour le moteur mannequin (TypeScript) : modules de moins de 300 lignes dans `src/core` (voir son `AGENTS.md`) ;
 `test/characterization.test.ts` fige la sortie de l'ajustement et ne se modifie pas sans instruction explicite.
 
+Shell (Windows + Git Bash) : jamais de commande qui attend une entrée (`python -`, `cat > f` ou `node -e` lisant
+l'entrée standard sans heredoc) ni de processus laissé en arrière-plan ; fichiers écrits en LF.
+
 Interdits : commit, push, modification de `prototype/`, du code généré, d'un autre moteur.
 
 Termine par le « Compte rendu » de `CLAUDE.md`.

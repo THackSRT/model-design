@@ -34,6 +34,16 @@ curl -s -X POST localhost:8080/api/designs/v1/designs/<id>/versions -H 'content-
 | `GET /health`       | Santé et version du moteur                     | 200                    |
 | `POST /v1/patterns` | Mesures + paramètres → spécification de patron | 200 `GarmentSpec`, 422 |
 
+## Moteur `manufacturing`
+
+| Méthode et chemin          | Rôle                                                  | Réponses                 |
+| -------------------------- | ----------------------------------------------------- | ------------------------ |
+| `GET /health`              | Santé et version du moteur                            | 200                      |
+| `POST /v1/cut-patterns`    | Patron → pièces de coupe (couture, coupe, cran)       | 200 `CutPattern`, 422    |
+| `POST /v1/graded-patterns` | Gradation par recalcul d'une spécification par taille | 200 `GradedPattern`, 422 |
+| `POST /v1/cutting-plans`   | Plan de coupe (imbrication, métrage)                  | 200 `CuttingPlan`, 422   |
+| `POST /v1/exports`         | Exports SVG 1:1, PDF A4 tuilé, DXF-AAMA               | 200 fichier binaire, 422 |
+
 Les moteurs ne sont pas exposés aux applications : seuls les services les appellent.
 
 ## Erreurs
