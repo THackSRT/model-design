@@ -1,4 +1,9 @@
-import type { Design, DesignVersion, GarmentSpec } from '@atelier/contracts-ts';
+import type {
+  CreateDesignRequest,
+  Design,
+  DesignVersion,
+  GarmentSpec,
+} from '@atelier/contracts-ts';
 import { err, ok } from '@atelier/kernel';
 import type { FittedMannequin } from '@atelier/mannequin';
 import type { ApiProblem, DesignsClient } from '../src/api/designs-client.js';
@@ -44,16 +49,30 @@ const design: Design = {
   latestVersionNumber: 0,
 };
 
-export function fakeDesigns(problem?: ApiProblem): DesignsClient & { versions: number } {
+export const designName = (type: string) => `Modèle ${type}`;
+
+export interface FakeDesigns extends DesignsClient {
+  versions: number;
+  versionDesignIds: string[];
+  created: CreateDesignRequest[];
+}
+
+export function fakeDesigns(problem?: ApiProblem): FakeDesigns {
   const client = {
     versions: 0,
-    createDesign: async () => ok(design),
-    createVersion: async (_id: string, body: Pick<DesignVersion, 'measurements' | 'garment'>) => {
+    versionDesignIds: [] as string[],
+    created: [] as CreateDesignRequest[],
+    createDesign: async (body: CreateDesignRequest) => {
+      client.created.push(body);
+      return ok({ ...design, ...body, id: `${design.id.slice(0, -4)}d00${client.created.length}` });
+    },
+    createVersion: async (id: string, body: Pick<DesignVersion, 'measurements' | 'garment'>) => {
       if (problem) return err(problem);
       client.versions += 1;
+      client.versionDesignIds.push(id);
       return ok({
         ...body,
-        designId: design.id,
+        designId: id,
         number: client.versions,
         createdAt: design.createdAt,
         fingerprint: 'a'.repeat(64),

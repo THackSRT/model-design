@@ -30,7 +30,8 @@ const actions = (): PatternStudioActions => ({
   setDisplay: vi.fn(),
   setSex: vi.fn(),
   setMeasurement: vi.fn(),
-  setSkirt: vi.fn(),
+  setGarmentType: vi.fn(),
+  setParam: vi.fn(),
   generate: vi.fn(),
 });
 
@@ -161,5 +162,66 @@ describe('vue de l’atelier de patron', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Silhouettes' }));
     expect(a.setDisplay).toHaveBeenCalledWith('outline');
     expect(screen.getByRole('button', { name: '3D' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('le sélecteur liste les quatre types ; le corsage est désactivé « à venir »', () => {
+    render(<PatternStudioView state={base} actions={actions()} />);
+    const options = screen.getAllByRole('option', { hidden: false }).map((o) => o.textContent);
+    expect(options).toEqual(
+      expect.arrayContaining(['Jupe droite', 'Jupe cercle', 'Pantalon', 'Corsage — à venir']),
+    );
+    const bodice = screen.getByRole('option', { name: 'Corsage — à venir' });
+    expect(bodice.hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('option', { name: 'Pantalon' }).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('choisir « Jupe cercle » appelle setGarmentType', async () => {
+    const a = actions();
+    render(<PatternStudioView state={base} actions={a} />);
+    await userEvent.selectOptions(screen.getByLabelText('Vêtement'), 'circle-skirt');
+    expect(a.setGarmentType).toHaveBeenCalledWith('circle-skirt');
+  });
+
+  it('les champs suivent le type : fraction de cercle, sans unité', async () => {
+    const a = actions();
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    render(<PatternStudioView state={{ ...base, form }} actions={a} />);
+    expect(screen.getByLabelText('Fraction de cercle')).toBeTruthy();
+    expect(screen.getByLabelText('Hauteur de ceinture')).toBeTruthy();
+    expect(screen.queryByLabelText('Aisance bassin')).toBeNull();
+    expect(screen.queryByLabelText('Hauteur d’entrejambe')).toBeNull();
+    await userEvent.type(screen.getByLabelText('Fraction de cercle'), '5');
+    expect(a.setParam).toHaveBeenCalledWith('circleFraction', 15);
+  });
+
+  it('pantalon : demande la hauteur d’entrejambe et le tour du bas de jambe', () => {
+    const form = { ...initialForm, garmentType: 'trousers' as const };
+    render(<PatternStudioView state={{ ...base, form }} actions={actions()} />);
+    expect(screen.getByLabelText('Hauteur d’entrejambe')).toBeTruthy();
+    expect(screen.getByLabelText('Tour du bas de jambe')).toBeTruthy();
+  });
+
+  it('erreur de ceinture : bornes dans l’unité du champ (cm)', () => {
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    const errors = { waistbandWidthMm: { code: 'zeroOrRange', minMm: 20, maxMm: 80 } } as const;
+    render(<PatternStudioView state={{ ...base, form, errors }} actions={actions()} />);
+    expect(screen.getByRole('alert').textContent).toBe('0 ou entre 2 cm et 8 cm');
+  });
+
+  it('erreur de fraction : bornes sans unité', () => {
+    const form = { ...initialForm, garmentType: 'circle-skirt' as const };
+    const errors = { circleFraction: { code: 'ratioRange', min: 0.25, max: 1 } } as const;
+    render(<PatternStudioView state={{ ...base, form, errors }} actions={actions()} />);
+    expect(screen.getByRole('alert').textContent).toBe('Entre 0,25 et 1');
+  });
+
+  it('type non tracé rendu par le service : message traduit', () => {
+    const problem = { type: '/problems/garment-type-not-supported', title: 'x', status: 422 };
+    render(
+      <PatternStudioView state={{ ...base, status: 'failed', problem }} actions={actions()} />,
+    );
+    expect(screen.getByRole('alert').textContent).toBe(
+      'Ce type de vêtement n’est pas encore tracé par le moteur.',
+    );
   });
 });

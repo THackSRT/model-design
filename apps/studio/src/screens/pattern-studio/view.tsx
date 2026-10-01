@@ -1,5 +1,5 @@
 import {
-  MEASUREMENT_KEYS,
+  measurementKeys,
   type FieldError,
   type PatternStudioActions,
   type PatternStudioState,
@@ -8,7 +8,8 @@ import { ColorMannequin } from '@atelier/design-tokens';
 import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
 import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline';
 import { Suspense, useMemo } from 'react';
-import { fieldErrorMessage, problemMessage, t } from '../../i18n/t.js';
+import { fieldErrorMessage, t } from '../../i18n/t.js';
+import { GarmentPanel } from './garment-panel.js';
 import { LazyMannequinView } from './lazy-mannequin-view.js';
 
 export interface PatternStudioViewProps {
@@ -18,7 +19,6 @@ export interface PatternStudioViewProps {
 
 const FIELD_UNIT = 'cm' as const; // les champs du formulaire se saisissent en cm
 const errorText = (error: FieldError | undefined) => error && fieldErrorMessage(error, FIELD_UNIT);
-const SKIRT_FIELDS = ['length', 'waistEase', 'hipEase', 'hemFlare'] as const;
 
 function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
   return (
@@ -33,7 +33,7 @@ function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
           <option value="male">{t('measurements.sex.male')}</option>
         </select>
       </label>
-      {MEASUREMENT_KEYS.map((key) => (
+      {measurementKeys(state.form.garmentType).map((key) => (
         <NumberField
           key={key}
           label={t(`measurements.${key}`)}
@@ -46,35 +46,6 @@ function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
       ))}
     </Panel>
   );
-}
-
-function SkirtPanel({ state, actions }: PatternStudioViewProps) {
-  return (
-    <Panel title={t('skirt.title')}>
-      {SKIRT_FIELDS.map((key) => (
-        <NumberField
-          key={key}
-          label={t(`skirt.${key}`)}
-          unit={t(`unit.${FIELD_UNIT}`)}
-          step={0.5}
-          value={state.form.skirtCm[key]}
-          error={key === 'length' ? errorText(state.errors.length) : undefined}
-          onChange={(cm) => actions.setSkirt(key, cm)}
-        />
-      ))}
-      <Button emphasis="high" disabled={state.status === 'working'} onClick={actions.generate}>
-        {t('action.generate')}
-      </Button>
-      <StatusMessage state={state} />
-    </Panel>
-  );
-}
-
-function StatusMessage({ state }: { state: PatternStudioState }) {
-  if (state.problem) return <Message tone="danger">{problemMessage(state.problem.type)}</Message>;
-  if (state.status === 'working') return <Message>{t('status.working')}</Message>;
-  if (state.status === 'idle') return <Message>{t('status.idle')}</Message>;
-  return <Message>{t('pattern.version', { number: state.versionNumber ?? 0 })}</Message>;
 }
 
 function PatternPanel({ state }: { state: PatternStudioState }) {
@@ -171,7 +142,7 @@ export function PatternStudioView(props: PatternStudioViewProps) {
       </header>
       <div className="studio-inputs">
         <MeasurementsPanel {...props} />
-        <SkirtPanel {...props} />
+        <GarmentPanel {...props} />
       </div>
       <PatternPanel state={props.state} />
       <MannequinPanel {...props} />

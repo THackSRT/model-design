@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { usePatternStudio } from '../src/pattern-studio/use-pattern-studio.js';
 import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
-import { fakeDesigns, fakeMannequin, fittedBody } from './fakes.js';
+import { designName, fakeDesigns, fakeMannequin, fittedBody } from './fakes.js';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
@@ -12,7 +12,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 describe('modèle de vue de l’atelier de patron', () => {
   it('calcule le patron et ajuste le mannequin pour la saisie', async () => {
-    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin() };
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     expect(result.current.state.status).toBe('idle');
     expect(result.current.state.mannequinStatus).toBe('idle');
@@ -32,7 +32,7 @@ describe('modèle de vue de l’atelier de patron', () => {
       title: 'pattern impossible',
       status: 422,
     };
-    const deps = { designs: fakeDesigns(problem), mannequin: fakeMannequin() };
+    const deps = { designs: fakeDesigns(problem), mannequin: fakeMannequin(), designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
     await waitFor(() => expect(result.current.state.status).toBe('failed'));
@@ -41,7 +41,7 @@ describe('modèle de vue de l’atelier de patron', () => {
   });
 
   it('ne lance rien tant que la saisie est invalide', () => {
-    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin() };
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.setMeasurement('hipGirthMm', 5));
     act(() => result.current.actions.generate());
@@ -54,7 +54,7 @@ describe('modèle de vue de l’atelier de patron', () => {
     const fitter: MannequinFitter = {
       fit: () => new Promise((resolve) => pending.push(resolve)),
     };
-    const deps = { designs: fakeDesigns(), mannequin: fitter };
+    const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
     act(() => result.current.actions.setMeasurement('chestGirthMm', 100));
@@ -68,7 +68,7 @@ describe('modèle de vue de l’atelier de patron', () => {
 
   it('état d’erreur du mannequin : le patron reste calculé', async () => {
     const fitter: MannequinFitter = { fit: () => Promise.reject(new Error('worker')) };
-    const deps = { designs: fakeDesigns(), mannequin: fitter };
+    const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
     await waitFor(() => expect(result.current.state.mannequinStatus).toBe('failed'));
@@ -78,7 +78,7 @@ describe('modèle de vue de l’atelier de patron', () => {
   });
 
   it('garde le choix de vue 3D ou silhouettes', () => {
-    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin() };
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     expect(result.current.state.display).toBe('3d');
     act(() => result.current.actions.setDisplay('outline'));
@@ -88,7 +88,7 @@ describe('modèle de vue de l’atelier de patron', () => {
   it('un ajusteur qui cesse de répondre ne bloque plus l’écran une fois rejeté', async () => {
     let reject: (e: Error) => void = () => undefined;
     const fitter: MannequinFitter = { fit: () => new Promise((_, r) => (reject = r)) };
-    const deps = { designs: fakeDesigns(), mannequin: fitter };
+    const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
     await waitFor(() => expect(result.current.state.versionNumber).toBe(1));
@@ -96,5 +96,51 @@ describe('modèle de vue de l’atelier de patron', () => {
     await act(async () => reject(new Error('worker timeout')));
     expect(result.current.state.status).toBe('ready');
     expect(result.current.state.mannequinStatus).toBe('failed');
+  });
+});
+
+describe('choix du type de vêtement', () => {
+  it('changer de type garde la saisie de chaque type et efface le patron', async () => {
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.setParam('lengthMm', 75));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.status).toBe('ready'));
+    act(() => result.current.actions.setGarmentType('circle-skirt'));
+    expect(result.current.state.form.garmentType).toBe('circle-skirt');
+    expect(result.current.state.status).toBe('idle');
+    expect(result.current.state.layout).toBeUndefined();
+    expect(result.current.state.mannequin).toBeDefined();
+    act(() => result.current.actions.setParam('circleFraction', 0.5));
+    act(() => result.current.actions.setGarmentType('straight-skirt'));
+    expect(result.current.state.form.paramsByType['straight-skirt']?.lengthMm).toBe(75);
+    expect(result.current.state.form.paramsByType['circle-skirt']?.circleFraction).toBe(0.5);
+  });
+
+  it('un type non tracé ne se choisit pas', () => {
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.setGarmentType('bodice'));
+    expect(result.current.state.form.garmentType).toBe('straight-skirt');
+  });
+
+  it('un modèle par type : deux types, deux createDesign nommés par designName', async () => {
+    const designs = fakeDesigns();
+    const deps = { designs, mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.versionNumber).toBe(1));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.versionNumber).toBe(2));
+    act(() => result.current.actions.setGarmentType('trousers'));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.versionNumber).toBe(3));
+    expect(designs.created).toEqual([
+      { name: 'Modèle straight-skirt', garmentType: 'straight-skirt' },
+      { name: 'Modèle trousers', garmentType: 'trousers' },
+    ]);
+    const [first, second, third] = designs.versionDesignIds;
+    expect(second).toBe(first);
+    expect(third).not.toBe(first);
   });
 });

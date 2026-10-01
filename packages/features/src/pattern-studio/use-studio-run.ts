@@ -1,7 +1,12 @@
 import type { CreateDesignVersionRequest } from '@atelier/contracts-ts';
 import { useCallback, useRef, useState } from 'react';
 import { initialMannequinState, type MannequinState } from './fitter.js';
-import { generate, type GenerationResult, type PatternStudioDeps } from './generate.js';
+import {
+  generate,
+  type GenerationResult,
+  type PatternStudioDeps,
+  type StudioSession,
+} from './generate.js';
 
 export interface PatronRun {
   pending: boolean;
@@ -18,24 +23,32 @@ export function useStudioRun(deps: PatternStudioDeps) {
   const [patron, setPatron] = useState<PatronRun>({ pending: false });
   const [body, setBody] = useState<MannequinState>(initialMannequinState);
   const latest = useRef(0);
-  const session = useRef({});
+  const session = useRef<StudioSession>({ designIds: {} });
+  const epoch = useRef(0);
 
   const run = useCallback(
     (request: CreateDesignVersionRequest) => {
       latest.current += 1;
       const id = latest.current;
       const isLatest = () => id === latest.current;
+      const patronEpoch = epoch.current;
+      const isPatronLatest = () => isLatest() && patronEpoch === epoch.current;
       setPatron((p) => ({ ...p, pending: true }));
       setBody((b) => ({ status: 'fitting', mannequin: b.mannequin }));
       deps.mannequin.fit(request.measurements).then(
         (mannequin) => isLatest() && setBody({ status: 'ready', mannequin }),
         () => isLatest() && setBody({ status: 'failed' }),
       );
-      generate(deps.designs, session.current, request)
+      generate(deps.designs, session.current, request, deps.designName)
         .catch((): GenerationResult => ({ problem: NETWORK_PROBLEM }))
-        .then((result) => isLatest() && setPatron({ pending: false, result }));
+        .then((result) => isPatronLatest() && setPatron({ pending: false, result }));
     },
     [deps],
   );
-  return { patron, body, run };
+  /** Efface le patron affiché (il ne correspond plus à la saisie) ; le mannequin reste. */
+  const clearPatron = useCallback(() => {
+    epoch.current += 1;
+    setPatron({ pending: false });
+  }, []);
+  return { patron, body, run, clearPatron };
 }

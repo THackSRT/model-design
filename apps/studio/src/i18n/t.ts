@@ -33,7 +33,33 @@ export type FieldUnit = 'cm' | 'mm';
 
 /** Traduit une erreur de saisie : les bornes du modèle de vue (mm) sont converties vers l'unité du champ. */
 export function fieldErrorMessage(error: FieldError, unit: FieldUnit): string {
-  if (error.code === 'required') return t('error.required');
   const divisor = unit === 'cm' ? 10 : 1;
-  return t('error.range', { unit, min: error.minMm / divisor, max: error.maxMm / divisor });
+  switch (error.code) {
+    case 'required':
+      return t('error.required');
+    case 'unavailable':
+      return t('error.unavailable');
+    case 'ratioRange':
+      return t('error.ratioRange', { min: error.min, max: error.max });
+    case 'zeroOrRange':
+      return t('error.zeroOrRange', {
+        unit,
+        min: error.minMm / divisor,
+        max: error.maxMm / divisor,
+      });
+    case 'range':
+      return t('error.range', { unit, min: error.minMm / divisor, max: error.maxMm / divisor });
+  }
+}
+
+/** Nom d'un type de vêtement ; un type du contrat inconnu du studio garde son identifiant. */
+export function garmentName(type: string): string {
+  const key = `garment.${type}`;
+  return key in fr ? t(key as MessageKey) : type;
+}
+
+/** Libellé d'un paramètre d'un type de vêtement ; repli sur le nom du paramètre. */
+export function paramLabel(type: string, param: string): string {
+  const key = `param.${type}.${param}`;
+  return key in fr ? t(key as MessageKey) : param;
 }

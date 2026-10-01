@@ -1,6 +1,14 @@
+import { DRAFTED_GARMENT_TYPES, GARMENT_TYPES, garmentFields } from '@atelier/features';
 import { describe, expect, it } from 'vitest';
 import { fr } from '../src/i18n/fr.js';
-import { fieldErrorMessage, formatMessage, problemMessage, t } from '../src/i18n/t.js';
+import {
+  fieldErrorMessage,
+  formatMessage,
+  garmentName,
+  paramLabel,
+  problemMessage,
+  t,
+} from '../src/i18n/t.js';
 
 describe('traduction ICU', () => {
   it('accorde le pluriel des pièces', () => {
@@ -39,5 +47,31 @@ describe('erreurs de saisie', () => {
     expect(fieldErrorMessage(range, 'cm')).toBe('Entre 60 cm et 190 cm');
     expect(fieldErrorMessage(range, 'mm')).toBe('Entre 600 mm et 1 900 mm');
     expect(fieldErrorMessage({ code: 'required' }, 'cm')).toBe('Valeur obligatoire');
+  });
+});
+
+describe('catalogue des vêtements', () => {
+  it('chaque type du contrat et chaque champ d’un type tracé ont leur clé', () => {
+    for (const type of GARMENT_TYPES) expect(`garment.${type}` in fr).toBe(true);
+    for (const type of DRAFTED_GARMENT_TYPES) {
+      for (const { param } of garmentFields(type)) {
+        expect(`param.${type}.${param}` in fr).toBe(true);
+        expect(paramLabel(type, param)).not.toBe(param);
+      }
+    }
+  });
+
+  it('un type inconnu du studio garde son identifiant', () => {
+    expect(garmentName('coat')).toBe('coat');
+    expect(garmentName('trousers')).toBe('Pantalon');
+  });
+
+  it('nouveaux codes d’erreur', () => {
+    expect(fieldErrorMessage({ code: 'zeroOrRange', minMm: 20, maxMm: 80 }, 'cm')).toBe(
+      '0 ou entre 2 cm et 8 cm',
+    );
+    expect(fieldErrorMessage({ code: 'ratioRange', min: 0.25, max: 1 }, 'cm')).toBe(
+      'Entre 0,25 et 1',
+    );
   });
 });

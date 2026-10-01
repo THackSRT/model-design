@@ -29,7 +29,8 @@ const actions: PatternStudioActions = {
   setDisplay: vi.fn(),
   setSex: vi.fn(),
   setMeasurement: vi.fn(),
-  setSkirt: vi.fn(),
+  setGarmentType: vi.fn(),
+  setParam: vi.fn(),
   generate: vi.fn(),
 };
 const state: PatternStudioState = {
