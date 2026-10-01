@@ -15,7 +15,7 @@ des tâches entre sous-agents (`docs/demarrer/orchestration.md`).
 | `contracts/` | Source de vérité des échanges : JSON Schema, OpenAPI, AsyncAPI                                                         | `contracts/README.md` |
 | `apps/`      | Applications (studio web ; mobile à venir)                                                                             | `apps/studio`         |
 | `services/`  | Microservices TypeScript (NestJS), un contexte métier chacun                                                           | `services/designs`    |
-| `engines/`   | Moteurs de calcul : Python (patronage, production, drapé) et TypeScript (mannequin)                                    | `engines/patterning`  |
+| `engines/`   | Moteurs de calcul : Python (patronage, production) et TypeScript (mannequin, drapé)                                    | `engines/patterning`  |
 | `packages/`  | Bibliothèques TS : `kernel`, `contracts-ts` (généré), `service-kit`, `design-tokens`, `ui-web`, `features`, `viewer3d` | —                     |
 | `py/`        | Bibliothèques Python : `contracts` (généré), `engine-kit`                                                              | —                     |
 | `tools/`     | Générateurs (`tools/generators`) et génération des contrats (`tools/contracts`)                                        | —                     |

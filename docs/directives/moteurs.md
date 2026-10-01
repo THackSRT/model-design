@@ -1,9 +1,9 @@
 # 6. Moteurs de calcul
 
 Un moteur est un cœur de calcul pur entouré d'adaptateurs minces : une API pour les appels rapides, un worker pour
-les tâches de la file _(à venir)_. Il ne possède pas de base de données et ne connaît aucun service : il reçoit
+les tâches de la file. Il ne possède pas de base de données et ne connaît aucun service : il reçoit
 des entrées, rend un résultat. Les moteurs de référence sont `engines/patterning` (patronage) et
-`engines/manufacturing` (fabrication).
+`engines/manufacturing` (fabrication) en Python ; `engines/drape` (drapé) est en TypeScript (ADR 0013).
 
 ```text
 engines/patterning/

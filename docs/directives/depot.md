@@ -20,7 +20,7 @@ atelier/
 │  ├─ mannequin/          TypeScript, partagé navigateur et serveur
 │  ├─ patterning/         Python : moteur de référence
 │  ├─ manufacturing/      Python : coutures, gradation, plan de coupe, exports (squelette)
-│  └─ drape/              Python : drapé 3D (squelette) ; render, fabric, ai à venir
+│  └─ drape/              TypeScript : simulation XPBD (cœur livré) ; maillage, glTF, cache, NATS à venir
 ├─ packages/              bibliothèques TypeScript partagées
 │  ├─ kernel/             Result, identifiants typés, Money, longueurs, horloge
 │  ├─ contracts-ts/       types et schémas générés (ne pas modifier src/generated)

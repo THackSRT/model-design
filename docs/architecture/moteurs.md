@@ -7,7 +7,7 @@ Sept moteurs font le travail technique ; les services métier les appellent, jam
 | Mannequin            | Mesures, sexe, âge, morphotype, silhouette              | Avatar glTF, mesures obtenues, silhouettes SVG, cartes 2,5D                        | Navigateur + service CPU                  | < 1 s              |
 | Patronage            | Modèle (paramètres), mesures du corps                   | Spécification de patron (pièces, coutures, placement)                              | Service Python CPU                        | < 1 s              |
 | Production atelier   | Spécification, tailles, laize, tissu                    | Pièces avec valeurs de couture, gradation, plan de coupe, fiche technique, exports | Service CPU, imbrication en tâche         | 1 à 30 s           |
-| Drapé 3D             | Spécification, avatar, tissu                            | Vêtement drapé glTF, carte d'aisance                                               | Worker GPU                                | 5 à 60 s           |
+| Drapé 3D             | Spécification, avatar, tissu                            | Vêtement drapé glTF, carte d'aisance, glTF en S3                                   | Tâche NATS, CPU (GPU à venir)             | 5 à 60 s           |
 | Rendu 2D / 2,5D / 3D | Avatar, drapé, motifs                                   | Vues trait, dessins techniques, images 2,5D, rendus réalistes                      | Navigateur + worker GPU                   | instantané à 1 min |
 | Tissu numérique      | Photos du tissu avec mire, composition, grammage, laize | Texture raccordable, couleur calibrée, propriétés physiques, fichiers U3M / AxF    | Service Python CPU + worker GPU, en tâche | < 1 min            |
 | IA                   | Texte, photos, notes vocales, contexte                  | Paramètres proposés, tâches, devis, mesures estimées                               | Service Python + fournisseurs de modèles  | 2 à 120 s          |
@@ -46,15 +46,15 @@ Il rend la spécification utilisable en atelier.
 
 ## 5.4 Moteur de Drapé 3D
 
-Il coud virtuellement les pièces sur l'avatar et simule le tombé du tissu.
+Il coud virtuellement les pièces sur l'avatar et simule le tombé du tissu (ADR 0013).
 
-1. **Maillage des pièces** : chaque pièce est triangulée ; ses coordonnées de texture sont celles du patron, ce qui place motifs et tissus au bon endroit.
-2. **Placement** : les pièces sont disposées autour du corps selon le placement fourni par le patronage.
-3. **Couture virtuelle** : des contraintes rapprochent les arêtes appariées jusqu'à fermeture.
-4. **Simulation** : dynamique à base de positions sur GPU, collisions avec le corps et le vêtement lui-même, jusqu'à l'équilibre ; propriétés du tissu = grammage, rigidité de flexion, élasticité chaîne et trame, frottement.
-5. **Sorties** : vêtement drapé glTF, carte des tensions et de l'aisance, mise en cache par (version du patron, avatar, tissu).
+1. **Positionnement initial** : les pièces sont placées autour du corps selon les repères fournis par le patronage (`Panel.placement` : zone, côté, sens, ancrage, aisance).
+2. **Simulation physique** : dynamique à base de positions étendue (XPBD) sur CPU, sans dépendance ; étirement anisotrope chaîne/trame, flexion isométrique, coutures virtuelles, collision avec le corps et frottement, arrêt au repos ou au nombre d'itérations fixé.
+3. **Habillage géométrique** : approximation instantanée en anneaux horizontaux (35–50 ms, `dressMannequin()`) pour aperçu pendant le calcul du drapé.
+4. **Sorties** : vêtement drapé glTF binaire (mètres, `POSITION`, `NORMAL`, `TEXCOORD_0` du patron, attributs personnalisés `_EASE_MM` et `_STRAIN`), mis en cache par (version du patron, avatar, tissu, ENGINE_VERSION) dans S3.
+5. **Tâche** : demande asynchrone via NATS, rétention 24 h, publication `drape.completed` ou `drape.failed` ; types d'erreur stables : placement manquant, échec du placement, couture non fermée, pénétration du corps, trop volumineux.
 
-Première version : simulateur GPU côté serveur (NVIDIA Warp, comme GarmentCode, licence Apache 2.0). Plus tard : simulation légère dans le navigateur (WebGPU) pour les petites retouches.
+Implémentation actuelle : TypeScript sur CPU (paquet `@atelier/drape`). GPU (WebGPU navigateur, ou Warp serveur) viendra par une nouvelle ADR si les performances le justifient. Propriétés des sept tisus préréglés (cotton-poplin, wax, bazin, linen, denim, silk-satin, jersey) : estimées, à faire valider.
 
 ## 5.5 Moteur de Rendu 2D, 2,5D et 3D
 
