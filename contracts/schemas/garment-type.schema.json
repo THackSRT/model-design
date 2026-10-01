@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/garment-type.schema.json",
+  "title": "GarmentType",
+  "description": "Type de vêtement que le moteur de patronage sait tracer (ADR 0010). Même valeur que GarmentRequest.type.",
+  "type": "string",
+  "enum": ["straight-skirt", "circle-skirt", "trousers", "bodice"]
+}

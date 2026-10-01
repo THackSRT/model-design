@@ -12,7 +12,7 @@ def round_point(p: Point) -> Point:
     return (round(p[0], PRECISION_MM) + 0.0, round(p[1], PRECISION_MM) + 0.0)
 
 
-def _bezier_point(points: tuple[Point, ...], t: float) -> Point:
+def bezier_point(points: tuple[Point, ...], t: float) -> Point:
     """Algorithme de De Casteljau, quel que soit le degré."""
     current = list(points)
     while len(current) > 1:
@@ -30,7 +30,7 @@ def sample_edge(edge: Edge, samples: int = BEZIER_SAMPLES) -> list[Point]:
     if not edge.controls:
         return [edge.start, edge.end]
     points = (edge.start, *edge.controls, edge.end)
-    return [_bezier_point(points, i / samples) for i in range(samples + 1)]
+    return [bezier_point(points, i / samples) for i in range(samples + 1)]
 
 
 def edge_length(edge: Edge) -> float:

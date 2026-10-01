@@ -5,20 +5,12 @@ Tracé volontairement simple pour valider la chaîne ; le tracé de production v
 
 from dataclasses import dataclass
 
+from patterning.core.errors import DraftingError
 from patterning.core.geometry import round_point
 from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Point, Seam
 
 HIP_DEPTH_RATIO = 0.12  # profondeur taille-hanches, rapportée à la stature
 MIN_SKIRT_BELOW_HIP_MM = 50
-
-
-class DraftingError(ValueError):
-    """Entrées valides mais impossibles à tracer."""
-
-    def __init__(self, kind: str, detail: str) -> None:
-        super().__init__(detail)
-        self.kind = kind
-        self.detail = detail
 
 
 @dataclass(frozen=True)

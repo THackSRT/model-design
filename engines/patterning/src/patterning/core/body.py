@@ -1,0 +1,184 @@
+"""Mesures du corps complétées : tout ce que les tracés utilisent, en mm (pentes en degrés).
+
+Les rapports d'estimation viennent des corps moyens `mean_female` / `mean_male` de GarmentCode
+(`assets/bodies`, commit d449629, licence MIT ; voir ADR 0010). Ce sont des hypothèses à valider
+par le modéliste. Une mesure estimée est listée dans `estimated`, sous le nom de son champ de
+`RawMeasurements`.
+"""
+
+from dataclasses import dataclass, fields
+
+from patterning.core.errors import DraftingError
+
+
+@dataclass(frozen=True)
+class RawMeasurements:
+    """Mesures telles que demandées : cinq requises, le reste facultatif."""
+
+    sex: str
+    stature_mm: float
+    chest_girth_mm: float
+    waist_girth_mm: float
+    hip_girth_mm: float
+    bust_girth_mm: float | None = None
+    underbust_girth_mm: float | None = None
+    thigh_girth_mm: float | None = None
+    wrist_girth_mm: float | None = None
+    cervicale_height_mm: float | None = None
+    waist_height_mm: float | None = None
+    hip_height_mm: float | None = None
+    crotch_height_mm: float | None = None
+    back_waist_length_mm: float | None = None
+    front_waist_length_mm: float | None = None
+    neck_shoulder_to_bust_point_mm: float | None = None
+    bust_point_width_mm: float | None = None
+    shoulder_width_mm: float | None = None
+    armscye_depth_mm: float | None = None
+    arm_length_mm: float | None = None
+
+
+@dataclass(frozen=True)
+class Ratios:
+    """Rapports d'estimation d'un corps moyen (à la stature, sauf mention)."""
+
+    head: float
+    back_waist: float
+    waist_hip_depth: float
+    shoulder_width: float
+    arm_length: float
+    armscye_depth: float
+    neck_shoulder_to_bust_point: float
+    bust_point_width_of_bust: float
+    underbust_of_bust: float
+    waist_back_width_of_waist: float
+    back_width_of_bust: float
+    hip_back_width_of_hip: float
+    bum_points_of_hip: float
+    neck_width: float
+    shoulder_incl_deg: float
+    hip_inclination_deg: float
+
+
+FEMALE_RATIOS = Ratios(
+    0.154, 0.215, 0.136, 0.209, 0.31, 0.076, 0.154, 0.166, 0.829, 0.47, 0.47, 0.535, 0.17, 0.107,
+    21.0, 12.7,
+)  # fmt: skip
+MALE_RATIOS = Ratios(
+    0.152, 0.214, 0.137, 0.215, 0.318, 0.073, 0.145, 0.173, 0.905, 0.46, 0.49, 0.524, 0.17, 0.114,
+    22.5, 6.7,
+)  # fmt: skip
+RATIOS = {"female": FEMALE_RATIOS, "male": MALE_RATIOS}
+
+
+@dataclass(frozen=True)
+class Body:
+    sex: str
+    stature_mm: float
+    bust_girth_mm: float
+    underbust_girth_mm: float
+    waist_girth_mm: float
+    hip_girth_mm: float
+    head_length_mm: float
+    back_waist_length_mm: float
+    waist_hip_depth_mm: float
+    shoulder_width_mm: float
+    bust_point_width_mm: float
+    arm_length_mm: float
+    neck_shoulder_to_bust_point_mm: float
+    armscye_depth_mm: float
+    waist_back_width_mm: float
+    back_width_mm: float
+    hip_back_width_mm: float
+    bum_points_mm: float
+    neck_width_mm: float
+    shoulder_incl_deg: float
+    hip_inclination_deg: float
+    thigh_girth_mm: float | None = None
+    wrist_girth_mm: float | None = None
+    crotch_hip_diff_mm: float | None = None
+    front_waist_length_mm: float | None = None
+
+
+class _Fill:
+    """Prend la mesure donnée, sinon l'estimation, et note ce qui a été estimé."""
+
+    def __init__(self) -> None:
+        self.estimated: list[str] = []
+
+    def value(self, name: str, given: float | None, estimate: float) -> float:
+        if given is not None:
+            return float(given)
+        self.estimated.append(name)
+        return estimate
+
+
+def _check_positive(body: Body) -> None:
+    for f in fields(body):
+        value = getattr(body, f.name)
+        if isinstance(value, float) and value <= 0:
+            raise DraftingError(
+                "inconsistent-measurements",
+                f"Les mesures données et estimées sont incohérentes : {f.name} vaut {value:.1f}.",
+            )
+
+
+def complete_body(raw: RawMeasurements) -> tuple[Body, tuple[str, ...]]:
+    """Complète les mesures ; rend le corps et les champs estimés, triés."""
+    if raw.sex not in RATIOS:
+        raise DraftingError("unknown-sex", f"Sexe inconnu : {raw.sex}.")
+    r = RATIOS[raw.sex]
+    fill = _Fill()
+    stature = float(raw.stature_mm)
+    bust = float(raw.bust_girth_mm if raw.bust_girth_mm is not None else raw.chest_girth_mm)
+    waist = float(raw.waist_girth_mm)
+    hip = float(raw.hip_girth_mm)
+    cervicale = fill.value("cervicale_height_mm", raw.cervicale_height_mm, stature * (1 - r.head))
+    back_waist = fill.value(
+        "back_waist_length_mm", raw.back_waist_length_mm, r.back_waist * stature
+    )
+    waist_h = fill.value("waist_height_mm", raw.waist_height_mm, cervicale - back_waist)
+    hip_h = fill.value("hip_height_mm", raw.hip_height_mm, waist_h - r.waist_hip_depth * stature)
+    crotch = raw.crotch_height_mm
+    body = Body(
+        sex=raw.sex,
+        stature_mm=stature,
+        bust_girth_mm=bust,
+        underbust_girth_mm=fill.value(
+            "underbust_girth_mm", raw.underbust_girth_mm, r.underbust_of_bust * bust
+        ),
+        waist_girth_mm=waist,
+        hip_girth_mm=hip,
+        head_length_mm=stature - cervicale,
+        back_waist_length_mm=back_waist,
+        waist_hip_depth_mm=waist_h - hip_h,
+        shoulder_width_mm=fill.value(
+            "shoulder_width_mm", raw.shoulder_width_mm, r.shoulder_width * stature
+        ),
+        bust_point_width_mm=fill.value(
+            "bust_point_width_mm", raw.bust_point_width_mm, r.bust_point_width_of_bust * bust
+        ),
+        arm_length_mm=fill.value("arm_length_mm", raw.arm_length_mm, r.arm_length * stature),
+        neck_shoulder_to_bust_point_mm=fill.value(
+            "neck_shoulder_to_bust_point_mm",
+            raw.neck_shoulder_to_bust_point_mm,
+            r.neck_shoulder_to_bust_point * stature,
+        ),
+        armscye_depth_mm=fill.value(
+            "armscye_depth_mm", raw.armscye_depth_mm, r.armscye_depth * stature
+        ),
+        waist_back_width_mm=r.waist_back_width_of_waist * waist,
+        back_width_mm=r.back_width_of_bust * bust,
+        hip_back_width_mm=r.hip_back_width_of_hip * hip,
+        bum_points_mm=r.bum_points_of_hip * hip,
+        neck_width_mm=r.neck_width * stature,
+        shoulder_incl_deg=r.shoulder_incl_deg,
+        hip_inclination_deg=r.hip_inclination_deg,
+        thigh_girth_mm=None if raw.thigh_girth_mm is None else float(raw.thigh_girth_mm),
+        wrist_girth_mm=None if raw.wrist_girth_mm is None else float(raw.wrist_girth_mm),
+        crotch_hip_diff_mm=None if crotch is None else hip_h - crotch,
+        front_waist_length_mm=(
+            None if raw.front_waist_length_mm is None else float(raw.front_waist_length_mm)
+        ),
+    )
+    _check_positive(body)
+    return body, tuple(sorted(fill.estimated))

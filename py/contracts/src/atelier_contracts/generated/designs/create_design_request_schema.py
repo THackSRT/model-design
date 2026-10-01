@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class GarmentType(StrEnum):
-    straight_skirt = "straight-skirt"
+from .. import garment_type_schema
 
 
 class CreateDesignRequest(BaseModel):
@@ -16,4 +12,4 @@ class CreateDesignRequest(BaseModel):
         extra="forbid",
     )
     name: str = Field(..., max_length=120, min_length=1)
-    garmentType: GarmentType
+    garmentType: garment_type_schema.GarmentType

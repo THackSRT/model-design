@@ -1,3 +1,4 @@
+import type { DesignId } from '../../../src/domain/design.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type DesignsDeps, designsUseCases } from '../../../src/application/use-cases/index.js';
 import { InMemoryDesignRepository } from '../../../src/adapters/persistence/in-memory/in-memory-design-repository.js';
@@ -65,6 +66,20 @@ describe('créer une version de modèle', () => {
     const engine = new FakePatterningEngine({ kind: 'pattern-impossible', detail: 'trop courte' });
     const version = await designsUseCases(deps(engine)).createDesignVersion(input);
     expect(version.isErr() && version.error.kind).toBe('pattern-impossible');
+    expect(designs.outbox).toHaveLength(0);
+  });
+
+  it('refuse une demande dont le type ne correspond pas à celui du modèle', async () => {
+    const trousers = aDesign({
+      id: '01920000-0000-7000-8000-00000000d002' as DesignId,
+      garmentType: 'trousers',
+    });
+    await designs.create(trousers);
+    const version = await designsUseCases(deps()).createDesignVersion({
+      ...input,
+      designId: trousers.id,
+    });
+    expect(version.isErr() && version.error.kind).toBe('garment-type-mismatch');
     expect(designs.outbox).toHaveLength(0);
   });
 });

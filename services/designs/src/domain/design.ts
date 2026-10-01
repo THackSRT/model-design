@@ -1,8 +1,9 @@
+import type { GarmentRequest } from '@atelier/contracts-ts';
 import { err, type Id, ok, type Result } from '@atelier/kernel';
 
 export type DesignId = Id<'design'>;
 export type OrganizationId = Id<'organization'>;
-export type GarmentType = 'straight-skirt';
+export type GarmentType = GarmentRequest['type'];
 
 export const DESIGN_NAME_MAX_LENGTH = 120;
 

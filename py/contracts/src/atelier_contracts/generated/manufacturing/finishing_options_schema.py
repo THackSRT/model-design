@@ -6,6 +6,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..garment_spec_schema import NotchPlacement
+
 
 class AutoNotches(StrEnum):
     none = "none"
@@ -31,21 +33,6 @@ class EdgeAllowance(BaseModel):
     allowanceMm: int = Field(..., ge=0, le=100)
 
 
-class NotchRequest(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    panelId: str
-    edgeId: str
-    distanceMm: float = Field(..., ge=0.0, le=10000.0)
-    count: int | None = Field(
-        1,
-        description="Cran simple, double (dos, par convention) ou triple.",
-        ge=1,
-        le=3,
-    )
-
-
 class SeamAllowances(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -53,6 +40,13 @@ class SeamAllowances(BaseModel):
     defaultMm: int | None = Field(10, ge=0, le=100)
     byRole: RoleAllowances | None = None
     byEdge: list[EdgeAllowance] | None = Field(None, max_length=500)
+
+
+class NotchRequest(NotchPlacement):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    panelId: str
 
 
 class FinishingOptions(BaseModel):

@@ -7,6 +7,6 @@
   "required": ["name", "garmentType"],
   "properties": {
     "name": { "type": "string", "minLength": 1, "maxLength": 120 },
-    "garmentType": { "type": "string", "enum": ["straight-skirt"] }
+    "garmentType": { "$ref": "../garment-type.schema.json" }
   }
 }

@@ -119,6 +119,18 @@ export interface components {
       /** @enum {string} */
       role?: 'seam' | 'fold' | 'hem' | 'waistline' | 'opening';
     };
+    /** @description Emplacement d'un cran, seule définition partagée par Panel.notches (Notch) et la fabrication (NotchRequest) : sur la ligne de couture du bord edgeId, à distanceMm de son début (from), mesurée le long du bord. Ouvert pour être étendu (allOf) ; Notch et NotchRequest le ferment. */
+    NotchPlacement: {
+      edgeId: string;
+      distanceMm: number;
+      /**
+       * @description Cran simple, double (dos, par convention) ou triple.
+       * @default 1
+       */
+      count: number;
+    };
+    /** @description Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords. */
+    Notch: components['schemas']['NotchPlacement'];
     EdgeRef: {
       panelId: string;
       edgeId: string;
@@ -134,15 +146,19 @@ export interface components {
       quantity: number;
       /** @default false */
       cutOnFold: boolean;
+      /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
+      notches?: components['schemas']['Notch'][];
     };
     Seam: {
       id: string;
       a: components['schemas']['EdgeRef'];
       b: components['schemas']['EdgeRef'];
+      /** @description Embu : le bord a est plus long que le bord b de cette valeur, qui se répartit en le cousant sur b (ex. tête de manche). Absent : 0, les deux bords ont la même longueur. */
+      easeMm?: number;
     };
     /**
      * GarmentSpec
-     * @description Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat.
+     * @description Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique.
      */
     'garment-spec.schema': {
       /** @constant */
@@ -158,6 +174,8 @@ export interface components {
       };
       panels: components['schemas']['Panel'][];
       seams: components['schemas']['Seam'][];
+      /** @description Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation. */
+      estimatedMeasurements?: string[];
       $defs: {
         /** @description [x, y] en millimètres. */
         Point: number[];
@@ -181,6 +199,8 @@ export interface components {
           quantity: number;
           /** @default false */
           cutOnFold: boolean;
+          /** @description Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux). */
+          notches?: components['schemas']['Notch'][];
         };
         EdgeRef: {
           panelId: string;
@@ -190,7 +210,21 @@ export interface components {
           id: string;
           a: components['schemas']['EdgeRef'];
           b: components['schemas']['EdgeRef'];
+          /** @description Embu : le bord a est plus long que le bord b de cette valeur, qui se répartit en le cousant sur b (ex. tête de manche). Absent : 0, les deux bords ont la même longueur. */
+          easeMm?: number;
         };
+        /** @description Emplacement d'un cran, seule définition partagée par Panel.notches (Notch) et la fabrication (NotchRequest) : sur la ligne de couture du bord edgeId, à distanceMm de son début (from), mesurée le long du bord. Ouvert pour être étendu (allOf) ; Notch et NotchRequest le ferment. */
+        NotchPlacement: {
+          edgeId: string;
+          distanceMm: number;
+          /**
+           * @description Cran simple, double (dos, par convention) ou triple.
+           * @default 1
+           */
+          count: number;
+        };
+        /** @description Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords. */
+        Notch: components['schemas']['NotchPlacement'];
       };
     };
     /** @description Valeur de couture par rôle de bord (voir Edge.role de GarmentSpec). Un bord sans rôle est traité comme une couture (seam). */
@@ -212,17 +246,10 @@ export interface components {
       byRole?: components['schemas']['RoleAllowances'];
       byEdge?: components['schemas']['EdgeAllowance'][];
     };
-    /** @description Cran placé sur la ligne de couture d'un bord, à distanceMm de son début (from), mesurée le long du bord. */
+    /** @description Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords. */
     NotchRequest: {
       panelId: string;
-      edgeId: string;
-      distanceMm: number;
-      /**
-       * @description Cran simple, double (dos, par convention) ou triple.
-       * @default 1
-       */
-      count: number;
-    };
+    } & components['schemas']['NotchPlacement'];
     /**
      * FinishingOptions
      * @description Comment finir les pièces d'un patron : valeurs de couture et crans. Longueurs en millimètres. Absent : valeurs par défaut du moteur (10 mm partout, 30 mm aux ourlets, crans aux raccords de couture).
@@ -257,17 +284,10 @@ export interface components {
           edgeId: string;
           allowanceMm: number;
         };
-        /** @description Cran placé sur la ligne de couture d'un bord, à distanceMm de son début (from), mesurée le long du bord. */
+        /** @description Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords. */
         NotchRequest: {
           panelId: string;
-          edgeId: string;
-          distanceMm: number;
-          /**
-           * @description Cran simple, double (dos, par convention) ou triple.
-           * @default 1
-           */
-          count: number;
-        };
+        } & components['schemas']['NotchPlacement'];
       };
     };
     /**

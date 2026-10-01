@@ -1,6 +1,13 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
 
 /**
+ * Cran demandé sur la pièce panelId : un emplacement (NotchPlacement de GarmentSpec : edgeId, distanceMm, count) sur la ligne de couture d'un de ses bords.
+ */
+export type NotchRequest = NotchPlacement & {
+  panelId: string;
+};
+
+/**
  * Comment finir les pièces d'un patron : valeurs de couture et crans. Longueurs en millimètres. Absent : valeurs par défaut du moteur (10 mm partout, 30 mm aux ourlets, crans aux raccords de couture).
  */
 export interface FinishingOptions {
@@ -42,10 +49,9 @@ export interface EdgeAllowance {
   allowanceMm: number;
 }
 /**
- * Cran placé sur la ligne de couture d'un bord, à distanceMm de son début (from), mesurée le long du bord.
+ * Emplacement d'un cran, seule définition partagée par Panel.notches (Notch) et la fabrication (NotchRequest) : sur la ligne de couture du bord edgeId, à distanceMm de son début (from), mesurée le long du bord. Ouvert pour être étendu (allOf) ; Notch et NotchRequest le ferment.
  */
-export interface NotchRequest {
-  panelId: string;
+export interface NotchPlacement {
   edgeId: string;
   distanceMm: number;
   /**

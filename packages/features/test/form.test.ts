@@ -8,7 +8,9 @@ describe('saisie de l’atelier', () => {
       measurementsCm: { ...initialForm.measurementsCm, waistGirthMm: 70.4 },
     });
     expect(request.isOk() && request.value.measurements.waistGirthMm).toBe(704);
-    expect(request.isOk() && request.value.garment.params.lengthMm).toBe(600);
+    const garment = request.isOk() ? request.value.garment : undefined;
+    expect(garment?.type).toBe('straight-skirt');
+    expect(garment?.type === 'straight-skirt' && garment.params.lengthMm).toBe(600);
   });
 
   it('applique les bornes du contrat et dit lesquelles', () => {

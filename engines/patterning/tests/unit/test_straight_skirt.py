@@ -1,7 +1,8 @@
 import pytest
 
+from patterning.core.errors import DraftingError
 from patterning.core.geometry import edge_length
-from patterning.core.straight_skirt import DraftingError, draft_straight_skirt
+from patterning.core.straight_skirt import draft_straight_skirt
 from tests.builders import a_skirt
 
 
