@@ -44,6 +44,8 @@ export {
   toVersionRequest,
 } from './pattern-studio/form.js';
 export {
+  type DressingState,
+  initialDressingState,
   initialMannequinState,
   type MannequinDisplay,
   type MannequinFitter,
@@ -55,6 +57,7 @@ export {
   type GenerationResult,
   type PatternStudioDeps,
 } from './pattern-studio/generate.js';
+export { roundZones, type DressingInput } from './pattern-studio/use-dressing.js';
 export { layoutPanels, type PanelShape, type PanelsLayout } from './pattern-studio/panels.js';
 export {
   type PatternStudioActions,

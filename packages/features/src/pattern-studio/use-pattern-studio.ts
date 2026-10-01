@@ -10,7 +10,15 @@ import {
   type StudioForm,
   toVersionRequest,
 } from './form.js';
-import type { MannequinDisplay, MannequinStatus } from './fitter.js';
+import type { DesignVersion } from '@atelier/contracts-ts';
+import type {
+  DressingState,
+  MannequinDisplay,
+  MannequinFitter,
+  MannequinState,
+  MannequinStatus,
+} from './fitter.js';
+import { useDressing } from './use-dressing.js';
 import type { GenerationResult, PatternStudioDeps } from './generate.js';
 import { layoutPanels, type PanelsLayout } from './panels.js';
 import { useStudioRun } from './use-studio-run.js';
@@ -27,6 +35,10 @@ export interface PatternStudioState {
   mannequinStatus: MannequinStatus;
   /** Vue choisie : mannequin 3D ou silhouettes en trait. */
   display: MannequinDisplay;
+  /** Vêtement porté sur le mannequin et son calcul (Web Worker). */
+  dressing: DressingState;
+  /** Montrer le vêtement sur le mannequin (3D et silhouettes). */
+  showGarment: boolean;
   problem?: ApiProblem;
   versionNumber?: number;
   /** Modèle de la version calculée : avec `versionNumber`, ce qu'il faut pour les pièces de coupe. */
@@ -44,10 +56,14 @@ export interface PatternStudioActions {
   /** Saisie d'un paramètre des manches (cm). */
   setSleeveParam(param: string, value: number | undefined): void;
   setDisplay(display: MannequinDisplay): void;
+  setShowGarment(show: boolean): void;
   generate(): void;
 }
 
-type FormActions = Omit<PatternStudioActions, 'generate' | 'setDisplay' | 'setGarmentType'>;
+type FormActions = Omit<
+  PatternStudioActions,
+  'generate' | 'setDisplay' | 'setGarmentType' | 'setShowGarment'
+>;
 
 function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions {
   return {
@@ -74,6 +90,19 @@ function statusOf(isWorking: boolean, result: GenerationResult | undefined): Stu
   return result.problem ? 'failed' : 'ready';
 }
 
+/** Habillage du mannequin avec le patron de la version calculée. */
+function useDressingOf(fitter: MannequinFitter, body: MannequinState, version?: DesignVersion) {
+  const input = useMemo(
+    () => (version ? { spec: version.spec, garmentType: version.garment.type } : undefined),
+    [version],
+  );
+  return useDressing(fitter, body.status === 'ready', body.mannequin, input);
+}
+
+function useLayout(result?: GenerationResult) {
+  return useMemo(() => (result?.version ? layoutPanels(result.version.spec) : undefined), [result]);
+}
+
 /** Modèle de vue de l'atelier de patron : l'écran ne reçoit que { state, actions }. */
 export function usePatternStudio(deps: PatternStudioDeps): {
   state: PatternStudioState;
@@ -81,16 +110,16 @@ export function usePatternStudio(deps: PatternStudioDeps): {
 } {
   const [form, setForm] = useState(initialForm);
   const [display, setDisplay] = useState<MannequinDisplay>('3d');
+  const [showGarment, setShowGarment] = useState(true);
   const { patron, body, run, clearPatron } = useStudioRun(deps);
   const request = toVersionRequest(form);
   const result = patron.result;
-  const layout = useMemo(
-    () => (result?.version ? layoutPanels(result.version.spec) : undefined),
-    [result],
-  );
+  const layout = useLayout(result);
+  const dressing = useDressingOf(deps.mannequin, body, result?.version);
   const actions: PatternStudioActions = {
     ...formActions(setForm),
     setDisplay,
+    setShowGarment,
     setGarmentType: (type) => {
       if (type === form.garmentType || !isDraftedGarmentType(type)) return;
       setForm((f) => ({ ...f, garmentType: type }));
@@ -104,10 +133,8 @@ export function usePatternStudio(deps: PatternStudioDeps): {
     form,
     errors: request.isErr() ? request.error : {},
     status: statusOf(patron.pending || body.status === 'fitting', result),
-    layout,
-    mannequin: body.mannequin,
-    mannequinStatus: body.status,
-    display,
+    ...{ layout, mannequin: body.mannequin, mannequinStatus: body.status },
+    ...{ display, dressing, showGarment },
     problem: result?.problem,
     versionNumber: result?.version?.number,
     designId: result?.version?.designId,

@@ -5,7 +5,7 @@ import type {
   GarmentSpec,
 } from '@atelier/contracts-ts';
 import { err, ok } from '@atelier/kernel';
-import type { FittedMannequin } from '@atelier/mannequin';
+import type { FittedMannequin, GarmentMesh } from '@atelier/mannequin';
 import type { ApiProblem, DesignsClient } from '../src/api/designs-client.js';
 import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
 
@@ -94,7 +94,40 @@ export const fittedBody = (chestMm = 880): FittedMannequin => ({
     index: Uint32Array.of(0, 1, 2),
   },
   measuredMm: { chest: chestMm },
-  landmarksMm: { crotch: 780, hip: 900, waist: 1050, neck: 1400, knee: 480, ankle: 80 },
+  landmarksMm: {
+    crotch: 780,
+    hip: 900,
+    waist: 1050,
+    neck: 1400,
+    knee: 480,
+    ankle: 80,
+    shoulder: 1330,
+    wrist: 820,
+  },
+  armsMm: {
+    left: {
+      shoulder: [180, 1330, 0],
+      wrist: [260, 820, 40],
+      axis: [0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+    right: {
+      shoulder: [-180, 1330, 0],
+      wrist: [-260, 820, 40],
+      axis: [-0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+  },
 });
 
-export const fakeMannequin = (): MannequinFitter => ({ fit: async () => fittedBody() });
+export const garmentMesh = (): GarmentMesh => ({
+  positions: new Float32Array(9),
+  normals: new Float32Array(9),
+  index: Uint32Array.of(0, 1, 2),
+  tightZones: [{ fromMm: 820.4, toMm: 899.6, shortfallMm: 70.2 }],
+});
+
+export const fakeMannequin = (): MannequinFitter => ({
+  fit: async () => fittedBody(),
+  dress: async () => garmentMesh(),
+});

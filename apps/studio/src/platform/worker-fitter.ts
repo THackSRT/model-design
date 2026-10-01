@@ -1,11 +1,11 @@
 import type { MannequinFitter } from '@atelier/features';
-import type { FitRequest, FitResponse } from './fit-protocol.js';
+import type { WorkerRequest, WorkerResponse } from './fit-protocol.js';
 
 /** Ce dont l'adaptateur a besoin d'un Worker (permet de le tester sans navigateur). */
 export interface WorkerLike {
-  postMessage(message: FitRequest): void;
+  postMessage(message: WorkerRequest): void;
   terminate(): void;
-  addEventListener(type: 'message', listener: (event: MessageEvent<FitResponse>) => void): void;
+  addEventListener(type: 'message', listener: (event: MessageEvent<WorkerResponse>) => void): void;
   addEventListener(type: 'error' | 'messageerror', listener: (event: Event) => void): void;
 }
 
@@ -17,7 +17,7 @@ export interface WorkerFitterOptions {
 export const DEFAULT_FIT_TIMEOUT_MS = 30_000;
 
 interface Waiting {
-  resolve: (response: FitResponse) => void;
+  resolve: (response: WorkerResponse) => void;
   reject: (error: Error) => void;
 }
 
@@ -44,7 +44,7 @@ class WorkerSession {
     return this.alive;
   }
 
-  send(request: FitRequest, waiting: Waiting): void {
+  send(request: WorkerRequest, waiting: Waiting): void {
     this.waiting.set(request.id, waiting);
     this.worker.postMessage(request);
   }
@@ -69,18 +69,35 @@ export function createWorkerFitter(
 ): MannequinFitter {
   let session: WorkerSession | undefined;
   let nextId = 0;
+  async function call(build: (id: number) => WorkerRequest): Promise<WorkerResponse> {
+    if (!session?.isAlive) session = new WorkerSession(createWorker);
+    const current = session;
+    nextId += 1;
+    const request = build(nextId);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const response = await new Promise<WorkerResponse>((resolve, reject) => {
+      timer = setTimeout(() => current.kill('worker timeout'), timeoutMs);
+      current.send(request, { resolve, reject });
+    }).finally(() => clearTimeout(timer));
+    if (!response.ok) throw new Error(response.message);
+    return response;
+  }
   return {
     async fit(measurements, options) {
-      if (!session?.isAlive) session = new WorkerSession(createWorker);
-      const current = session;
-      nextId += 1;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const response = await new Promise<FitResponse>((resolve, reject) => {
-        timer = setTimeout(() => current.kill('worker timeout'), timeoutMs);
-        current.send({ id: nextId, measurements, options }, { resolve, reject });
-      }).finally(() => clearTimeout(timer));
-      if (!response.ok) throw new Error(response.message);
+      const response = await call((id) => ({ id, measurements, options }));
+      if (!('mannequin' in response)) throw new Error('unexpected worker response');
       return response.mannequin;
+    },
+    async dress(spec, garmentType, options) {
+      const response = await call((id) => ({
+        kind: 'dress',
+        id,
+        spec,
+        garment: { type: garmentType },
+        options,
+      }));
+      if (!('garment' in response)) throw new Error('unexpected worker response');
+      return response.garment;
     },
   };
 }

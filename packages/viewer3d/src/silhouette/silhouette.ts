@@ -55,3 +55,15 @@ export function silhouettePaths(
     heightCm: projected.maxY - projected.minY,
   };
 }
+
+/**
+ * Coin haut-gauche de la silhouette dans le plan de la vue (cm : x vers la droite, y vers le haut) :
+ * permet de superposer deux silhouettes (corps et vêtement) dans un même repère.
+ */
+export function silhouetteOrigin(
+  mesh: MeshData,
+  view: SilhouetteView,
+): { leftCm: number; topCm: number } {
+  const { minX, maxY } = projectVertices(mesh, view);
+  return Number.isFinite(minX) ? { leftCm: minX, topCm: maxY } : { leftCm: 0, topCm: 0 };
+}

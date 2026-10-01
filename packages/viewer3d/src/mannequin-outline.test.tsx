@@ -43,3 +43,30 @@ describe('MannequinOutline', () => {
     expect(spy).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('MannequinOutline avec vêtement', () => {
+  const body = rectangle(10, 0, 20, 60);
+  const dress = rectangle(5, 0, 30, 40);
+
+  it('superpose la silhouette du vêtement, d’un trait distinct, dans un repère commun', () => {
+    render(<MannequinOutline mesh={body} garment={dress} views={['front']} labels={labels} />);
+    const svg = screen.getByRole('img', { name: 'Face' });
+    expect(svg.querySelectorAll('path')).toHaveLength(2);
+    const garment = svg.querySelector('path[data-layer="garment"]');
+    expect(garment?.getAttribute('d')).toMatch(/^M.*Z$/);
+    // Le vêtement déborde le corps de 5 cm à gauche et est plus court de 20 cm.
+    expect(svg.querySelector('path:not([data-layer])')?.getAttribute('transform')).toBe(
+      'translate(5 0)',
+    );
+    expect(garment?.getAttribute('transform')).toBe('translate(0 20)');
+    expect(svg.getAttribute('viewBox')).toBe('-2 -2 29 64');
+    expect((garment as SVGElement).style.stroke).toBe('var(--color-garment-stroke)');
+  });
+
+  it('sans vêtement : un seul tracé, repère inchangé', () => {
+    render(<MannequinOutline mesh={body} views={['front']} labels={labels} />);
+    const svg = screen.getByRole('img', { name: 'Face' });
+    expect(svg.querySelectorAll('path')).toHaveLength(1);
+    expect(svg.getAttribute('viewBox')).toBe('-2 -2 14 64');
+  });
+});

@@ -2,10 +2,10 @@ import type { GarmentType } from '@atelier/contracts-ts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { usePatternStudio } from '../src/pattern-studio/use-pattern-studio.js';
 import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
-import { designName, fakeDesigns, fakeMannequin, fittedBody } from './fakes.js';
+import { designName, fakeDesigns, fakeMannequin, fittedBody, garmentMesh } from './fakes.js';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
@@ -53,6 +53,7 @@ describe('modèle de vue de l’atelier de patron', () => {
   it('ignore la réponse périmée d’un ajustement quand une demande plus récente a abouti', async () => {
     const pending: Array<(m: ReturnType<typeof fittedBody>) => void> = [];
     const fitter: MannequinFitter = {
+      ...fakeMannequin(),
       fit: () => new Promise((resolve) => pending.push(resolve)),
     };
     const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
@@ -68,7 +69,10 @@ describe('modèle de vue de l’atelier de patron', () => {
   });
 
   it('état d’erreur du mannequin : le patron reste calculé', async () => {
-    const fitter: MannequinFitter = { fit: () => Promise.reject(new Error('worker')) };
+    const fitter: MannequinFitter = {
+      ...fakeMannequin(),
+      fit: () => Promise.reject(new Error('worker')),
+    };
     const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
@@ -88,7 +92,10 @@ describe('modèle de vue de l’atelier de patron', () => {
 
   it('un ajusteur qui cesse de répondre ne bloque plus l’écran une fois rejeté', async () => {
     let reject: (e: Error) => void = () => undefined;
-    const fitter: MannequinFitter = { fit: () => new Promise((_, r) => (reject = r)) };
+    const fitter: MannequinFitter = {
+      ...fakeMannequin(),
+      fit: () => new Promise((_, r) => (reject = r)),
+    };
     const deps = { designs: fakeDesigns(), mannequin: fitter, designName };
     const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
     act(() => result.current.actions.generate());
@@ -168,5 +175,71 @@ describe('choix du type de vêtement', () => {
     });
     await waitFor(() => expect(result.current.state.status).toBe('ready'));
     expect(designs.created).toHaveLength(1);
+  });
+});
+
+describe('vêtement porté sur le mannequin', () => {
+  it('habille le corps ajusté avec le patron et arrondit les zones trop justes', async () => {
+    const dress = vi.fn(fakeMannequin().dress);
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    expect(result.current.state.dressing.status).toBe('idle');
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.dressing.status).toBe('ready'));
+    expect(dress).toHaveBeenCalledTimes(1);
+    expect(dress.mock.calls[0]?.[1]).toBe('straight-skirt');
+    expect(result.current.state.dressing.garment?.tightZones).toEqual([
+      { fromMm: 820, toMm: 900, shortfallMm: 70 },
+    ]);
+    expect(result.current.state.showGarment).toBe(true);
+    act(() => result.current.actions.setShowGarment(false));
+    expect(result.current.state.showGarment).toBe(false);
+  });
+
+  it('un nouveau patron relance l’habillage ; changer de type efface le vêtement', async () => {
+    const dress = vi.fn(fakeMannequin().dress);
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.dressing.status).toBe('ready'));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(dress).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.state.dressing.status).toBe('ready'));
+    act(() => result.current.actions.setGarmentType('trousers'));
+    expect(result.current.state.dressing).toEqual({ status: 'idle' });
+  });
+
+  it('ignore la réponse périmée d’un habillage plus ancien', async () => {
+    const pending: Array<(g: ReturnType<typeof garmentMesh>) => void> = [];
+    const dress = vi.fn(() => new Promise<ReturnType<typeof garmentMesh>>((r) => pending.push(r)));
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(pending).toHaveLength(1));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(pending).toHaveLength(2));
+    const recent = { ...garmentMesh(), tightZones: [] };
+    await act(async () => pending[1]?.(recent));
+    await act(async () => pending[0]?.(garmentMesh()));
+    expect(result.current.state.dressing.garment?.tightZones).toEqual([]);
+  });
+
+  it('échec de l’habillage : failed, le patron reste prêt', async () => {
+    const dress = vi.fn(() => Promise.reject(new Error('no mannequin')));
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.dressing.status).toBe('failed'));
+    expect(result.current.state.status).toBe('ready');
+  });
+
+  it('n’habille pas tant que le corps n’est pas ajusté', async () => {
+    const dress = vi.fn(fakeMannequin().dress);
+    const fit = () => new Promise<ReturnType<typeof fittedBody>>(() => undefined);
+    const deps = { designs: fakeDesigns(), mannequin: { fit, dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.versionNumber).toBe(1));
+    expect(dress).not.toHaveBeenCalled();
   });
 });

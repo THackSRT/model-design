@@ -22,6 +22,11 @@ export const fr = {
   'garment.circle-skirt': 'Jupe cercle',
   'garment.trousers': 'Pantalon',
   'garment.bodice': 'Corsage',
+  'garment.show': 'Montrer le vêtement',
+  'garment.dressing': 'Habillage du mannequin…',
+  'garment.dressingFailed': 'Le vêtement n’a pas pu être habillé sur le mannequin.',
+  'garment.tightZone':
+    'Trop juste de {shortfallMm, number, ::unit/millimeter} entre {fromMm, number} et {toMm, number, ::unit/millimeter} du sol',
   'garment.withSleeve': 'Avec manches',
   'garment.unavailable': '{name} — à venir',
   'param.straight-skirt.lengthMm': 'Longueur',

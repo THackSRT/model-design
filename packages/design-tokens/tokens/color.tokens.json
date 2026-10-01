@@ -11,6 +11,12 @@
     "danger": { "$value": "#b42318" },
     "pattern-stroke": { "$value": "#1f1d1a" },
     "pattern-fill": { "$value": "#f3ede4" },
-    "mannequin": { "$value": "#e9e4dc" }
+    "mannequin": { "$value": "#e9e4dc" },
+    "garment": { "$value": "#c9bfae", "$description": "Tissu du vêtement porté sur le mannequin" },
+    "garment-stroke": {
+      "$value": "#b4532a",
+      "$description": "Silhouette du vêtement (vues en trait)"
+    },
+    "garment-tight": { "$value": "#b42318", "$description": "Zone où le vêtement est trop juste" }
   }
 }
