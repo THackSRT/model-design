@@ -150,3 +150,12 @@ de 15 mm). Le moteur de patronage doit fournir `placement` (travail 1.19c, réf�
 remplacer par le moteur Tissu numérique ; un tissu estimé est signalé (`fabricEstimated`). Revoir cette décision
 si un GPU devient nécessaire (maillage plus fin, temps réel), ou si une bibliothèque permissive de simulation
 de tissu apparaît.
+
+**Décisions de l'orchestrateur, sur délégation de l'utilisateur (01/10/2026).** Exception à l'ADR 0003 acceptée :
+`engines/drape` devient un moteur TypeScript (`@atelier/drape`), le squelette Python est supprimé. Warp n'est
+pas retenu : l'exception de licence qu'il demanderait (composants NVIDIA propriétaires, numpy) reste une décision
+de l'utilisateur, à poser seulement si un calcul sur GPU devient nécessaire. Les références golden du patronage
+peuvent être régénérées pour y ajouter `placement` (ajout seul, tâche 1.19c). Le moteur mannequin exposera les
+repères d'épaule et de poignet et l'axe des bras (tâche à part, avant 1.19d). Les propriétés des préréglages de
+tissu (dont wax et bazin) sont des estimations, signalées comme telles, à faire valider par un modéliste ou un
+vendeur de tissus.

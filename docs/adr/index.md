@@ -19,4 +19,5 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0010](0010-integration-garmentcode.md)       | Intégration de GarmentCode : tracés réécrits en Python pur                 | Acceptée             |
 | [0011](0011-messages-icu.md)                  | Messages ICU : `intl-messageformat` (FormatJS)                             | Acceptée             |
 | [0012](0012-fabrication-via-designs.md)       | Pièces de coupe et exports servis par `designs`                            | Acceptée             |
+| [0013](0013-drape-physique.md)                | Drapé physique en TypeScript (XPBD, CPU), en tâche NATS                    | Acceptée             |
 | [0014](0014-versions-et-erreurs-relayees.md)  | Versions d'un modèle et erreurs du patronage relayées                      | Acceptée             |

@@ -133,6 +133,7 @@ nav:
       - 0010 Intégration de GarmentCode: adr/0010-integration-garmentcode.md
       - 0011 Messages ICU: adr/0011-messages-icu.md
       - 0012 Fabrication via designs: adr/0012-fabrication-via-designs.md
+      - 0013 Drapé physique: adr/0013-drape-physique.md
       - 0014 Versions et erreurs relayées: adr/0014-versions-et-erreurs-relayees.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
