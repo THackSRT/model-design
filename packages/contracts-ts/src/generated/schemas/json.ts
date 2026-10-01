@@ -502,7 +502,7 @@ export const jsonSchemas = {
     $id: 'https://atelier.example/schemas/garment-type.schema.json',
     title: 'GarmentType',
     description:
-      'Type de vêtement que le moteur de patronage sait tracer (ADR 0010). Même valeur que GarmentRequest.type.',
+      "Type de vêtement connu de la plateforme (ADR 0010). Même valeur que GarmentRequest.type. Un type dont le tracé n'est pas encore livré est refusé par le moteur de patronage (problème garment-type-not-supported).",
     type: 'string',
     enum: ['straight-skirt', 'circle-skirt', 'trousers', 'bodice'],
   },
@@ -1051,7 +1051,7 @@ export const jsonSchemas = {
       autoNotches: {
         type: 'string',
         description:
-          "none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté.",
+          "none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté, et un cran aux deux extrémités de chaque pince (pince franchie par la ligne de coupe).",
         enum: ['none', 'seam-junctions'],
         default: 'seam-junctions',
       },

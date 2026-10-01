@@ -3,6 +3,7 @@
 import math
 from itertools import pairwise
 
+from manufacturing.core.darts import dart_pairs
 from manufacturing.core.errors import NOTCH_OUTSIDE_EDGE, UNKNOWN_EDGE, ManufacturingError
 from manufacturing.core.geometry import EPSILON, distance, round_point, signed_area
 from manufacturing.core.model import (
@@ -123,6 +124,17 @@ def auto_placements(pattern: Pattern, panel: Panel, outline: CutOutline) -> list
     return placements
 
 
+def dart_placements(pattern: Pattern, panel: Panel, outline: CutOutline) -> list[NotchPlacement]:
+    """Un cran à chaque bout du pont d'une pince : fin du bord qui la précède, début du suivant."""
+    edges = outline.seam_edges
+    placements: list[NotchPlacement] = []
+    for first, second in dart_pairs(pattern, panel):
+        before, after = edges[(first - 1) % len(edges)], edges[(second + 1) % len(edges)]
+        placements.append(NotchPlacement(before.edge_id, polyline_length(before.points)))
+        placements.append(NotchPlacement(after.edge_id, 0.0))
+    return placements
+
+
 def _key(placement: NotchPlacement) -> tuple[str, int]:
     return (placement.edge_id, round(placement.distance_mm / DISTANCE_TOLERANCE_MM))
 
@@ -140,7 +152,9 @@ def place_notches(
     ]
     candidates += [(p, NotchSource.REQUESTED) for p in panel.notches]
     if settings.auto_notches:
-        candidates += [(p, NotchSource.AUTO) for p in auto_placements(pattern, panel, outline)]
+        autos = auto_placements(pattern, panel, outline)
+        autos += dart_placements(pattern, panel, outline)
+        candidates += [(p, NotchSource.AUTO) for p in autos]
     for placement, source in candidates:
         chosen.setdefault(_key(placement), (placement, source))
     marks = [place_notch(outline, p, s) for p, s in chosen.values()]

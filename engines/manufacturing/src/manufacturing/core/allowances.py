@@ -1,6 +1,12 @@
 """Valeurs de couture : résolution par bord (bord > rôle > défaut) et contours de coupe."""
 
-from manufacturing.core.errors import ALLOWANCE_ON_FOLD, UNKNOWN_EDGE, ManufacturingError
+from manufacturing.core.darts import DartPair, bridge_contour, dart_edge_ids, dart_pairs
+from manufacturing.core.errors import (
+    ALLOWANCE_ON_DART,
+    ALLOWANCE_ON_FOLD,
+    UNKNOWN_EDGE,
+    ManufacturingError,
+)
 from manufacturing.core.geometry import flatten_panel, round_point
 from manufacturing.core.model import (
     DEFAULT_POLICY,
@@ -15,7 +21,7 @@ from manufacturing.core.offset import offset_contour
 
 
 def validate_policy(pattern: Pattern, policy: AllowancePolicy) -> None:
-    """`by_edge` doit viser un bord existant et ne pas donner de valeur à un pli."""
+    """`by_edge` doit viser un bord existant, sans valeur sur un pli ni une jambe de pince."""
     panels = {p.id: p for p in pattern.panels}
     for (panel_id, edge_id), value in policy.by_edge.items():
         panel = panels.get(panel_id)
@@ -26,13 +32,20 @@ def validate_policy(pattern: Pattern, policy: AllowancePolicy) -> None:
             raise ManufacturingError(
                 ALLOWANCE_ON_FOLD, f"pièce {panel_id} : le bord {edge_id} est un pli"
             )
+        if value > 0 and panel and edge.id in dart_edge_ids(panel, dart_pairs(pattern, panel)):
+            raise ManufacturingError(
+                ALLOWANCE_ON_DART, f"pièce {panel_id} : le bord {edge_id} est une jambe de pince"
+            )
 
 
-def resolve_allowances(panel: Panel, policy: AllowancePolicy) -> tuple[float, ...]:
-    """Valeur de chaque bord : pli = 0, sinon `by_edge` > `by_role` > `default_mm`."""
+def resolve_allowances(
+    panel: Panel, policy: AllowancePolicy, darts: tuple[DartPair, ...] = ()
+) -> tuple[float, ...]:
+    """Valeur de chaque bord : pli et jambe de pince = 0, sinon `by_edge` > `by_role` > défaut."""
     values: list[float] = []
+    dart_edges = dart_edge_ids(panel, darts)
     for edge in panel.edges:
-        if edge.role is EdgeRole.FOLD:
+        if edge.role is EdgeRole.FOLD or edge.id in dart_edges:
             values.append(0.0)
         else:
             by_role = policy.by_role.get(edge.role, policy.default_mm)
@@ -40,12 +53,18 @@ def resolve_allowances(panel: Panel, policy: AllowancePolicy) -> tuple[float, ..
     return tuple(values)
 
 
-def cut_outline(panel: Panel, policy: AllowancePolicy) -> CutOutline:
-    """Ligne de couture et ligne de coupe (arrondies à 0,01 mm) d'une pièce."""
+def cut_outline(
+    panel: Panel, policy: AllowancePolicy, darts: tuple[DartPair, ...] = ()
+) -> CutOutline:
+    """Ligne de couture et ligne de coupe (arrondies à 0,01 mm) d'une pièce.
+
+    Une pince n'est pas découpée : la ligne de coupe la franchit par un pont.
+    """
     flat = flatten_panel(panel)
-    values = resolve_allowances(panel, policy)
+    values = resolve_allowances(panel, policy, darts)
     try:
-        cut = offset_contour(flat, values)
+        bridged, bridged_values = bridge_contour(flat, values, darts)
+        cut = offset_contour(bridged, bridged_values)
     except ManufacturingError as error:
         raise ManufacturingError(error.kind, f"pièce {panel.id} : {error.detail}") from error
     seam_edges = tuple(
@@ -60,4 +79,4 @@ def compute_cut_outlines(
 ) -> tuple[CutOutline, ...]:
     """Contour de coupe de chaque pièce du patron."""
     validate_policy(pattern, policy)
-    return tuple(cut_outline(panel, policy) for panel in pattern.panels)
+    return tuple(cut_outline(panel, policy, dart_pairs(pattern, panel)) for panel in pattern.panels)

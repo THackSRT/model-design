@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://atelier.example/schemas/garment-type.schema.json",
   "title": "GarmentType",
-  "description": "Type de vêtement que le moteur de patronage sait tracer (ADR 0010). Même valeur que GarmentRequest.type.",
+  "description": "Type de vêtement connu de la plateforme (ADR 0010). Même valeur que GarmentRequest.type. Un type dont le tracé n'est pas encore livré est refusé par le moteur de patronage (problème garment-type-not-supported).",
   "type": "string",
   "enum": ["straight-skirt", "circle-skirt", "trousers", "bodice"]
 }

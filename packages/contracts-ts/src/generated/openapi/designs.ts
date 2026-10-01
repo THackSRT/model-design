@@ -115,7 +115,7 @@ export interface components {
     DesignVersion: components['schemas']['design-version.schema'];
     /**
      * GarmentType
-     * @description Type de vêtement que le moteur de patronage sait tracer (ADR 0010). Même valeur que GarmentRequest.type.
+     * @description Type de vêtement connu de la plateforme (ADR 0010). Même valeur que GarmentRequest.type. Un type dont le tracé n'est pas encore livré est refusé par le moteur de patronage (problème garment-type-not-supported).
      * @enum {string}
      */
     'garment-type.schema': 'straight-skirt' | 'circle-skirt' | 'trousers' | 'bodice';

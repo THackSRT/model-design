@@ -110,7 +110,7 @@ def _notch(mark: NotchMark) -> dict[str, Any]:
     }
 
 
-def _piece(piece: CutPiece, panel_id: str) -> dict[str, Any]:
+def piece_to_dict(piece: CutPiece, panel_id: str) -> dict[str, Any]:
     data: dict[str, Any] = {
         "panelId": panel_id,
         "name": piece.name,
@@ -150,6 +150,6 @@ def to_cut_pattern(
             },
             "garment": {"type": pattern.garment_type},
             "sizeLabel": request.sizeLabel.root if request.sizeLabel else None,
-            "pieces": [_piece(p, p.outline.panel_id) for p in pieces],
+            "pieces": [piece_to_dict(p, p.outline.panel_id) for p in pieces],
         }
     )

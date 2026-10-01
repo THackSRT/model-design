@@ -1,4 +1,4 @@
 """Moteur manufacturing."""
 
 ENGINE_NAME = "manufacturing"
-ENGINE_VERSION = "0.2.0"
+ENGINE_VERSION = "0.3.0"

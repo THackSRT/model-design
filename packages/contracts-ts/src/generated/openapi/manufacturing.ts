@@ -259,7 +259,7 @@ export interface components {
       /** @description Crans demandés en plus des crans automatiques. */
       notches?: components['schemas']['NotchRequest'][];
       /**
-       * @description none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté.
+       * @description none : aucun cran automatique. seam-junctions : un cran à chaque jonction de deux bords cousus presque alignés (écart de direction inférieur à 30°), par exemple la ligne de hanches d'une couture de côté, et un cran aux deux extrémités de chaque pince (pince franchie par la ligne de coupe).
        * @default seam-junctions
        * @enum {string}
        */
@@ -687,7 +687,7 @@ export interface components {
     };
   };
   responses: {
-    /** @description Entrées conformes au schéma mais impossibles à traiter, au format RFC 9457. Types stables : /problems/unknown-edge (bord ou pièce cité inconnu), /problems/allowance-on-fold (valeur de couture demandée sur une pliure), /problems/notch-outside-edge (cran au-delà du bord), /problems/open-contour (contour de pièce non fermé), /problems/fold-edge-missing (pièce sur pliure sans bord de rôle fold), /problems/cut-line-self-intersects (valeurs de couture trop grandes pour une courbe), /problems/sizes-mismatch (tailles sans les mêmes pièces ni les mêmes bords, ou taille de base absente), /problems/fold-not-on-grain (pliure non parallèle au droit fil sur tissu plié), /problems/piece-wider-than-fabric (pièce plus large que la laize utile), /problems/too-many-pieces (plus de 500 placements), /problems/export-format-unavailable (format pas encore livré par cette version du moteur). Une requête hors schéma reçoit la réponse 422 de validation de FastAPI. */
+    /** @description Entrées conformes au schéma mais impossibles à traiter, au format RFC 9457. Types stables : /problems/unknown-edge (bord ou pièce cité inconnu), /problems/allowance-on-fold (valeur de couture demandée sur une pliure), /problems/allowance-on-dart (valeur de couture demandée sur une jambe de pince), /problems/adjacent-darts (deux pinces qui se touchent ou partagent un bord), /problems/notch-outside-edge (cran au-delà du bord), /problems/open-contour (contour de pièce non fermé), /problems/fold-edge-missing (pièce sur pliure sans bord de rôle fold), /problems/cut-line-self-intersects (valeurs de couture trop grandes pour une courbe), /problems/sizes-mismatch (tailles sans les mêmes pièces ni les mêmes bords, ou taille de base absente), /problems/fold-not-on-grain (pliure non parallèle au droit fil sur tissu plié), /problems/piece-wider-than-fabric (pièce plus large que la laize utile), /problems/too-many-pieces (plus de 500 placements), /problems/export-format-unavailable (format pas encore livré par cette version du moteur). Une requête hors schéma reçoit la réponse 422 de validation de FastAPI. */
     Problem: {
       headers: {
         [name: string]: unknown;

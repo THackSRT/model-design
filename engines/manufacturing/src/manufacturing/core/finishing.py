@@ -1,6 +1,7 @@
 """Finition des pièces : droit fil, pliure, étiquette, encombrement, aire et crans."""
 
 from manufacturing.core.allowances import cut_outline, validate_policy
+from manufacturing.core.darts import dart_pairs
 from manufacturing.core.errors import FOLD_EDGE_MISSING, UNKNOWN_EDGE, ManufacturingError
 from manufacturing.core.geometry import point_in_polygon, round_point, signed_area
 from manufacturing.core.model import (
@@ -66,7 +67,7 @@ def fold_line(panel: Panel, outline: CutOutline) -> tuple[Point, Point] | None:
 
 
 def finish_piece(pattern: Pattern, panel: Panel, settings: FinishingSettings) -> CutPiece:
-    outline = cut_outline(panel, settings.policy)
+    outline = cut_outline(panel, settings.policy, dart_pairs(pattern, panel))
     seam = outline.seam_line
     grain = panel.grainline or default_grainline(seam)
     grain = (round_point(grain[0]), round_point(grain[1]))

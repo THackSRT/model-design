@@ -10,6 +10,7 @@ layers =
     manufacturing.main
     manufacturing.api
     manufacturing.spec
+    manufacturing.export
     manufacturing.core
 
 [importlinter:contract:pure-core]
@@ -17,6 +18,7 @@ name = Le cœur n'importe aucun framework
 type = forbidden
 source_modules =
     manufacturing.core
+    manufacturing.export
 forbidden_modules =
     fastapi
     pydantic
