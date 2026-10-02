@@ -9,6 +9,22 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Banc d'essai des tissus (ADR 0015, 1.39) : contrats (`fabric-physics`, `fabric-bench-measurements`,
+  `fabric-derived-values`, `fabric-preset-review`, `fabric-validation-report`) et langage commun ; moteur :
+  essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement, tolérances, écarts), essai de drapé
+  de Cusick simulé (0,75–2 s, coefficient de drapé) ; features : modèle de vue `useFabricBench`,
+  import/export du rapport, validateur JSON Schema ; ui-web : composants `Tabs`, `TextArea`, `ChoiceGroup`,
+  `FileButton` ; studio : onglets Patron | Tissus, écran du banc d'essai avec Worker de Cusick et vue de
+  dessus (1.39a–j).
+- Moteur drapé (ENGINE_VERSION 0.3.0, 1.37) : λ cumulé par sous-pas (XPBD correct), option `iterations`
+  (1–32), validation des maillages (`InvalidInputError`, code `'mesh'` | `'settings'`).
+- Studio : un Worker d'ajustement qui plante est recréé et la demande relancée une fois ; le dernier
+  ajustement est rejoué sur un Worker neuf avant un habillage (1.38).
+- Contrats (1.36) : générateur émet une constante par schéma (`<clé>JsonSchema`), `jsonSchemas` conservé ;
+  `sideEffects: false` dans contracts-ts ; studio : paquet d'entrée 360,71 kB (gzip 109,82) → 319,03 kB
+  (gzip 99,58). Avec le banc d'essai, chargé à la demande (1.39j), l'entrée est à 338,25 kB (gzip 104,88).
+- Manufacturing (1.33) : références golden lues/écrites en octets, JSON et SVG en LF, DXF en CRLF, PDF
+  binaire (`.gitattributes`) ; aucune valeur changée.
 - Contrat du drapé physique (1.19a, compatibilité `specVersion: 1.0`) : `Panel.placement` (zone, côté, sens,
   ancrage, aisance), tissu (sept préréglages + surcharges), schémas avatar et qualité ; routes `…/drapes`
   (demander, lire, télécharger), événements `drape.requested`, `drape.completed`, `drape.failed` ; aucune

@@ -24,11 +24,18 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
   valeurs de couture par bord, crans demandés ou automatiques, droit fil, pliure, pinces (pont) ; gradation par
   recalcul ; plan de coupe simple et déterministe ; exports SVG 1:1, PDF A4 tuilé et DXF-AAMA en mm. Erreurs
   RFC 9457 typées.
-- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.2.0) : cœur de
+- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.3.0) : cœur de
   simulation XPBD sur CPU en TypeScript (ADR 0013, exception à l'ADR 0003), sans dépendance de calcul,
-  déterministe ; étirement chaîne/trame, flexion, coutures, collision, frottement, arrêt au repos ; tests
-  physiques, `/health`. Maillage, glTF en S3 à cache (version + avatar), tâche NATS, événements
-  `drape.requested`, `drape.completed`, `drape.failed` à venir (1.19d–g).
+  déterministe ; étirement chaîne/trame, flexion, coutures, collision, frottement, arrêt au repos ; λ cumulé
+  par sous-pas (XPBD correct), option `iterations` (1–32), validation des maillages ; essai de drapé de
+  Cusick simulé (coefficient de drapé, 0,75–2 s) ; tests physiques, `/health`. Maillage, glTF en S3 à cache
+  (version + avatar), tâche NATS, événements `drape.requested`, `drape.completed`, `drape.failed` à venir
+  (1.19d–g).
+- **Banc d'essai des tissus** (ADR 0015) : contrats et schémas (`fabric-physics`, mesures, valeurs dérivées,
+  rapport de validation) ; moteur : essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement),
+  tolérances et écarts, essai de Cusick simulé ; features : modèle de vue `useFabricBench`, import/export du
+  rapport ; ui-web : composants `Tabs`, `TextArea`, `ChoiceGroup`, `FileButton` ; studio : onglets Patron |
+  Tissus et écran du banc avec Worker de Cusick et vue de dessus (1.39a–j).
 - **Outillage** : contrats et code généré (`pnpm contracts:gen|check`), générateurs (`pnpm gen`), règles
   d'architecture dans le lint, `pnpm check` (16 projets et documentation), hook `pre-push`, intégration continue manuelle.
 - **Conteneurs** : une image par moteur, service et application ; toute la pile tourne avec `pnpm stack:up`.
@@ -69,5 +76,9 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
     dans le studio avec silhouette en trait superposée.
 12. ✅ **Repères d'épaule et de poignet** (1.35) : `landmarksMm.shoulder|wrist` (hauteurs), `armsMm`
     (pivot, poignet, axe, longueur) pour habillage géométrique précis.
-13. **Plateforme** : construction des images en CI, charts Helm, environnement de recette.
-14. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées.
+13. ✅ **Banc d'essai des tissus** (ADR 0015, 1.37, 1.39a–j) : contrats et schémas `fabric-*` ; moteur :
+    essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement), essai de Cusick simulé ;
+    features : modèle de vue, import/export du rapport ; studio : onglets Patron | Tissus et écran du banc
+    avec Worker de Cusick.
+14. **Plateforme** : construction des images en CI, charts Helm, environnement de recette.
+15. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées.

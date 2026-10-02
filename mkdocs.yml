@@ -76,6 +76,7 @@ nav:
   - Plateforme:
       - plateforme/index.md
       - Studio de patron: plateforme/studio-de-patron.md
+      - Banc d'essai des tissus: plateforme/banc-essai-tissus.md
       - API: plateforme/api.md
       - Formats de données: plateforme/formats.md
   - Architecture:
@@ -135,6 +136,7 @@ nav:
       - 0012 Fabrication via designs: adr/0012-fabrication-via-designs.md
       - 0013 Drapé physique: adr/0013-drape-physique.md
       - 0014 Versions et erreurs relayées: adr/0014-versions-et-erreurs-relayees.md
+      - 0015 Banc d'essai des tissus: adr/0015-banc-d-essai-des-tissus.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md

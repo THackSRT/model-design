@@ -1,7 +1,8 @@
 # Studio de patron
 
 Le studio calcule le patron d'un vêtement à partir des mesures d'un client et montre, à côté, un mannequin 3D
-ajusté aux mêmes mesures. C'est l'écran de la phase 1. Quatre types de vêtement sont proposés : jupe droite, jupe
+ajusté aux mêmes mesures. C'est l'écran de la phase 1. Deux onglets : **Patron** (par défaut), et **Tissus**
+pour valider et paramétrer les préréglages des tissus. Quatre types de vêtement sont proposés : jupe droite, jupe
 cercle, pantalon et corsage (avec ou sans manches) ; les tracés de GarmentCode sont validés par référence.
 
 ![Studio de patron : mesures à gauche, patron devant et dos au centre, mannequin 3D à droite](../assets/ecrans/studio-phase-1.png)
