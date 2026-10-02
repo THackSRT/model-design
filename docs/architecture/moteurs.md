@@ -49,10 +49,11 @@ Il rend la spécification utilisable en atelier.
 Il coud virtuellement les pièces sur l'avatar et simule le tombé du tissu (ADR 0013).
 
 1. **Positionnement initial** : les pièces sont placées autour du corps selon les repères fournis par le patronage (`Panel.placement` : zone, côté, sens, ancrage, aisance).
-2. **Simulation physique** : dynamique à base de positions étendue (XPBD) sur CPU, sans dépendance ; étirement anisotrope chaîne/trame, flexion isométrique, coutures virtuelles, collision avec le corps et frottement, arrêt au repos ou au nombre d'itérations fixé.
-3. **Habillage géométrique** : approximation instantanée en anneaux horizontaux (35–50 ms, `dressMannequin()`) pour aperçu pendant le calcul du drapé.
-4. **Sorties** : vêtement drapé glTF binaire (mètres, `POSITION`, `NORMAL`, `TEXCOORD_0` du patron, attributs personnalisés `_EASE_MM` et `_STRAIN`), mis en cache par (version du patron, avatar, tissu, ENGINE_VERSION) dans S3.
-5. **Tâche** : demande asynchrone via NATS, rétention 24 h, publication `drape.completed` ou `drape.failed` ; types d'erreur stables : placement manquant, échec du placement, couture non fermée, pénétration du corps, trop volumineux.
+2. **Maillage triangulaire** : Delaunay contrainte des pièces à pas régulier h (25 mm en brouillon, 15 mm en standard ; arêtes ≤ 1,2 h, angle minimal > 20°) ; vêtement complet à plat `meshGarment` avec pièces sur pliure dépliées, copies miroir pour `quantity: 2`, coutures appariées point à point, droit fil par triangle ; limites : 40 pièces, 2 000 bords, 30 000 sommets ; cinq vêtements de référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets).
+3. **Simulation physique** : dynamique à base de positions étendue (XPBD) sur CPU, sans dépendance ; étirement anisotrope chaîne/trame, flexion isométrique, coutures virtuelles, collision avec le corps et frottement, arrêt au repos ou au nombre d'itérations fixé.
+4. **Habillage géométrique** : approximation instantanée en anneaux horizontaux (35–50 ms, `dressMannequin()`) pour aperçu pendant le calcul du drapé.
+5. **Sorties** : vêtement drapé glTF binaire (mètres, `POSITION`, `NORMAL`, `TEXCOORD_0` du patron, attributs personnalisés `_EASE_MM` et `_STRAIN`), mis en cache par (version du patron, avatar, tissu, ENGINE_VERSION) dans S3.
+6. **Tâche** : demande asynchrone via NATS, rétention 24 h, publication `drape.completed` ou `drape.failed` ; types d'erreur stables : placement manquant, échec du placement, couture non fermée, pénétration du corps, trop volumineux.
 
 Implémentation actuelle : TypeScript sur CPU (paquet `@atelier/drape`). GPU (WebGPU navigateur, ou Warp serveur) viendra par une nouvelle ADR si les performances le justifient. Propriétés des sept tisus préréglés (cotton-poplin, wax, bazin, linen, denim, silk-satin, jersey) : estimées, à faire valider.
 

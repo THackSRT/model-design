@@ -20,9 +20,11 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   (1–32), validation des maillages (`InvalidInputError`, code `'mesh'` | `'settings'`).
 - Studio : un Worker d'ajustement qui plante est recréé et la demande relancée une fois ; le dernier
   ajustement est rejoué sur un Worker neuf avant un habillage (1.38).
-- Contrats (1.36) : générateur émet une constante par schéma (`<clé>JsonSchema`), `jsonSchemas` conservé ;
-  `sideEffects: false` dans contracts-ts ; studio : paquet d'entrée 360,71 kB (gzip 109,82) → 319,03 kB
-  (gzip 99,58). Avec le banc d'essai, chargé à la demande (1.39j), l'entrée est à 338,25 kB (gzip 104,88).
+- Contrats (1.36, 1.40) : générateur émet une constante par schéma (`<clé>JsonSchema`), `jsonSchemas` conservé ;
+  `sideEffects: false` dans contracts-ts ; un module généré par schéma JSON (`generated/json-schemas/<nom>.ts`,
+  1.40), noms exportés inchangés ; studio : paquet d'entrée 360,71 kB (gzip 109,82) → 319,03 kB (gzip 99,58)
+  après 1.36, puis 338,25 kB (gzip 104,88) avec le banc d'essai chargé à la demande (1.39j), puis 324,20 kB
+  (gzip 99,66) après 1.40, puis 338,05 kB (gzip 104,63) avec le panneau d'historique (1.16c).
 - Manufacturing (1.33) : références golden lues/écrites en octets, JSON et SVG en LF, DXF en CRLF, PDF
   binaire (`.gitattributes`) ; aucune valeur changée.
 - Contrat du drapé physique (1.19a, compatibilité `specVersion: 1.0`) : `Panel.placement` (zone, côté, sens,
@@ -38,6 +40,12 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Placement de chaque pièce autour du corps (1.19c, ENGINE_VERSION 0.6.0) : `Panel.placement` pour jupes,
   pantalon et corsage ; convention des coutures vérifiée par tests ; références golden régénérées (placement
   ajouté, aucune coordonnée changée).
+- Maillage triangulaire des pièces et du vêtement complet (1.19d–d2, ENGINE_VERSION 0.4.0) : Delaunay
+  contrainte (pas de 25 mm en brouillon, 15 mm en standard, angle minimal > 20°) ; vêtement complet
+  à plat `meshGarment` avec pièces sur pliure dépliées, copies miroir pour `quantity: 2`, coutures appariées
+  point à point, droit fil par triangle ; limites (40 pièces, 2 000 bords, 30 000 sommets, 200 coutures,
+  coordonnées à 10 m) vérifiées avant tout travail coûteux, contre une entrée hostile ; cinq vêtements de
+  référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets) ; ADR 0013 complétée.
 - Repères d'épaule et de poignet, axes des bras du mannequin (`landmarksMm.shoulder`, `.wrist` ; `armsMm`
   par bras : pivot, poignet, axe unitaire, longueur) pour habillage géométrique précis (1.35).
 - Studio : vêtement porté sur le mannequin, habillage géométrique (1.34b) ; vue 3D translucide avec zones
@@ -46,6 +54,14 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 - Liste et comparaison des versions d'un modèle : `GET /v1/designs/{id}/versions` (résumés récents d'abord,
   curseur opaque, pas de mesures) et `GET .../versions/{n}/changes?since=` (différences de paramètres et
   de mesures, organisation propriétaire seulement, `no-store`, 1.16a) ; aucune migration (ADR 0014).
+- Historique des versions du modèle de la session : features clients `listVersions`, `getVersion`,
+  `getVersionChanges` et modèle de vue `useDesignHistory` (liste paginée par curseur, reprise dans le
+  formulaire, comparaison : changements du service + aire et périmètre par pièce calculés pour l'affichage,
+  1.16b) ; studio : panneau « Historique » repliable dans l'onglet Patron avec liste des versions de la
+  session, « charger plus », reprendre une version avec confirmation si le formulaire contient des
+  modifications non calculées, et comparer deux versions (changements libellés, écarts d'aire en cm² et de
+  périmètre en cm par pièce, pièces ajoutées/retirées, 1.16c) ; tous les libellés traduits pour les mesures
+  du contrat (ADR 0014 : l'historique est limité au modèle de la session, pas de stockage navigateur).
 - Erreurs précises du moteur de patronage relayées (1.32) : huit types stables du contrat remontés en 422 avec
   détail ; autre type du moteur → 422 `/problems/pattern-impossible` (détail fixé) ; validation, délai, panne
   → 502 `/problems/engine-unavailable` sans relayer le corps (ADR 0014).

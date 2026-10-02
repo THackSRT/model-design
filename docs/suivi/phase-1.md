@@ -5,6 +5,14 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
 
 ## Ce qui est prêt
 
+- **Historique et comparaison des versions** : chaque calcul d'un patron crée une nouvelle version stockée au
+  service ; dans le studio, le panneau « Historique » de l'onglet Patron liste les versions de la session,
+  permet de reprendre l'une d'elles (avec confirmation si des modifications non calculées existent), et de
+  comparer deux versions pour voir les changements de paramètres et mesures avec écarts d'aire et périmètre
+  par pièce (ADR 0014 : limité au modèle de la session).
+- **Maillage triangulaire des pièces et du vêtement complet** (ENGINE_VERSION 0.4.0) : Delaunay contraint pour
+  la simulation drapé (pas de < 25 mm en brouillon, < 15 mm en standard, angle > 20°) ; cinq vêtements de
+  référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets) ; ADR 0013 complétée.
 - **Tranche verticale de bout en bout** : `apps/studio` → `services/designs` → `engines/patterning` (quatre
   types de vêtement, douze mesures facultatives), et le mannequin MakeHuman ajusté dans le navigateur
   (`engines/mannequin`) puis affiché en 3D (`packages/viewer3d`) ou en silhouettes 2D. Un patron impossible
@@ -55,14 +63,16 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
    (`prototype/js/body.js`) ; ajustement dans un Web Worker pour ne pas figer l'écran.
 3. ✅ **Vues 2D trait du mannequin** (silhouettes SVG, reprise de `prototype/js/viewer3d.js`) affichées dans
    le studio (`packages/viewer3d` + `apps/studio`).
-4. 🟡 **Retouches** : édition des paramètres du modèle dans le studio (1.16b ⬜), liste et comparaison des
-   versions (`GET /v1/designs/{id}/versions`, 1.16a ✅, curseur opaque, pas de mesures dans les résumés).
+4. ✅ **Retouches** : liste et comparaison des versions (`GET /v1/designs/{id}/versions`, 1.16a ✅, curseur
+   opaque, pas de mesures dans les résumés) ; features clients et modèle de vue (1.16b ✅) ; panneau
+   Historique du studio (1.16c ✅) avec reprise et comparaison. Édition des paramètres du modèle reste à faire.
 5. ✅ **`engines/manufacturing`** : pièces de coupe, valeurs de couture (défaut 10 mm, ourlet 30 mm), crans,
    droit fil, pliure, pinces ; gradation par recalcul ; plan de coupe ; exports SVG 1:1 (1.18a), PDF A4
    tuilé (1.18b) et DXF-AAMA (1.18c).
-6. 🟡 **`engines/drape`** : placement de chaque pièce (1.19c ✅, `Panel.placement` : zone, côté, sens, ancrage,
-   aisance) ; couture virtuelle et simulation XPBD sur CPU en TypeScript (1.19b ✅), en tâche NATS, sortie
-   glTF, carte d'aisance, cache S3 (1.19 🟡, restent 1.19d-g).
+6. 🟡 **`engines/drape`** : contrat du drapé physique (1.19a ✅, `Panel.placement`) ; simulation XPBD sur CPU
+   en TypeScript (1.19b ✅, ENGINE_VERSION 0.2.0–0.4.0) ; placement de chaque pièce (1.19c ✅) ; maillage
+   triangulaire Delaunay contraint (1.19d ✅, ENGINE_VERSION 0.4.0, 0,02–0,17 s pour les références) ; restent
+   1.19e avatar, départ, aisance ; 1.19f glTF S3, NATS événements ; 1.19g route `/drapes`.
 7. ✅ **Relais de l'outbox vers NATS JetStream** : implémenté dans `service-kit` et branché dans `designs`
    avec flux `DESIGNS` (sujets `design.>`), variables d'environnement `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`.
 8. ✅ **Studio** : `three.js` chargé à la demande (paquet de 806 kB réduit à 303 kB) ; bibliothèque de

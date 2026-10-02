@@ -81,9 +81,30 @@ signalé et le calcul ne part pas. Les mesures obligatoires par type de vêtemen
 | « Le moteur de patronage ne répond pas. » | Moteur arrêté ou trop lent                                           | Vérifier que le moteur tourne, réessayer |
 | « Le service est injoignable. »           | Service `designs` arrêté                                             | Démarrer la pile (`pnpm stack:up`)       |
 
+## Historique des versions
+
+Chaque calcul d'un patron crée une nouvelle version du modèle, stockée au service. Dans l'onglet Patron, le
+panneau « Historique » (repliable) affiche la liste des versions de la session, du plus récent au plus ancien.
+
+**Reprendre une version** : cliquer sur « Reprendre la version _n_ » pour recharger ses mesures et ses
+paramètres dans le formulaire ; le patron affiché est effacé jusqu'au prochain calcul. Si le formulaire contient
+des modifications non calculées, une confirmation est demandée.
+
+**Comparer deux versions** : Dans le panneau de comparaison (en bas du panneau Historique), choisir une version
+de référence et une version comparée, puis cliquer sur « Comparer ». Les résultats affichent :
+
+- les changements de paramètres (ex. « Longueur : 100 cm → 110 cm ») ;
+- les changements de mesures du client (si elles ont été modifiées) ;
+- pour chaque pièce, l'écart d'aire en cm² et l'écart de périmètre en cm ;
+- les pièces ajoutées ou retirées entre les deux versions.
+
+L'historique est limité au modèle de la session (ADR 0014) : les versions restent enregistrées par le service,
+mais après un rechargement de la page le studio ne sait plus quel modèle afficher, faute de liste des modèles
+d'une organisation. Rien n'est gardé dans le navigateur, car une version contient des mesures de client.
+
 ## Limites actuelles
 
-- Pas encore : édition des paramètres du modèle, liste et comparaison des versions (travail 1.16) ; drapé 3D en
-  tâche (travail 1.19) ; tests de bout en bout (travail 1.24).
+- Pas encore : drapé 3D physique en tâche (travail 1.19, l'aperçu géométrique du vêtement porté est déjà là) ;
+  tests de bout en bout (travail 1.24).
 - Les références golden des tracés sont déclarées « candidates » : elles doivent être validées par un modéliste
   sur toile (porte de sortie 1.25).
