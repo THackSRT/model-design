@@ -4,6 +4,7 @@
   "private": true,
   "description": "Types et schémas générés depuis contracts/ (pnpm contracts:gen). Ne pas modifier src/generated à la main.",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "source": "./src/index.ts",

@@ -1,5 +1,5 @@
 import {
-  jsonSchemas,
+  measurementSetJsonSchema,
   type CreateDesignVersionRequest,
   type GarmentRequest,
   type GarmentType,
@@ -83,8 +83,7 @@ export const initialForm: StudioForm = {
 };
 
 type Bounds = { minimum: number; maximum: number };
-const measurementBounds = (key: MeasurementKey): Bounds =>
-  jsonSchemas.measurementSet.properties[key];
+const measurementBounds = (key: MeasurementKey): Bounds => measurementSetJsonSchema.properties[key];
 
 const toMm = (cm: number | undefined) => (cm === undefined ? undefined : Math.round(cmToMm(cm)));
 

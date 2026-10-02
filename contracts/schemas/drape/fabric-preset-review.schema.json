@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/drape/fabric-preset-review.schema.json",
+  "title": "FabricPresetReview",
+  "description": "Revue d'un préréglage de tissu par un modéliste au banc d'essai des tissus (ADR 0015). estimated : valeurs du préréglage revues, telles que les définit le moteur de drapé du rapport (FabricValidationReport.engineVersion) ; measurements : mesures d'atelier brutes ; derived : grandeurs qui en sont déduites ; corrected : valeurs à substituer au préréglage, présentes si et seulement si verdict vaut corrected ; simulatedDrape : essais de drapé simulés. Aucun nom de personne ni donnée personnelle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["preset", "verdict", "reviewedAt", "estimated"],
+  "properties": {
+    "preset": { "$ref": "./fabric.schema.json#/properties/preset" },
+    "verdict": {
+      "type": "string",
+      "description": "validated : l'estimation est conservée ; corrected : les valeurs de corrected remplacent l'estimation ; to-review : à reprendre (mesures manquantes, doute).",
+      "enum": ["validated", "corrected", "to-review"]
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Dernière modification de cette revue, en UTC (suffixe Z).",
+      "pattern": "Z$"
+    },
+    "estimated": { "$ref": "./fabric-physics.schema.json" },
+    "measurements": { "$ref": "./fabric-bench-measurements.schema.json" },
+    "derived": { "$ref": "./fabric-derived-values.schema.json" },
+    "corrected": { "$ref": "./fabric-physics.schema.json" },
+    "simulatedDrape": { "$ref": "#/$defs/SimulatedDrapeTests" },
+    "comment": {
+      "type": "string",
+      "description": "Commentaire libre du modéliste, sur le tissu seulement : ni nom, ni coordonnées, ni donnée d'un client.",
+      "maxLength": 500
+    }
+  },
+  "if": {
+    "properties": { "verdict": { "const": "corrected" } },
+    "required": ["verdict"]
+  },
+  "then": { "properties": { "corrected": true }, "required": ["corrected"] },
+  "else": { "properties": { "corrected": false } },
+  "$defs": {
+    "SimulatedDrapeTests": {
+      "type": "object",
+      "description": "Essais de drapé de Cusick simulés par le moteur de drapé, côte à côte. estimated : avec les valeurs estimées du préréglage ; candidate : avec les valeurs candidates (corrected si présentes, sinon l'estimation où chaque grandeur mesurée, dans les bornes de Fabric, remplace la valeur estimée).",
+      "additionalProperties": false,
+      "properties": {
+        "estimated": { "$ref": "#/$defs/CusickSimulation" },
+        "candidate": { "$ref": "#/$defs/CusickSimulation" }
+      }
+    },
+    "CusickSimulation": {
+      "type": "object",
+      "description": "Essai de drapé de Cusick simulé (fabric : propriétés simulées) : éprouvette circulaire de 300 mm sur un disque de 180 mm (BS 5058, ISO 9073-9).",
+      "additionalProperties": false,
+      "required": ["fabric", "drapeCoefficient", "converged", "simulatedSteps"],
+      "properties": {
+        "fabric": { "$ref": "./fabric-physics.schema.json" },
+        "drapeCoefficient": {
+          "type": "number",
+          "description": "Coefficient de drapé simulé, sans unité, borné à [0, 1].",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "converged": {
+          "type": "boolean",
+          "description": "Vrai si le tissu s'est immobilisé avant la fin de la simulation."
+        },
+        "simulatedSteps": {
+          "type": "integer",
+          "description": "Nombre de pas de simulation effectués.",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    }
+  }
+}

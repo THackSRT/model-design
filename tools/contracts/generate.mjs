@@ -60,12 +60,18 @@ async function generateSchemaTypes(outRoot) {
         ? `export type { ${title} } from './${name}.js';`
         : `export type * from './${name}.js';`,
     );
-    raw.push(`  ${camel(name)}: ${json.trim().replace(/\n/g, '\n  ')},`);
+    raw.push({ key: camel(name), json: json.trim() });
   }
   writeFileSync(join(outDir, 'index.ts'), `${BANNER}${exports.join('\n')}\n`);
+  // Une constante par schéma (import nommé : le bundler écarte les autres), puis l'objet par clé.
+  const consts = raw.map(
+    ({ key, json }) =>
+      `/** Schéma JSON brut « ${key} ». */\nexport const ${key}JsonSchema = ${json} as const;\n`,
+  );
+  const entries = raw.map(({ key }) => `  ${key}: ${key}JsonSchema,`);
   writeFileSync(
     join(outDir, 'json.ts'),
-    `${BANNER}/** Schémas JSON bruts, pour la validation à l'exécution (Ajv). */\nexport const jsonSchemas = {\n${raw.join('\n')}\n} as const;\n`,
+    `${BANNER}${consts.join('\n')}\n/** Tous les schémas par clé, pour la validation à l'exécution (Ajv). */\nexport const jsonSchemas = {\n${entries.join('\n')}\n} as const;\n`,
   );
 }
 
