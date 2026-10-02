@@ -34,7 +34,10 @@
   },
   "dependencies": {
     "@atelier/contracts-ts": "workspace:*",
-    "@atelier/mannequin": "workspace:*"
+    "@atelier/mannequin": "workspace:*",
+    "@nats-io/jetstream": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
+    "aws4fetch": "^1.0.20"
   },
   "devDependencies": {
     "@types/node": "^22.20.4"

@@ -2,7 +2,7 @@
 
 Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU, sans dépendances).
 Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État : socle du paquet, simulation (1.19b), maillage (1.19d),
-placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; NATS et S3 en cours (1.19f2).
+placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; travailleur NATS et S3 (1.19f2).
 
 ## Entrées et API
 
@@ -13,6 +13,11 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
   `PlacementError`) ; serveur et tests de drapé seuls l'importent.
 - `src/output/` (Node seulement, via `src/node.ts`) : `buildGlb` (GLB déterministe, mètres ici seulement), `cacheKeyOf` et `modelKeyOf` (SHA-256 du JSON canonique), `completedEvent` et `failedEvent` (contenu exact de `drape.completed` et `drape.failed`). Sans E/S ; détail dans la page du composant.
 - `src/server.ts` + `src/main.ts` : serveur HTTP (`GET /health`), port `PORT` ou 8000.
+- `src/adapters/` (Node, E/S) : travailleur de la file `DRAPE_JOBS` (consommateur durable `drape`). Actif seulement si
+  `NATS_URL` est défini ; alors `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` sont obligatoires
+  (`S3_REGION` us-east-1, `S3_BUCKET` drapes, `S3_TIMEOUT_MS` 30000). Le calcul tourne dans un fil (`drape-thread.ts`)
+  pour que NATS reste vivant. Ni mesure ni contenu de tâche dans les journaux. Ne pas importer service-kit : les
+  modèles y sont recopiés. Détail : page du composant.
 
 ## Architecture des dossiers
 

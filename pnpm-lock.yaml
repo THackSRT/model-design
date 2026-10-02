@@ -126,6 +126,15 @@ importers:
       '@atelier/mannequin':
         specifier: workspace:*
         version: link:../mannequin
+      '@nats-io/jetstream':
+        specifier: ^3.4.0
+        version: 3.4.0
+      '@nats-io/transport-node':
+        specifier: ^3.4.0
+        version: 3.4.0
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
     devDependencies:
       '@types/node':
         specifier: ^22.20.4

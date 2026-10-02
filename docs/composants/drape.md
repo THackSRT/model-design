@@ -255,3 +255,38 @@ navigateur). Aucune E/S : NATS et S3 sont l'objet de 1.19f2.
 Tests : `gltf.test.ts` (structure du GLB, accesseurs, min/max, déterminisme, une primitive par exemplaire),
 `output-events.test.ts` (clé de cache, événements validés par le schéma généré via `schema-check.ts`, validateur minimal
 car Ajv n'est pas une dépendance du moteur).
+
+### Travailleur NATS et S3 (1.19f2)
+
+`src/adapters/` (Node seulement ; hors des entrées `.` et `./node`). Sans `NATS_URL`, le moteur garde son seul serveur de
+santé ; avec `NATS_URL`, la configuration S3 est obligatoire et validée au démarrage (une erreur nomme la variable, jamais
+sa valeur).
+
+| Variable                                                  | Rôle                                              | Défaut                   |
+| --------------------------------------------------------- | ------------------------------------------------- | ------------------------ |
+| `NATS_URL`                                                | active le travailleur                             | —                        |
+| `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | stockage (signature AWS v4, adressage par chemin) | obligatoires             |
+| `S3_REGION`, `S3_BUCKET`, `S3_TIMEOUT_MS`                 | région, seau, délai d'une requête                 | us-east-1, drapes, 30000 |
+
+- **Flux** : le moteur déclare `DRAPE_JOBS` (file de travail, 24 h, sujet `drape.requested`) et `DRAPE`
+  (`drape.completed`, `drape.failed`) comme designs (`streams.ts`), puis le consommateur durable `drape` (ack explicite,
+  `ack_wait` 60 s, 5 livraisons, renvoi après 10 s). Un message à la fois.
+- **Traitement** (`handler.ts`) : enveloppe et tâche contrôlées (`messages.ts`) ; clé de cache ; si
+  `drapes/<organisation>/<clé>.json` existe, son `DrapeResult` est republié sans simulation ; sinon calcul, écriture du GLB
+  `<clé>.glb` **puis** du JSON de résultat (sans mesure). Le JSON marque un calcul terminé : un GLB seul (écriture
+  interrompue) est recalculé. Publication, puis acquittement.
+- **Calcul** : dans un fil (`worker_threads` : `drape-thread.ts`, `thread-runner.ts`) car la simulation est synchrone : le
+  fil principal garde NATS en vie et envoie un signal de travail (`working()`) toutes les 20 s. Une exception inattendue du
+  moteur devient `drape.failed` `drape-internal` (la rejouer échouerait de même).
+- **Publication** : enveloppe CloudEvents (`specversion`, `id`, `source` `/engines/drape`, `type`, `subject` = drapé,
+  `time` UTC, `data`) ; `id` et `Nats-Msg-Id` = `<drapeId>:completed` ou `<drapeId>:failed` (déduplication).
+- **Message invalide** (hors enveloppe ou contrat) : acquitté, journalisé par sujet et identifiant CloudEvents seulement ;
+  `drape.failed` `drape-internal` publié si les quatre identifiants (drapé, dessin, version, organisation) sont lisibles.
+  Contrôle de structure seulement (Ajv n'est pas une dépendance du moteur) : le détail des valeurs est validé par le moteur.
+- **Pannes** S3 ou NATS (lecture, écriture, publication) ou fil de calcul perdu : pas d'acquittement, `nak` avec délai.
+  **SIGTERM** : lecture arrêtée, le message en cours a 25 s pour finir, sinon le calcul est interrompu et le message rendu.
+- **Journaux** : identifiants et noms d'erreur seulement.
+
+Tests : `worker.test.ts` (traitement, cache, échecs, signaux de travail avec horloge simulée), `worker-loop.test.ts`
+(acquittement, `nak`, déclarations, configuration, démarrage), `worker-compute.test.ts` (calcul réel), `s3-store.test.ts`
+(faux serveur S3, signature v4). Aucun réseau.
