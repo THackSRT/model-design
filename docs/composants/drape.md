@@ -230,3 +230,28 @@ référence du moteur de patronage ; `mesh-garment*.test.ts` : coutures, pliure,
 draft et standard, déterminisme, performance).
 
 Modèle à suivre : `engines/mannequin`.
+
+### Sorties — glTF, clé de cache, événements (1.19f1)
+
+`src/output/` (réservé à Node : `node:crypto` ; exporté par `src/node.ts` seulement, l'entrée `.` reste compatible
+navigateur). Aucune E/S : NATS et S3 sont l'objet de 1.19f2.
+
+- `piece-arrays.ts` : tableaux d'un exemplaire de pièce. Positions mm / 1000 (mètres, seule conversion avec les
+  coordonnées de texture), indices rendus locaux (global moins `vertexStart`), normales de sommet par somme des normales
+  de face pondérées par l'aire, `TEXCOORD_0` = coordonnées à plat en mètres dans le repère de la pièce (x moins
+  `shiftXMm`) ; la copie miroir est retournée (x → −x) pour que le tissu se lise comme sur la pièce dessinée.
+- `gltf.ts` : `buildGlb(success): Uint8Array`, GLB 2.0 petit-boutiste. Un nœud et un maillage par exemplaire
+  (`pieceName` : `<panelId>` ou `<panelId>@<côté>`), chacun d'une primitive : `POSITION` (avec min et max), `NORMAL`,
+  `TEXCOORD_0`, `_EASE_MM`, `_STRAIN`, indices `UNSIGNED_INT`. Blocs JSON (remplis d'espaces) et BIN (zéros) alignés sur
+  4 octets ; `asset.generator` = `atelier-drape <ENGINE_VERSION>` ; aucun horodatage : mêmes entrées, mêmes octets.
+- `cache-key.ts` : `canonicalJson` (clés triées), `sha256Hex`, `cacheKeyOf(job)` = SHA-256 du JSON canonique de
+  `{ spec, measurements, avatar, fabric résolu, quality, engineVersion }` (les identifiants du travail n'y entrent pas),
+  `modelKeyOf(organizationId, cacheKey)` = `drapes/<organizationId>/<cacheKey>.glb`.
+- `events.ts` : `completedEvent(job, success, glb, cacheKey)` (clé, taille et SHA-256 du GLB plus `DrapeResultCore`) et
+  `failedEvent(job, problem)`. `FAILURE_TYPES` donne le type du contrat de chaque problème ; `invalid-input` est publié
+  comme `/problems/drape-internal` (designs valide la demande en amont). `retryable` est toujours faux : le calcul est
+  déterministe. Aucune mesure dans les données.
+
+Tests : `gltf.test.ts` (structure du GLB, accesseurs, min/max, déterminisme, une primitive par exemplaire),
+`output-events.test.ts` (clé de cache, événements validés par le schéma généré via `schema-check.ts`, validateur minimal
+car Ajv n'est pas une dépendance du moteur).

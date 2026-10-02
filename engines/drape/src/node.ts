@@ -14,3 +14,6 @@ export type {
   DrapeResultCore,
   DrapeSuccess,
 } from './drape/drape-garment.js';
+export { buildGlb, pieceName } from './output/gltf.js';
+export { canonicalJson, cacheKeyOf, modelKeyOf, sha256Hex } from './output/cache-key.js';
+export { FAILURE_TYPES, completedEvent, failedEvent } from './output/events.js';

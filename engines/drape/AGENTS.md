@@ -2,7 +2,7 @@
 
 Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU, sans dépendances).
 Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État : socle du paquet, simulation (1.19b), maillage (1.19d),
-placements et drapé complet (1.19e) ; glTF et NATS en cours (1.19f).
+placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; NATS et S3 en cours (1.19f2).
 
 ## Entrées et API
 
@@ -11,6 +11,7 @@ placements et drapé complet (1.19e) ; glTF et NATS en cours (1.19f).
   vérifie.
 - `src/node.ts` : réservée à Node (`loadAvatarEngine`, `buildAvatar`, `placeGarment`, `drapeGarment`,
   `PlacementError`) ; serveur et tests de drapé seuls l'importent.
+- `src/output/` (Node seulement, via `src/node.ts`) : `buildGlb` (GLB déterministe, mètres ici seulement), `cacheKeyOf` et `modelKeyOf` (SHA-256 du JSON canonique), `completedEvent` et `failedEvent` (contenu exact de `drape.completed` et `drape.failed`). Sans E/S ; détail dans la page du composant.
 - `src/server.ts` + `src/main.ts` : serveur HTTP (`GET /health`), port `PORT` ou 8000.
 
 ## Architecture des dossiers
