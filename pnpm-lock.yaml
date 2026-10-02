@@ -62,6 +62,9 @@ importers:
       '@atelier/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@atelier/drape':
+        specifier: workspace:*
+        version: link:../../engines/drape
       '@atelier/features':
         specifier: workspace:*
         version: link:../../packages/features
@@ -116,6 +119,10 @@ importers:
         version: 8.3.1(@types/node@22.20.4)(yaml@2.9.1)
 
   engines/drape:
+    dependencies:
+      '@atelier/contracts-ts':
+        specifier: workspace:*
+        version: link:../../packages/contracts-ts
     devDependencies:
       '@types/node':
         specifier: ^22.20.4
@@ -147,6 +154,9 @@ importers:
       '@atelier/contracts-ts':
         specifier: workspace:*
         version: link:../contracts-ts
+      '@atelier/drape':
+        specifier: workspace:*
+        version: link:../../engines/drape
       '@atelier/kernel':
         specifier: workspace:*
         version: link:../kernel

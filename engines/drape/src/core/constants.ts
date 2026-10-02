@@ -16,3 +16,5 @@ export const SEWING_FINAL_RATIO = 0.02;
 export const SEWING_SOFTNESS_START = 300;
 /** Amortissement visqueux d'un tissu retenu (sommets fixes ou en contact), 1/s. */
 export const ANCHORED_DAMPING_PER_S = 4;
+/** Maximum d'itérations de contraintes par sous-pas (`SimulationSettings.iterations`). */
+export const MAX_ITERATIONS = 32;

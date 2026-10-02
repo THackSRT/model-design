@@ -190,6 +190,19 @@ export const NO_BODY: BodyMesh = {
   triangles: new Uint32Array(0),
 };
 
+/**
+ * Temps de calcul (CPU) de `fn`, en s. Les tests de performance mesurent le temps CPU du processus et non
+ * l'horloge murale : sous charge (lint, build et autres fichiers de test en parallèle) l'horloge compte l'attente
+ * du processeur, ce qui a fait échouer un seuil de 10 s sans changement de code. Vitest isole chaque fichier de test
+ * dans son propre processus (pool `forks`), donc seul son propre calcul est compté.
+ */
+export function cpuSeconds(fn: () => void): number {
+  const before = process.cpuUsage();
+  fn();
+  const used = process.cpuUsage(before);
+  return (used.user + used.system) / 1e6;
+}
+
 export function sameBits(a: Float64Array, b: Float64Array): boolean {
   return Buffer.from(a.buffer).equals(Buffer.from(b.buffer));
 }

@@ -5,7 +5,7 @@ const root = (await import(new URL('../../eslint.config.mjs', import.meta.url).h
 export default [
   ...root,
   {
-    files: ['src/core/**/*.ts'],
+    files: ['src/core/**/*.ts', 'src/bench/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -13,7 +13,8 @@ export default [
           patterns: [
             {
               group: ['node:*', '**/adapters/**', '**/output/**', '**/body/**'],
-              message: 'src/core est pur : ni Node, ni adaptateurs, ni sorties, ni avatar.',
+              message:
+                'src/core et src/bench sont purs : ni Node, ni adaptateurs, ni sorties, ni avatar.',
             },
           ],
         },

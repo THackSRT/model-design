@@ -5,7 +5,14 @@ import {
   maxPenetration,
   type CollisionScratch,
 } from './collision.js';
-import { solveBending, solveStitches, solveStretch } from './constraints.js';
+import {
+  createLambdas,
+  resetLambdas,
+  solveBending,
+  solveStitches,
+  solveStretch,
+  type Lambdas,
+} from './constraints.js';
 import {
   CAPTURE_RANGE_MM,
   ANCHORED_DAMPING_PER_S,
@@ -20,6 +27,7 @@ import {
 import { dampNonRigid } from './damping.js';
 import { toXpbdParams } from './fabric.js';
 import { buildClothModel, type ClothModel } from './topology.js';
+import { validateBody, validateCloth, validateSettings } from './validate.js';
 import type {
   BodyMesh,
   ClothMesh,
@@ -34,6 +42,7 @@ const u = (a: Uint32Array, i: number): number => a[i] as number;
 
 interface Context {
   model: ClothModel;
+  lambdas: Lambdas;
   grid: BodyGrid | null;
   scratch: CollisionScratch;
   x: Float64Array;
@@ -44,19 +53,6 @@ interface Context {
   anchored: boolean;
   offsetMm: number;
   friction: number;
-}
-
-function validate(cloth: ClothMesh, settings: SimulationSettings): void {
-  const n = cloth.flatMm.length / 2;
-  if (!Number.isInteger(n) || cloth.positionsMm.length !== 3 * n) {
-    throw new RangeError('cloth.positionsMm must hold 3 values per vertex and flatMm 2');
-  }
-  if (cloth.grainUnit.length !== (2 * cloth.triangles.length) / 3) {
-    throw new RangeError('cloth.grainUnit must hold 2 values per triangle');
-  }
-  if (!(settings.stepS > 0) || settings.substeps < 1 || settings.maxSteps < 0) {
-    throw new RangeError('invalid simulation settings');
-  }
 }
 
 /** Intégration explicite : gravité, puis positions prédites (sommets fixes immobiles). */
@@ -97,10 +93,12 @@ function dampWorld(c: Context, factor: number): void {
 function substep(c: Context, gravityScale: number, stitchCompliance: number): number {
   const invDt2 = 1 / (c.dtS * c.dtS);
   predict(c, gravityScale);
+  resetLambdas(c.lambdas);
+  const soft = { compliance: stitchCompliance, invDt2 };
   for (let it = 0; it < c.iterations; it++) {
-    solveStretch(c.model, c.x, invDt2);
-    solveBending(c.model, c.x, invDt2);
-    solveStitches(c.model, c.x, stitchCompliance, invDt2); // en dernier : la couture se ferme
+    solveStretch(c.model, c.x, invDt2, c.lambdas.stretch);
+    solveBending(c.model, c.x, invDt2, c.lambdas.bending);
+    solveStitches(c.model, c.x, soft, c.lambdas.stitches); // en dernier : la couture se ferme
   }
   let touching = false;
   if (c.grid) {
@@ -151,8 +149,10 @@ function createContext(
   const params = toXpbdParams(fabric);
   const offsetMm = params.thicknessMm + CONTACT_MARGIN_MM;
   const hasBody = body.triangles.length >= 3;
+  const model = buildClothModel(cloth, params);
   return {
-    model: buildClothModel(cloth, params),
+    model,
+    lambdas: createLambdas(model),
     grid: hasBody ? buildBodyGrid(body, offsetMm + CAPTURE_RANGE_MM) : null,
     scratch: createCollisionScratch(cloth.positionsMm.length / 3),
     x: Float64Array.from(cloth.positionsMm),
@@ -188,7 +188,9 @@ export function simulate(
   fabric: FabricPhysics,
   settings: SimulationSettings,
 ): SimulationResult {
-  validate(cloth, settings);
+  validateCloth(cloth);
+  validateBody(body);
+  validateSettings(settings);
   const c = createContext(cloth, body, fabric, settings);
   let steps = 0;
   let calm = 0;

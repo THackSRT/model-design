@@ -1,3 +1,4 @@
+import type { Fabric } from '@atelier/contracts-ts';
 import type { FabricPhysics } from './types.js';
 
 /**
@@ -64,6 +65,59 @@ export const FABRIC_PRESETS = {
 } as const satisfies Record<string, FabricPhysics>;
 
 export type FabricPresetName = keyof typeof FABRIC_PRESETS;
+
+/** Statut d'un préréglage : estimé, ou validé par un modéliste (rapport de validation, ADR 0015). */
+export type FabricPresetStatus = 'estimated' | 'validated';
+
+/** Statut de chaque préréglage. Aucun rapport de validation réel n'existe encore : tous sont estimés. */
+export const FABRIC_PRESET_STATUS: Readonly<Record<FabricPresetName, FabricPresetStatus>> = {
+  'cotton-poplin': 'estimated',
+  'cotton-wax': 'estimated',
+  bazin: 'estimated',
+  linen: 'estimated',
+  denim: 'estimated',
+  'silk-satin': 'estimated',
+  jersey: 'estimated',
+};
+
+const PHYSICS_KEYS = [
+  'weightGPerM2',
+  'thicknessMm',
+  'stretchWarpPercent',
+  'stretchWeftPercent',
+  'bendingRigidityMicroNm',
+  'frictionCoefficient',
+] as const satisfies readonly (keyof FabricPhysics)[];
+
+/** Tissu du contrat → propriétés physiques : valeurs du préréglage, chaque surcharge présente l'emporte. */
+export function resolveFabric(fabric: Fabric): FabricPhysics {
+  const base = FABRIC_PRESETS[fabric.preset];
+  return {
+    weightGPerM2: fabric.weightGPerM2 ?? base.weightGPerM2,
+    thicknessMm: fabric.thicknessMm ?? base.thicknessMm,
+    stretchWarpPercent: fabric.stretchWarpPercent ?? base.stretchWarpPercent,
+    stretchWeftPercent: fabric.stretchWeftPercent ?? base.stretchWeftPercent,
+    bendingRigidityMicroNm: fabric.bendingRigidityMicroNm ?? base.bendingRigidityMicroNm,
+    frictionCoefficient: fabric.frictionCoefficient ?? base.frictionCoefficient,
+  };
+}
+
+/** Variante paramétrée par la table des statuts (pour les tests : la constante exportée ne change pas). */
+export function isFabricEstimatedWith(
+  fabric: Fabric,
+  statuses: Readonly<Record<FabricPresetName, FabricPresetStatus>>,
+): boolean {
+  if (statuses[fabric.preset] === 'validated') return false;
+  return PHYSICS_KEYS.some((key) => fabric[key] === undefined);
+}
+
+/**
+ * Vrai si le résultat repose sur une estimation (`DrapeResult.fabricEstimated`) : préréglage estimé dont au moins
+ * une propriété n'est pas surchargée. Faux pour un préréglage validé, ou si les six propriétés sont surchargées.
+ */
+export function isFabricEstimated(fabric: Fabric): boolean {
+  return isFabricEstimatedWith(fabric, FABRIC_PRESET_STATUS);
+}
 
 /** Paramètres de la simulation, en g, mm, s. */
 export interface XpbdParams {
