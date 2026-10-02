@@ -61,6 +61,7 @@ const actions = (): PatternStudioActions => ({
   setShowGarment: vi.fn(),
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
+  applyForm: vi.fn(),
 });
 
 const base: PatternStudioState = {
@@ -71,6 +72,8 @@ const base: PatternStudioState = {
   display: '3d',
   dressing: { status: 'idle' },
   showGarment: true,
+  dirty: false,
+  runs: 0,
 };
 const layout = {
   viewBox: '0 0 100 100',

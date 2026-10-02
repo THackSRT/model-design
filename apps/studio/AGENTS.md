@@ -24,6 +24,11 @@ Rôle : deux onglets (`app-tabs.tsx`). **Patron** : mesures, choix du vêtement 
   comme la vue 3D. Les textes du banc (`i18n/fr-bench.ts`) ne sont pas dans l'entrée : `i18n/bench.ts` les ajoute
   au catalogue (`registerMessages`) à l'import de l'écran ; `t()` lève une erreur sur une clé absente plutôt que d'afficher
   la clé. Seules les clés `tabs.*` et `fabricBench.loading` restent dans `fr.ts`.
+- Historique (`history-panel.tsx`, `comparison-view.tsx`, `history-format.ts` pure) : panneau repliable (`details`) de
+  l'onglet Patron, visible dès qu'un modèle a été calculé dans la session (`useStudioHistory` de features garde le dernier modèle
+  quand un patron est effacé). `screen.tsx` branche `useStudioHistory` ; « Reprendre » lit la version puis demande confirmation (prop
+  `confirm`, `window.confirm` par défaut) si `state.dirty`, puis `resume(n, form)` et `applyForm` ; refus = rien ne
+  change. Longueurs en cm, aires en cm² (ICU `scale/`), jamais de mesures dans la liste. Clés `history.*` dans `fr.ts`.
 - Banc d'essai (`screens/fabric-bench/`) : `screen.tsx` branche `useFabricBench` (export par `browserFileSaver`, essai de Cusick par `getCusickRunner`) ; `view.tsx` assemble
   `preset-list`, `measurements-panel` (champs, bornes et conseils pilotés par `BENCH_TESTS`, jamais recopiés),
   `comparison-panel` (colonne « Tolérance » lue dans `BENCH_TOLERANCES`, `toleranceLabel`), `drape-panel` (affiché si `drapeTestAvailable`), `review-panel` et `report-bar`. Erreurs de saisie, d'import et avis sont traduits par

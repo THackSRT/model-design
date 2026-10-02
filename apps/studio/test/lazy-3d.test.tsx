@@ -58,6 +58,7 @@ const actions: PatternStudioActions = {
   setShowGarment: vi.fn(),
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
+  applyForm: vi.fn(),
 };
 const state: PatternStudioState = {
   form: initialForm,
@@ -68,6 +69,8 @@ const state: PatternStudioState = {
   display: '3d',
   dressing: { status: 'idle' },
   showGarment: true,
+  dirty: false,
+  runs: 0,
 };
 
 describe('chargement différé de la vue 3D', () => {

@@ -94,8 +94,8 @@ export function garmentName(type: string): string {
   return hasMessage(key) ? t(key as CoreMessageKey) : type;
 }
 
-/** Libellé d'un paramètre d'un type de vêtement ; repli sur le nom du paramètre. */
+/** Libellé d'un paramètre d'un type de vêtement ; un paramètre inconnu du catalogue reçoit un libellé générique, jamais son nom brut. */
 export function paramLabel(type: string, param: string): string {
   const key = `param.${type}.${param}`;
-  return hasMessage(key) ? t(key as CoreMessageKey) : param;
+  return t(hasMessage(key) ? (key as CoreMessageKey) : 'param.other');
 }
