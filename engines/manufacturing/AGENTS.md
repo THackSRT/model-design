@@ -46,5 +46,7 @@ laize. Temps visé : 1 à 30 s (imbrication en tâche).
 - Tests : `tests/` (`unit/`, `property/` avec Hypothesis, `api/`, `golden/`). Fixture d'entrée :
   `tests/fixtures/straight-skirt-spec.json` (jupe droite du moteur de patronage) ; référence golden :
   `tests/golden/straight-skirt-cut-pattern.json` (à valider par le modéliste ; `UPDATE_GOLDEN=1` seulement avec son accord).
+- Références golden : lues et écrites en octets (`tests/golden_files.py`, `write_text_lf`), jamais en mode texte (CRLF
+  sous Windows) ; JSON et SVG en LF, DXF en CRLF, PDF binaire (`.gitattributes`).
 - Commandes : `pnpm nx run manufacturing:test`, `…:lint`, `…:typecheck`, `…:dev`.
 - Modèle à suivre : `engines/patterning`.

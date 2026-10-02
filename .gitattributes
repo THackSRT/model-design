@@ -4,3 +4,6 @@
 # Exports de fabrication : octets exacts (le DXF exige CRLF, le PDF des décalages xref exacts).
 *.dxf binary
 *.pdf binary
+# Références golden de fabrication : JSON et SVG en LF, jamais convertis à l'extraction.
+engines/manufacturing/tests/golden/*.json text eol=lf
+engines/manufacturing/tests/golden/*.svg text eol=lf
