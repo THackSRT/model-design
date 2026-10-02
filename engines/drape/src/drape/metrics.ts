@@ -1,5 +1,6 @@
 import { buildBodyGrid } from '../core/body-grid.js';
 import { NEAREST_SIZE, WORK_SIZE, nearestOnBody } from '../core/body-query.js';
+import { createInsideTest, distanceToSurface, isInsideBody } from '../core/inside.js';
 import type { BodyMesh, ClothMesh } from '../core/types.js';
 
 // Indicateurs du vêtement drapé : aisance (distance au corps moins l'épaisseur du tissu) et allongement par sommet.
@@ -21,9 +22,9 @@ function farDistance(body: BodyMesh, p: Float64Array): number {
 }
 
 /**
- * Aisance de chaque sommet, mm : distance signée au corps (négative dedans) moins `thicknessMm`. Au-delà de 60 mm
- * de la surface, la distance est celle du sommet du corps le plus proche (borne haute, à une demi-arête près, 4 mm)
- * et le sommet est supposé dehors.
+ * Aisance de chaque sommet, mm : distance signée au corps moins `thicknessMm`. Le signe vient du test de parité
+ * (négatif dedans, sans limite de portée). Distance : exacte à moins de 60 mm de la surface ; au-delà, dehors, celle
+ * du sommet du corps le plus proche (borne haute, à une demi-arête près, 4 mm) ; au-delà, dedans, celle de la surface.
  */
 export function vertexEase(
   positionsMm: Float64Array,
@@ -31,16 +32,18 @@ export function vertexEase(
   thicknessMm: number,
 ): Float32Array {
   const grid = buildBodyGrid(body, EASE_RANGE_MM);
+  const inside = createInsideTest(body);
   const work = new Float64Array(WORK_SIZE);
   const out = new Float64Array(NEAREST_SIZE);
   const p = new Float64Array(3);
   const ease = new Float32Array(positionsMm.length / 3);
   for (let v = 0; v < ease.length; v++) {
     for (let k = 0; k < 3; k++) p[k] = positionsMm[3 * v + k] as number;
-    const signed = nearestOnBody(grid, p, -1, { work, out })
-      ? (out[7] as number)
-      : farDistance(body, p);
-    ease[v] = signed - thicknessMm;
+    const within = isInsideBody(inside, p[0] as number, p[1] as number, p[2] as number);
+    let dist: number;
+    if (nearestOnBody(grid, p, -1, { work, out })) dist = out[0] as number;
+    else dist = within ? distanceToSurface(grid, p, work) : farDistance(body, p);
+    ease[v] = (within ? -dist : dist) - thicknessMm;
   }
   return ease;
 }

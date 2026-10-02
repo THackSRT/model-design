@@ -9,6 +9,7 @@ import {
   createLambdas,
   resetLambdas,
   solveBending,
+  solveHolds,
   solveStitches,
   solveStretch,
   type Lambdas,
@@ -25,6 +26,7 @@ import {
   SEWING_SOFTNESS_START,
 } from './constants.js';
 import { dampNonRigid } from './damping.js';
+import { createInsideTest, type InsideTest } from './inside.js';
 import { toXpbdParams } from './fabric.js';
 import { buildClothModel, type ClothModel } from './topology.js';
 import { validateBody, validateCloth, validateSettings } from './validate.js';
@@ -32,6 +34,7 @@ import type {
   BodyMesh,
   ClothMesh,
   FabricPhysics,
+  Holds,
   SimulationResult,
   SimulationSettings,
 } from './types.js';
@@ -44,6 +47,10 @@ interface Context {
   model: ClothModel;
   lambdas: Lambdas;
   grid: BodyGrid | null;
+  inside: InsideTest | null;
+  /** Tenues (modèle réduit pour `solveHolds`), ou null. */
+  holdModel: { invMass: Float64Array; holds: Holds } | null;
+  holdReleaseSteps: number;
   scratch: CollisionScratch;
   x: Float64Array;
   v: Float64Array;
@@ -90,15 +97,24 @@ function dampWorld(c: Context, factor: number): void {
   }
 }
 
-function substep(c: Context, gravityScale: number, stitchCompliance: number): number {
+/** Souplesses du sous-pas : coutures, et tenues (null : tenues absentes). */
+interface Softness {
+  stitch: number;
+  hold: number | null;
+}
+
+function substep(c: Context, gravityScale: number, softness: Softness): number {
   const invDt2 = 1 / (c.dtS * c.dtS);
   predict(c, gravityScale);
   resetLambdas(c.lambdas);
-  const soft = { compliance: stitchCompliance, invDt2 };
+  const soft = { compliance: softness.stitch, invDt2 };
+  const holdSoft = { compliance: softness.hold ?? 0, invDt2 };
   for (let it = 0; it < c.iterations; it++) {
     solveStretch(c.model, c.x, invDt2, c.lambdas.stretch);
     solveBending(c.model, c.x, invDt2, c.lambdas.bending);
-    solveStitches(c.model, c.x, soft, c.lambdas.stitches); // en dernier : la couture se ferme
+    solveStitches(c.model, c.x, soft, c.lambdas.stitches); // la couture se ferme
+    if (c.holdModel && softness.hold !== null)
+      solveHolds(c.holdModel, c.x, holdSoft, c.lambdas.holds);
   }
   let touching = false;
   if (c.grid) {
@@ -140,6 +156,17 @@ function maxStitchGap(model: ClothModel, x: Float64Array): number {
   return gap;
 }
 
+/** Tenues du vêtement (aucune si la liste est vide : alors rien ne change, pas même l'arrêt au repos). */
+function holdState(
+  cloth: ClothMesh,
+  settings: SimulationSettings,
+  invMass: Float64Array,
+): Pick<Context, 'holdModel' | 'holdReleaseSteps'> {
+  const holds = cloth.holds;
+  if (!holds || holds.vertices.length === 0) return { holdModel: null, holdReleaseSteps: 0 };
+  return { holdModel: { invMass, holds }, holdReleaseSteps: settings.holdReleaseSteps ?? 0 };
+}
+
 function createContext(
   cloth: ClothMesh,
   body: BodyMesh,
@@ -150,10 +177,13 @@ function createContext(
   const offsetMm = params.thicknessMm + CONTACT_MARGIN_MM;
   const hasBody = body.triangles.length >= 3;
   const model = buildClothModel(cloth, params);
+  const held = holdState(cloth, settings, model.invMass);
   return {
     model,
-    lambdas: createLambdas(model),
+    lambdas: createLambdas(model, held.holdModel?.holds),
     grid: hasBody ? buildBodyGrid(body, offsetMm + CAPTURE_RANGE_MM) : null,
+    inside: hasBody ? createInsideTest(body) : null,
+    ...held,
     scratch: createCollisionScratch(cloth.positionsMm.length / 3),
     x: Float64Array.from(cloth.positionsMm),
     v: new Float64Array(cloth.positionsMm.length),
@@ -166,13 +196,30 @@ function createContext(
   };
 }
 
+/**
+ * Souplesse d'une tenue : celle d'une couture finie pendant la couture, puis divisée par r (r de 1 à 0 en
+ * `holdReleaseSteps` pas) ; null une fois relâchée (ou sans tenues).
+ */
+function holdCompliance(c: Context, position: number, sewingSteps: number): number | null {
+  if (!c.holdModel) return null;
+  const base = c.model.meanEdgeCompliance * SEWING_FINAL_RATIO;
+  if (position < sewingSteps) return base;
+  const r = 1 - (position - sewingSteps) / c.holdReleaseSteps;
+  return c.holdReleaseSteps > 0 && r > 0 ? base / r : null;
+}
+
 /** Un pas (plusieurs sous-pas) ; rend la vitesse maximale du dernier sous-pas. */
 function runStep(c: Context, step: number, settings: SimulationSettings): number {
   const sewing = step < settings.sewingSteps;
   let speed = 0;
   for (let s = 0; s < settings.substeps; s++) {
-    const progress = sewing ? (step + s / settings.substeps) / settings.sewingSteps : 1;
-    speed = substep(c, sewing ? SEWING_GRAVITY_SCALE : 1, stitchCompliance(c.model, progress));
+    const position = step + s / settings.substeps;
+    const progress = sewing ? position / settings.sewingSteps : 1;
+    const softness = {
+      stitch: stitchCompliance(c.model, progress),
+      hold: holdCompliance(c, position, settings.sewingSteps),
+    };
+    speed = substep(c, sewing ? SEWING_GRAVITY_SCALE : 1, softness);
   }
   return speed;
 }
@@ -194,9 +241,10 @@ export function simulate(
   const c = createContext(cloth, body, fabric, settings);
   let steps = 0;
   let calm = 0;
+  const settleFrom = settings.sewingSteps + c.holdReleaseSteps;
   while (steps < settings.maxSteps && calm < REST_STEPS) {
     const speed = runStep(c, steps, settings);
-    calm = steps >= settings.sewingSteps && speed < settings.restSpeedMmPerS ? calm + 1 : 0;
+    calm = steps >= settleFrom && speed < settings.restSpeedMmPerS ? calm + 1 : 0;
     steps++;
   }
   return {
@@ -204,6 +252,6 @@ export function simulate(
     steps,
     converged: calm >= REST_STEPS,
     maxStitchGapMm: maxStitchGap(c.model, c.x),
-    maxPenetrationMm: c.grid ? maxPenetration(c.grid, c.x, c.scratch) : 0,
+    maxPenetrationMm: c.grid && c.inside ? maxPenetration(c.grid, c.x, c.scratch, c.inside) : 0,
   };
 }

@@ -50,6 +50,7 @@ export type {
   BodyMesh,
   ClothMesh,
   FabricPhysics,
+  Holds,
   SimulationResult,
   SimulationSettings,
 } from './core/types.js';

@@ -61,6 +61,9 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
   dégénérescence. `DrapeTooLargeError` pour maillage. `RangeError` du cœur pour calcul.
 - **Limites** : `MAX_EDGES_PER_GARMENT` 2 000, `MAX_VERTICES_PER_GARMENT` 30 000, `MAX_PANELS_PER_GARMENT` 40,
   `MAX_SEAMS_PER_GARMENT` 200, `MAX_COORDINATE_MM` 10 000, `MAX_LATTICE_WORK` 5e7.
+- **Pénétration** (0.6.0) : mesurée par parité (`core/inside.ts`, rayon de direction fixe, grille 2D), sans limite de
+  portée ; `vertexEase` en tire son signe. **Tenues** : `ClothMesh.holds?` (sommet, axe unitaire, cible) et
+  `SimulationSettings.holdReleaseSteps?` (0 à 1 000) ; actives pendant la couture, relâchées ensuite ; sans elles, rien ne change.
 - **Simulation** : petits pas (1/60 s), 10 sous-pas par défaut, jusqu'à 300–600 pas (borne dure 1 000), arrêt au repos
   (vitesse max sous seuil pendant 10 pas). Réglages par qualité dans `DRAPE_SETTINGS`.
 - **Tests de performance** : budgets relatifs (`costRatio` dans `test/helpers.ts`). Référence fixe ~0,55 s, mesurée

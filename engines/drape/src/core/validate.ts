@@ -1,5 +1,10 @@
 import { MAX_ITERATIONS } from './constants.js';
-import type { BodyMesh, ClothMesh, SimulationSettings } from './types.js';
+import type { BodyMesh, ClothMesh, Holds, SimulationSettings } from './types.js';
+
+/** Écart toléré à 1 de la norme d'un axe de tenue. */
+export const HOLD_AXIS_TOLERANCE = 1e-6;
+/** Maximum de pas de relâchement des tenues. */
+export const MAX_HOLD_RELEASE_STEPS = 1000;
 
 /** Maillage ou réglage invalide : rien n'est simulé. `code` permet de distinguer la cause. */
 export class InvalidInputError extends RangeError {
@@ -54,6 +59,28 @@ export function validateCloth(cloth: ClothMesh): void {
   }
   checkIndices('cloth.stitches', cloth.stitches, 2, n);
   checkIndices('cloth.pinned', cloth.pinned ?? [], 1, n);
+  if (cloth.holds) validateHolds(cloth.holds, n);
+}
+
+function validateHolds(holds: Holds, vertexCount: number): void {
+  const count = holds.vertices.length;
+  checkIndices('cloth.holds.vertices', holds.vertices, 1, vertexCount);
+  if (holds.axes.length !== 3 * count || holds.targetsMm.length !== count) {
+    throw new InvalidInputError(
+      'mesh',
+      'cloth.holds must hold 3 axis values and 1 target per hold',
+    );
+  }
+  for (let h = 0; h < count; h++) {
+    const [a, b, c] = [holds.axes[3 * h], holds.axes[3 * h + 1], holds.axes[3 * h + 2]] as number[];
+    const norm = Math.sqrt((a as number) ** 2 + (b as number) ** 2 + (c as number) ** 2);
+    if (!(Math.abs(norm - 1) <= HOLD_AXIS_TOLERANCE)) {
+      throw new InvalidInputError('mesh', `cloth.holds: axis ${h} is not a unit vector`);
+    }
+    if (!Number.isFinite(holds.targetsMm[h])) {
+      throw new InvalidInputError('mesh', `cloth.holds: target ${h} is not finite`);
+    }
+  }
 }
 
 export function validateBody(body: BodyMesh): void {
@@ -68,11 +95,12 @@ export function validateSettings(settings: SimulationSettings): void {
   if (!(settings.stepS > 0) || !(settings.substeps >= 1) || !(settings.maxSteps >= 0)) {
     throw new InvalidInputError('settings', 'invalid simulation settings');
   }
-  const it = settings.iterations;
-  if (it !== undefined && !(Number.isInteger(it) && it >= 1 && it <= MAX_ITERATIONS)) {
-    throw new InvalidInputError(
-      'settings',
-      `iterations must be an integer between 1 and ${MAX_ITERATIONS}`,
-    );
+  checkCount('iterations', settings.iterations, 1, MAX_ITERATIONS);
+  checkCount('holdReleaseSteps', settings.holdReleaseSteps, 0, MAX_HOLD_RELEASE_STEPS);
+}
+
+function checkCount(name: string, value: number | undefined, min: number, max: number): void {
+  if (value !== undefined && !(Number.isInteger(value) && value >= min && value <= max)) {
+    throw new InvalidInputError('settings', `${name} must be an integer between ${min} and ${max}`);
   }
 }

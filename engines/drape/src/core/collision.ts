@@ -1,5 +1,6 @@
 import type { BodyGrid } from './body-grid.js';
 import { nearestOnBody, NEAREST_SIZE, WORK_SIZE } from './body-query.js';
+import { distanceToSurface, isInsideBody, type InsideTest } from './inside.js';
 
 // Lecture sans vérification d'indice : les tableaux typés sont dimensionnés par construction.
 const f = (a: Float64Array, i: number): number => a[i] as number;
@@ -139,14 +140,28 @@ export function collideCloth(
   return deepest;
 }
 
-/** Profondeur de pénétration maximale sous la surface réelle du corps (0 si aucun sommet dedans), mm. */
-export function maxPenetration(grid: BodyGrid, x: Float64Array, scratch: CollisionScratch): number {
+/**
+ * Profondeur de pénétration maximale sous la surface réelle du corps (0 si aucun sommet dedans), mm. Un sommet est
+ * dedans par le test de parité (`inside`), sans limite de portée ; sa profondeur est sa distance à la surface.
+ */
+export function maxPenetration(
+  grid: BodyGrid,
+  x: Float64Array,
+  scratch: CollisionScratch,
+  inside: InsideTest,
+): number {
   let deepest = 0;
   for (let v = 0; v < x.length / 3; v++) {
     for (let k = 0; k < 3; k++) scratch.point[k] = f(x, 3 * v + k);
-    if (nearestOnBody(grid, scratch.point, -1, { work: scratch.work, out: scratch.nearest })) {
-      deepest = Math.max(deepest, -f(scratch.nearest, 7));
-    }
+    if (!isInsideBody(inside, f(x, 3 * v), f(x, 3 * v + 1), f(x, 3 * v + 2))) continue;
+    const found = nearestOnBody(grid, scratch.point, -1, {
+      work: scratch.work,
+      out: scratch.nearest,
+    });
+    deepest = Math.max(
+      deepest,
+      found ? f(scratch.nearest, 0) : distanceToSurface(grid, scratch.point, scratch.work),
+    );
   }
   return deepest;
 }

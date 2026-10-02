@@ -13,6 +13,17 @@ export interface ClothMesh {
   stitches: Uint32Array;
   /** Sommets immobiles. */
   pinned?: Uint32Array;
+  /** Tenues : sommets tenus sur un axe pendant la couture, puis relâchés (`SimulationSettings.holdReleaseSteps`). */
+  holds?: Holds;
+}
+
+/** Tenues de sommets : contrainte `axe · x = cible` (un axe unitaire par tenue). */
+export interface Holds {
+  vertices: Uint32Array;
+  /** 3 valeurs par tenue, vecteur unitaire. */
+  axes: Float64Array;
+  /** Position visée le long de l'axe, mm. */
+  targetsMm: Float64Array;
 }
 
 export interface BodyMesh {
@@ -45,6 +56,8 @@ export interface SimulationSettings {
   iterations?: number;
   /** Sous cette vitesse maximale pendant 10 pas, la simulation s'arrête. */
   restSpeedMmPerS: number;
+  /** Pas de relâchement des tenues après la couture (entier de 0 à 1 000, 0 par défaut : relâchées d'un coup). */
+  holdReleaseSteps?: number;
 }
 
 export interface SimulationResult {

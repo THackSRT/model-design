@@ -20,7 +20,7 @@
 `src/body/` (fait, 1.19e : avatar par `@atelier/mannequin`, cm → mm ici seulement) ; à venir : `src/output/` (glTF,
 mètres ici seulement), `src/adapters/` (NATS, stockage).
 
-- `types.ts` : `ClothMesh`, `BodyMesh`, `FabricPhysics`, `SimulationSettings`, `SimulationResult` (interface partagée
+- `types.ts` : `Holds`, `ClothMesh`, `BodyMesh`, `FabricPhysics`, `SimulationSettings`, `SimulationResult` (interface partagée
   avec 1.19d : ne pas la changer sans le signaler ; `iterations?` est un ajout facultatif : entier de 1 à
   `MAX_ITERATIONS` = 32, 1 par défaut) ;
 - `validate.ts` : validation des entrées avant toute simulation ; `InvalidInputError` (sous-classe de `RangeError`, `code`
@@ -36,6 +36,19 @@ mètres ici seulement), `src/adapters/` (NATS, stockage).
 - `constraints.ts` : passes de Gauss-Seidel (étirement, flexion, coutures) avec multiplicateurs de Lagrange λ remis à zéro
   à chaque sous-pas et cumulés sur ses itérations (XPBD, terme `α̃·λ`) ; `simulate.ts` : boucle (petits pas, phase de
   couture à gravité réduite, arrêt au repos : vitesse max sous le seuil pendant 10 pas) ;
+- `inside.ts` (0.6.0, ADR 0013 « Maintien des vêtements ») : `createInsideTest(body)` et `isInsideBody(test, x, y, z)`,
+  parité du nombre de croisements d'un rayon de direction fixe (1 sur Y, pentes 0,0137 en x et 0,0091 en z : ni arêtes ni
+  sommets alignés avec les axes) ; les triangles sont cisaillés le long du rayon sur un plan 2D, rangés dans une grille
+  régulière (tri par comptage, au plus 512 cases par axe) ; seulement `+ − × ÷` ; `distanceToSurface(grid, p, work)` :
+  distance exacte à la surface sans limite de portée (triangles dégénérés ignorés). `maxPenetration` (collision.ts) et
+  `vertexEase` (drape/metrics.ts) s'en servent : un sommet dedans a une pénétration égale à sa distance à la surface,
+  quelle que soit sa profondeur (avant : aveugle au-delà de 10 mm, signe tiré de la normale de la face la plus proche) ;
+- tenues (0.6.0) : `ClothMesh.holds?: { vertices, axes (3 par tenue, unitaires à 1e-6), targetsMm }` et
+  `SimulationSettings.holdReleaseSteps?` (entier de 0 à 1 000). `solveHolds` (constraints.ts) : `C = a·x − t`,
+  `Δλ = (−C − α̃λ)/(w + α̃)`, `Lambdas.holds` remis à zéro par sous-pas, résolu après les coutures. Souplesse :
+  `SEWING_FINAL_RATIO` × souplesse moyenne d'une arête pendant la couture, divisée par r (r de 1 à 0 en
+  `holdReleaseSteps` pas après la couture), puis tenues absentes ; l'arrêt au repos ne compte qu'après le relâchement. Sans
+  tenues (ou liste vide) : mêmes bits qu'avant. Entrées invalides : `InvalidInputError` ;
 - `body-grid.ts`, `body-query.ts`, `triangle-distance.ts`, `collision.ts` : collision sommet-triangle contre un corps
   fermé (normales vers l'extérieur par l'ordre des sommets), grille de hachage spatiale, frottement de Coulomb
   positionnel ; `damping.ts` : amortissement des modes non rigides.
@@ -221,7 +234,7 @@ mesuré : environ 10 % pour un rapport 1,25 entre les deux sens, 25 % pour un ra
 la capture des collisions est limitée à 8 mm au-delà de la distance de contact (pas de traversée tant que la vitesse reste
 sous environ 4 m/s).
 
-Tests (`test/`, Vitest) : déterminisme, chute libre, bande suspendue (étirement), porte-à-faux (flexion, solution exacte de
+Tests (`test/`, Vitest) : parité et pénétration sur sphère, creux et avatar (`inside.test.ts`, budget relatif 0,2, mesuré 0 à 0,03), tenues (`holds.test.ts`), déterminisme, chute libre, bande suspendue (étirement), porte-à-faux (flexion, solution exacte de
 l'élastique pesant dans `elastica.ts`), sphère, plan incliné, coutures, performance (70 × 70 sommets en moins de 10 s),
 conversions, `/health`, maillage de pièce (`avatar.test.ts`, `not-loaded.test.ts`, `placement.test.ts`, `drape-skirt.test.ts`
 : avatar, mise en place, drapé de la jupe droite, cohérence avec 1.34a ; `mesh-*.test.ts` : rectangle, pièces en L et à pince,

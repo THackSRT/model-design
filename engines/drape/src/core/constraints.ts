@@ -1,4 +1,5 @@
 import type { ClothModel } from './topology.js';
+import type { Holds } from './types.js';
 
 // Lecture sans vérification d'indice : les tableaux typés sont dimensionnés par construction.
 const f = (a: Float64Array, i: number): number => a[i] as number;
@@ -14,13 +15,16 @@ export interface Lambdas {
   bending: Float64Array;
   /** 3 composantes par couture. */
   stitches: Float64Array;
+  /** 1 par tenue. */
+  holds: Float64Array;
 }
 
-export function createLambdas(model: ClothModel): Lambdas {
+export function createLambdas(model: ClothModel, holds?: Holds): Lambdas {
   return {
     stretch: new Float64Array(model.edgeRestMm.length),
     bending: new Float64Array(3 * model.bendCompliance.length),
     stitches: new Float64Array(3 * (model.stitches.length / 2)),
+    holds: new Float64Array(holds ? holds.vertices.length : 0),
   };
 }
 
@@ -28,6 +32,7 @@ export function resetLambdas(l: Lambdas): void {
   l.stretch.fill(0);
   l.bending.fill(0);
   l.stitches.fill(0);
+  l.holds.fill(0);
 }
 
 /** Étirement : contrainte de distance par arête, une passe de Gauss-Seidel dans l'ordre des arêtes (XPBD). */
@@ -113,5 +118,32 @@ export function solveStitches(
       x[3 * a + c] = f(x, 3 * a + c) + wa * dLambda;
       x[3 * b + c] = f(x, 3 * b + c) - wb * dLambda;
     }
+  }
+}
+
+/**
+ * Tenues : contrainte scalaire C = a·x − t par sommet tenu (axe unitaire a, cible t en mm). Δλ = (−C − α̃λ)/(w + α̃).
+ * Résolues après les coutures ; `soft.compliance` est la souplesse de la tenue (déjà divisée par le relâchement).
+ */
+export function solveHolds(
+  model: { invMass: Float64Array; holds: Holds },
+  x: Float64Array,
+  soft: { compliance: number; invDt2: number },
+  lambda: Float64Array,
+): void {
+  const { vertices, axes, targetsMm } = model.holds;
+  const alpha = soft.compliance * soft.invDt2;
+  for (let h = 0; h < vertices.length; h++) {
+    const i = u(vertices, h);
+    const w = f(model.invMass, i);
+    if (w + alpha <= 0) continue;
+    const c =
+      f(axes, 3 * h) * f(x, 3 * i) +
+      f(axes, 3 * h + 1) * f(x, 3 * i + 1) +
+      f(axes, 3 * h + 2) * f(x, 3 * i + 2) -
+      f(targetsMm, h);
+    const dLambda = (-c - alpha * f(lambda, h)) / (w + alpha);
+    lambda[h] = f(lambda, h) + dLambda;
+    for (let k = 0; k < 3; k++) x[3 * i + k] = f(x, 3 * i + k) + w * f(axes, 3 * h + k) * dLambda;
   }
 }
