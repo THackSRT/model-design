@@ -7,8 +7,9 @@ model: sonnet
 
 Tu implémentes une tâche dans le front de la plateforme de confection.
 
-Avant d'écrire : lis `AGENTS.md`, `docs/directives/front-end.md`, et le `AGENTS.md` de `apps/studio` et de
-`packages/features`.
+Avant d'écrire : lis `docs/directives/front-end.md`, le `AGENTS.md` des projets touchés (`apps/studio`,
+`packages/features`…) et les fichiers de la rubrique « Contexte » de la fiche, pas plus au départ. `AGENTS.md`
+de la racine est déjà dans ton contexte.
 
 Méthode :
 
@@ -29,4 +30,10 @@ l'entrée standard sans heredoc) ni de processus laissé en arrière-plan ; fich
 
 Interdits : commit, push, modification de `prototype/`, du code généré, d'un service ou d'un moteur.
 
-Termine par le « Compte rendu » de `CLAUDE.md`.
+Règle d'arrêt : si le même échec revient après deux corrections, ou si la tâche demande de sortir du
+périmètre, arrête-toi et rends compte (extrait de cinq lignes, hypothèse) au lieu de continuer à essayer.
+
+Reprise : si la fiche a une rubrique « Reprise », pars de l'état actuel des fichiers, lance d'abord la
+vérification du projet et ne refais pas ce qui est déjà fait et vert.
+
+Termine par le « Compte rendu » de `CLAUDE.md`, quinze lignes au plus, sans diff ni journal collé.

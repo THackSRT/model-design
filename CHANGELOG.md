@@ -117,6 +117,11 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Modifié
 
+- Orchestration Claude Code (1.45, amendement de l'ADR 0007) : `relecteur` sur Sonnet (Opus pour les lots
+  sensibles) ; découpage dans la session principale ; vérification, relecture et documentation une fois par
+  lot ; commit local par tâche ; fichier d'état `.claude/lot-en-cours.md` et skill `/reprendre` après une
+  coupure ou une limite d'usage ; lectures ciblées et comptes rendus courts ; `engines/drape/AGENTS.md`
+  allégé (détail dans `docs/composants/drape.md`).
 - Contrat du drapé (1.41) : coordonnées d'un `Point` de GarmentSpec bornées à ±10 000 mm (la plus grande
   valeur des références actuelles est 1 506,9 mm) ; patronage et fabrication adaptées ; une coupe hors borne est refusée (422 `/problems/invalid-request`) ;
   un plan de coupe de plus de 10 m reste accepté.
