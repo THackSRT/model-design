@@ -1,6 +1,43 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
 /** Schémas JSON bruts, pour la validation à l'exécution (Ajv). */
 export const jsonSchemas = {
+  avatarOptions: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/avatar-options.schema.json',
+    title: 'AvatarOptions',
+    description:
+      "Options d'ajustement de l'avatar (FitOptions du moteur mannequin), en plus des mesures. Champ absent : défaut du studio. Le même jeu d'options donne le même corps dans le studio et dans le drapé (ADR 0013).",
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      age: {
+        type: 'integer',
+        description: 'Âge en années. Défaut : 30.',
+        minimum: 16,
+        maximum: 90,
+        default: 30,
+      },
+      morphotype: {
+        type: 'object',
+        description:
+          'Proportions de morphotype, de 0 à 1 chacune (normalisées par le moteur mannequin ; somme nulle : africain). Défaut : africain (1, 0, 0).',
+        additionalProperties: false,
+        required: ['african', 'asian', 'caucasian'],
+        properties: {
+          african: { type: 'number', minimum: 0, maximum: 1 },
+          asian: { type: 'number', minimum: 0, maximum: 1 },
+          caucasian: { type: 'number', minimum: 0, maximum: 1 },
+        },
+      },
+      armAngleDeg: {
+        type: 'number',
+        description: "Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.",
+        minimum: 0,
+        maximum: 45,
+        default: 9,
+      },
+    },
+  },
   createDesignRequest: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     $id: 'https://atelier.example/schemas/designs/create-design-request.schema.json',
@@ -65,6 +102,134 @@ export const jsonSchemas = {
       },
     },
   },
+  designVersionChanges: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/design-version-changes.schema.json',
+    title: 'DesignVersionChanges',
+    description:
+      "Ce qui change des entrées d'une version de modèle (to) par rapport à une autre (from) : paramètres du vêtement et mesures du client, valeurs telles qu'envoyées, sans appliquer les défauts. Seules les entrées différentes sont listées. Contient des mesures : réservé à l'organisation propriétaire, jamais gardé en cache ni journalisé. Longueurs en millimètres.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['designId', 'from', 'to', 'sameFingerprint', 'params', 'measurements'],
+    properties: {
+      designId: { type: 'string', format: 'uuid' },
+      from: { $ref: './design-version-summary.schema.json' },
+      to: { $ref: './design-version-summary.schema.json' },
+      sameFingerprint: {
+        type: 'boolean',
+        description:
+          'Vrai si les deux versions ont la même empreinte : mêmes mesures, mêmes paramètres, même version du moteur, donc même patron.',
+      },
+      params: {
+        type: 'array',
+        description: 'Paramètres différents, triés par chemin.',
+        maxItems: 100,
+        items: { $ref: '#/$defs/ParamChange' },
+      },
+      measurements: {
+        type: 'array',
+        description: 'Mesures différentes, triées par nom.',
+        maxItems: 100,
+        items: { $ref: '#/$defs/MeasurementChange' },
+      },
+    },
+    $defs: {
+      ParamChange: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['path'],
+        properties: {
+          path: {
+            type: 'string',
+            description:
+              'Chemin du paramètre dans GarmentRequest.params, points entre les niveaux (ex. lengthMm, sleeve.capEaseMm).',
+            pattern: '^[a-z][A-Za-z0-9]*([.][a-z][A-Za-z0-9]*)*$',
+            maxLength: 120,
+          },
+          from: {
+            type: ['number', 'string', 'boolean'],
+            description:
+              'Valeur dans la version from. Absent : paramètre absent (défaut du moteur).',
+          },
+          to: {
+            type: ['number', 'string', 'boolean'],
+            description: 'Valeur dans la version to. Absent : paramètre absent (défaut du moteur).',
+          },
+        },
+      },
+      MeasurementChange: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Nom de champ de MeasurementSet (ex. waistGirthMm).',
+            pattern: '^[a-z][A-Za-z0-9]*$',
+            maxLength: 64,
+          },
+          from: {
+            type: ['integer', 'string'],
+            description:
+              'Valeur dans la version from (mm, ou sexe). Absent : mesure non fournie (estimée par le moteur si besoin).',
+          },
+          to: {
+            type: ['integer', 'string'],
+            description:
+              'Valeur dans la version to (mm, ou sexe). Absent : mesure non fournie (estimée par le moteur si besoin).',
+          },
+        },
+      },
+    },
+  },
+  designVersionPage: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/design-version-page.schema.json',
+    title: 'DesignVersionPage',
+    description:
+      "Une page de résumés de versions d'un modèle, par numéro décroissant (la plus récente d'abord).",
+    type: 'object',
+    additionalProperties: false,
+    required: ['designId', 'items'],
+    properties: {
+      designId: { type: 'string', format: 'uuid' },
+      items: {
+        type: 'array',
+        maxItems: 100,
+        items: { $ref: './design-version-summary.schema.json' },
+      },
+      nextCursor: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 64,
+        description:
+          'Curseur opaque de la page suivante (versions plus anciennes). Absent : dernière page.',
+      },
+    },
+  },
+  designVersionSummary: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/design-version-summary.schema.json',
+    title: 'DesignVersionSummary',
+    description:
+      "Résumé d'une version de modèle, pour une liste : ni mesures du client ni patron (lire la version pour les obtenir). Longueurs des paramètres en millimètres.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['number', 'createdAt', 'fingerprint', 'engineVersion', 'garment'],
+    properties: {
+      number: { type: 'integer', minimum: 1 },
+      createdAt: { type: 'string', format: 'date-time' },
+      fingerprint: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+      engineVersion: {
+        type: 'string',
+        description: 'Version du moteur de patronage qui a tracé le patron (spec.engine.version).',
+      },
+      garment: {
+        $ref: '../garment-request.schema.json',
+        description: "Type de vêtement et paramètres demandés, tels qu'envoyés.",
+      },
+    },
+  },
   designVersion: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     $id: 'https://atelier.example/schemas/designs/design-version.schema.json',
@@ -102,6 +267,248 @@ export const jsonSchemas = {
       },
     },
   },
+  drapeRequest: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/drape-request.schema.json',
+    title: 'DrapeRequest',
+    description:
+      "Demande de drapé d'une version de modèle : le tissu, les options de l'avatar et la finesse. Les mesures et le patron sont ceux de la version. Même demande canonique sur la même version : même drapé (ADR 0013).",
+    type: 'object',
+    additionalProperties: false,
+    required: ['fabric'],
+    properties: {
+      fabric: { $ref: '../drape/fabric.schema.json' },
+      avatar: {
+        $ref: '../avatar-options.schema.json',
+        description: 'Absent : défauts du studio, comme {}.',
+      },
+      quality: {
+        type: 'string',
+        description: 'draft (arête de 25 mm) ou standard (arête de 15 mm).',
+        enum: ['draft', 'standard'],
+        default: 'standard',
+      },
+    },
+  },
+  drape: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/designs/drape.schema.json',
+    title: 'Drape',
+    description:
+      "Drapé d'une version de modèle, tel que le service designs le suit. Le modèle 3D se lit par GET …/drapes/{drapeId}/model une fois le drapé completed. Longueurs en millimètres.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['id', 'status', 'createdAt'],
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      status: {
+        type: 'string',
+        description:
+          'pending : en calcul ; completed : modèle disponible ; failed : voir problemType. Un drapé encore pending 10 minutes après createdAt est lu failed (drape-timeout).',
+        enum: ['pending', 'completed', 'failed'],
+      },
+      problemType: {
+        type: 'string',
+        description:
+          'Seulement si status vaut failed. Types de drape.failed, plus /problems/drape-timeout.',
+        enum: [
+          '/problems/drape-placement-missing',
+          '/problems/drape-placement-failed',
+          '/problems/drape-seam-not-closed',
+          '/problems/drape-body-penetration',
+          '/problems/drape-too-large',
+          '/problems/drape-internal',
+          '/problems/drape-timeout',
+        ],
+      },
+      ease: {
+        $ref: '../drape/drape-result.schema.json#/$defs/DrapeEase',
+        description: 'Seulement si status vaut completed.',
+      },
+      maxStrainPercent: {
+        type: 'number',
+        description:
+          'Seulement si status vaut completed. Allongement relatif maximal, en pourcentage.',
+        minimum: -100,
+        maximum: 1000,
+      },
+      fabricEstimated: {
+        type: 'boolean',
+        description:
+          "Seulement si status vaut completed. Vrai si le tissu vient d'un préréglage estimé.",
+      },
+      createdAt: { type: 'string', format: 'date-time' },
+      completedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Fin du calcul (completed ou failed), en UTC.',
+      },
+    },
+  },
+  drapeJob: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/drape/drape-job.schema.json',
+    title: 'DrapeJob',
+    description:
+      "Tâche de drapé confiée au moteur drape (données de drape.requested). Contient des mesures de client : jamais journalisée (ADR 0013). L'avatar est recalculé par le moteur depuis measurements et avatar, jamais transmis.",
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'drapeId',
+      'organizationId',
+      'designId',
+      'versionNumber',
+      'spec',
+      'measurements',
+      'avatar',
+      'fabric',
+      'quality',
+    ],
+    properties: {
+      drapeId: { type: 'string', format: 'uuid' },
+      organizationId: { type: 'string', format: 'uuid' },
+      designId: { type: 'string', format: 'uuid' },
+      versionNumber: { type: 'integer', minimum: 1 },
+      spec: { $ref: '../garment-spec.schema.json' },
+      measurements: { $ref: '../measurement-set.schema.json' },
+      avatar: { $ref: '../avatar-options.schema.json' },
+      fabric: { $ref: './fabric.schema.json' },
+      quality: {
+        type: 'string',
+        description:
+          'Finesse du maillage du vêtement : draft (arête de 25 mm), standard (arête de 15 mm).',
+        enum: ['draft', 'standard'],
+      },
+    },
+  },
+  drapeResult: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/drape/drape-result.schema.json',
+    title: 'DrapeResult',
+    description:
+      "Résultat d'un drapé réussi : le modèle glTF binaire (vêtement seul) écrit dans le stockage objet, et ses indicateurs. Longueurs en millimètres, surfaces en millimètres carrés.",
+    type: 'object',
+    additionalProperties: false,
+    required: [
+      'modelKey',
+      'sizeBytes',
+      'sha256',
+      'ease',
+      'maxStrainPercent',
+      'fabricEstimated',
+      'engineVersion',
+      'vertexCount',
+      'simulatedSteps',
+      'converged',
+    ],
+    properties: {
+      modelKey: {
+        type: 'string',
+        description:
+          "Clé de l'objet dans le seau privé des drapés : drapes/<organizationId>/<cacheKey>.glb. Jamais d'URL publique.",
+        pattern: '^drapes/[0-9a-f-]{36}/[a-f0-9]{64}[.]glb$',
+        maxLength: 120,
+      },
+      sizeBytes: { type: 'integer', minimum: 1, maximum: 268435456 },
+      sha256: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+      ease: { $ref: '#/$defs/DrapeEase' },
+      maxStrainPercent: {
+        type: 'number',
+        description:
+          'Allongement relatif maximal du tissu, en pourcentage (négatif : compression partout).',
+        minimum: -100,
+        maximum: 1000,
+      },
+      fabricEstimated: {
+        type: 'boolean',
+        description: "Vrai si une propriété du tissu vient d'un préréglage estimé.",
+      },
+      engineVersion: { type: 'string', minLength: 1, maxLength: 64 },
+      vertexCount: { type: 'integer', minimum: 1, maximum: 30000 },
+      simulatedSteps: { type: 'integer', minimum: 0, maximum: 1000000 },
+      converged: {
+        type: 'boolean',
+        description:
+          'Vrai si la vitesse maximale est restée sous 1 mm/s pendant 10 pas avant la fin.',
+      },
+    },
+    $defs: {
+      DrapeEase: {
+        type: 'object',
+        description:
+          "Aisance : distance du tissu au corps moins l'épaisseur du tissu, en millimètres (négative : pénétration).",
+        additionalProperties: false,
+        required: ['minMm', 'medianMm', 'maxMm', 'tightAreaMm2'],
+        properties: {
+          minMm: { type: 'number', minimum: -1000, maximum: 2000 },
+          medianMm: { type: 'number', minimum: -1000, maximum: 2000 },
+          maxMm: { type: 'number', minimum: -1000, maximum: 2000 },
+          tightAreaMm2: {
+            type: 'number',
+            description:
+              "Surface du vêtement où l'aisance est nulle (tissu au contact du corps), en mm².",
+            minimum: 0,
+            maximum: 100000000,
+          },
+        },
+      },
+    },
+  },
+  fabric: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/drape/fabric.schema.json',
+    title: 'Fabric',
+    description:
+      "Tissu d'un drapé : un préréglage et des surcharges facultatives, chacune dans son unité (suffixe). Les valeurs des préréglages sont dans le moteur de drapé et sont des estimations, signalées par DrapeResult.fabricEstimated (ADR 0013).",
+    type: 'object',
+    additionalProperties: false,
+    required: ['preset'],
+    properties: {
+      preset: {
+        type: 'string',
+        enum: ['cotton-poplin', 'cotton-wax', 'bazin', 'linen', 'denim', 'silk-satin', 'jersey'],
+      },
+      weightGPerM2: {
+        type: 'number',
+        description: 'Grammage, en grammes par mètre carré.',
+        minimum: 20,
+        maximum: 800,
+      },
+      thicknessMm: {
+        type: 'number',
+        description: 'Épaisseur, en millimètres.',
+        minimum: 0.1,
+        maximum: 5,
+      },
+      stretchWarpPercent: {
+        type: 'number',
+        description:
+          'Allongement dans le sens de la chaîne (droit fil) sous 10 N sur une bande de 50 mm de large, en pourcentage.',
+        minimum: 0,
+        maximum: 100,
+      },
+      stretchWeftPercent: {
+        type: 'number',
+        description:
+          'Allongement dans le sens de la trame sous 10 N sur une bande de 50 mm de large, en pourcentage.',
+        minimum: 0,
+        maximum: 100,
+      },
+      bendingRigidityMicroNm: {
+        type: 'number',
+        description:
+          'Rigidité de flexion par unité de largeur (valeur B de Kawabata), en micronewtons-mètres (µN·m ; 1 gf·cm²/cm ≈ 98 µN·m).',
+        minimum: 0.1,
+        maximum: 5000,
+      },
+      frictionCoefficient: {
+        type: 'number',
+        description: 'Coefficient de frottement du tissu sur le corps (sans unité).',
+        minimum: 0,
+        maximum: 1.5,
+      },
+    },
+  },
   cloudEvent: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
     $id: 'https://atelier.example/schemas/events/cloud-event.schema.json',
@@ -136,6 +543,65 @@ export const jsonSchemas = {
       fingerprint: { type: 'string', pattern: '^[a-f0-9]{64}$' },
       engineVersion: { type: 'string' },
     },
+  },
+  drapeCompleted: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/events/drape-completed.schema.json',
+    title: 'DrapeCompleted',
+    description:
+      "Données de l'événement drape.completed : le drapé drapeId est calculé. Aucune mesure, aucun texte libre.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['drapeId', 'designId', 'versionNumber', 'organizationId', 'result'],
+    properties: {
+      drapeId: { type: 'string', format: 'uuid' },
+      designId: { type: 'string', format: 'uuid' },
+      versionNumber: { type: 'integer', minimum: 1 },
+      organizationId: { type: 'string', format: 'uuid' },
+      result: { $ref: '../drape/drape-result.schema.json' },
+    },
+  },
+  drapeFailed: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/events/drape-failed.schema.json',
+    title: 'DrapeFailed',
+    description:
+      "Données de l'événement drape.failed : le drapé drapeId n'a pas pu être calculé. Un type d'erreur stable, aucun texte libre ni mesure.",
+    type: 'object',
+    additionalProperties: false,
+    required: ['drapeId', 'designId', 'versionNumber', 'organizationId', 'type', 'retryable'],
+    properties: {
+      drapeId: { type: 'string', format: 'uuid' },
+      designId: { type: 'string', format: 'uuid' },
+      versionNumber: { type: 'integer', minimum: 1 },
+      organizationId: { type: 'string', format: 'uuid' },
+      type: {
+        type: 'string',
+        description:
+          'placement-missing : une pièce sans Panel.placement ; placement-failed : pose initiale impossible ; seam-not-closed : couture encore ouverte à la fin ; body-penetration : tissu dans le corps à la fin ; too-large : plus de 40 pièces, 2 000 bords ou 30 000 sommets ; internal : erreur du moteur.',
+        enum: [
+          '/problems/drape-placement-missing',
+          '/problems/drape-placement-failed',
+          '/problems/drape-seam-not-closed',
+          '/problems/drape-body-penetration',
+          '/problems/drape-too-large',
+          '/problems/drape-internal',
+        ],
+      },
+      retryable: {
+        type: 'boolean',
+        description:
+          'Vrai si la même demande peut réussir plus tard (erreur passagère) ; faux si elle échouera encore.',
+      },
+    },
+  },
+  drapeRequested: {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: 'https://atelier.example/schemas/events/drape-requested.schema.json',
+    title: 'DrapeRequested',
+    description:
+      "Données de l'événement drape.requested : une tâche de drapé (DrapeJob). Contient des mesures : jamais journalisée.",
+    $ref: '../drape/drape-job.schema.json',
   },
   garmentRequest: {
     $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -464,6 +930,67 @@ export const jsonSchemas = {
               $ref: '#/$defs/Notch',
             },
           },
+          placement: {
+            $ref: '#/$defs/PanelPlacement',
+          },
+        },
+      },
+      PanelPlacement: {
+        type: 'object',
+        description:
+          "Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur.",
+        additionalProperties: false,
+        required: ['zone', 'bodySide', 'facing', 'anchor'],
+        properties: {
+          zone: {
+            type: 'string',
+            enum: ['torso', 'leg', 'arm'],
+            description: "Partie du corps autour de laquelle la pièce s'enroule.",
+          },
+          bodySide: {
+            type: 'string',
+            enum: ['left', 'right', 'center'],
+            description:
+              'Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.',
+          },
+          facing: {
+            type: 'string',
+            enum: ['front', 'back', 'outer'],
+            description:
+              "Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.",
+          },
+          anchor: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['point', 'landmark'],
+            description:
+              'Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm.',
+            properties: {
+              point: {
+                $ref: '#/$defs/Point',
+              },
+              landmark: {
+                type: 'string',
+                enum: ['neck', 'shoulder', 'waist', 'hip', 'crotch', 'knee', 'ankle', 'wrist'],
+                description: 'Repère de hauteur du corps ajusté.',
+              },
+              offsetMm: {
+                type: 'number',
+                minimum: -500,
+                maximum: 500,
+                default: 0,
+                description:
+                  'Décalage vertical depuis le repère, en millimètres, positif vers le haut.',
+              },
+            },
+          },
+          clearanceMm: {
+            type: 'number',
+            minimum: 5,
+            maximum: 150,
+            default: 30,
+            description: 'Distance au corps de la position de départ, en millimètres.',
+          },
         },
       },
       EdgeRef: {
@@ -477,10 +1004,18 @@ export const jsonSchemas = {
           edgeId: {
             type: 'string',
           },
+          side: {
+            type: 'string',
+            enum: ['left', 'right'],
+            description:
+              'Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.',
+          },
         },
       },
       Seam: {
         type: 'object',
+        description:
+          "Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas.",
         additionalProperties: false,
         required: ['id', 'a', 'b'],
         properties: {

@@ -71,6 +71,19 @@ describe('créer une version de modèle', () => {
     expect(designs.outbox).toHaveLength(0);
   });
 
+  it('propage le type précis du moteur sans rien enregistrer', async () => {
+    const failure = {
+      kind: 'patterning-problem',
+      type: 'neckline-too-deep',
+      detail: 'trop profonde',
+    } as const;
+    const version = await designsUseCases(
+      deps(new FakePatterningEngine(failure)),
+    ).createDesignVersion(input);
+    expect(version.isErr() && version.error).toEqual(failure);
+    expect(designs.outbox).toHaveLength(0);
+  });
+
   it('refuse une demande dont le type ne correspond pas à celui du modèle', async () => {
     const trousers = aDesign({
       id: '01920000-0000-7000-8000-00000000d002' as DesignId,

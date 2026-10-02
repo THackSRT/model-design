@@ -5,7 +5,6 @@ requires-python = "==3.12.*"
 [manifest]
 members = [
     "atelier-contracts",
-    "atelier-drape",
     "atelier-engine-kit",
     "atelier-manufacturing",
     "atelier-patterning",
@@ -106,25 +105,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pydantic", specifier = ">=2.9" }]
-
-[[package]]
-name = "atelier-drape"
-version = "0.1.0"
-source = { editable = "engines/drape" }
-dependencies = [
-    { name = "atelier-contracts" },
-    { name = "atelier-engine-kit" },
-    { name = "fastapi" },
-    { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "atelier-contracts", editable = "py/contracts" },
-    { name = "atelier-engine-kit", editable = "py/engine-kit" },
-    { name = "fastapi", specifier = ">=0.118" },
-    { name = "uvicorn", specifier = ">=0.37" },
-]
 
 [[package]]
 name = "atelier-engine-kit"

@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "garment": {
     "type": "straight-skirt"
@@ -139,7 +139,21 @@
           "distanceMm": 68.2,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            0.0,
+            600.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-right",
@@ -307,7 +321,21 @@
           "distanceMm": 45.16,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "right",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            0.0,
+            600.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-left",
@@ -475,7 +503,21 @@
           "distanceMm": 0.0,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "left",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            267.5,
+            600.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     }
   ],
   "seams": [

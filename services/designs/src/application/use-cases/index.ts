@@ -8,6 +8,8 @@ import { createDesignVersion } from './create-design-version.js';
 import { exportVersion } from './export-version.js';
 import { getDesign, getDesignVersion } from './get-design.js';
 import { getVersionCutPattern } from './get-version-cut-pattern.js';
+import { getVersionChanges } from './get-version-changes.js';
+import { listDesignVersions } from './list-design-versions.js';
 
 export interface DesignsDeps {
   designs: DesignRepository;
@@ -25,6 +27,8 @@ export function designsUseCases(deps: DesignsDeps) {
     getDesign: getDesign(deps),
     createDesignVersion: createDesignVersion(deps),
     getDesignVersion: getDesignVersion(deps),
+    listDesignVersions: listDesignVersions(deps),
+    getVersionChanges: getVersionChanges(deps),
     getVersionCutPattern: getVersionCutPattern(deps),
     exportVersion: exportVersion(deps),
   };

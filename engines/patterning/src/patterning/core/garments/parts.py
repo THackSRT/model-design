@@ -7,10 +7,23 @@ from collections.abc import Sequence
 from dataclasses import replace
 
 from patterning.core.geometry import edge_length, round_point
-from patterning.core.model import Edge, Notch, Panel, Point
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    Notch,
+    Panel,
+    Point,
+)
 
 GRAIN_LOW = 0.2  # droit fil : de 20 % à 80 % de la hauteur de la pièce
 GRAIN_HIGH = 0.8
+
+
+_OPPOSITE = {
+    BodySide.LEFT: BodySide.RIGHT,
+    BodySide.RIGHT: BodySide.LEFT,
+    BodySide.CENTER: BodySide.CENTER,
+}
 
 
 def pt(x: float, y: float) -> Point:
@@ -64,7 +77,20 @@ def mirror_panel(panel: Panel, panel_id: str, name: str) -> Panel:
         for n in panel.notches
     )
     grain = (flip(panel.grainline[0]), flip(panel.grainline[1]))
-    return replace(panel, id=panel_id, name=name, edges=edges, grainline=grain, notches=notches)
+    placement = panel.placement and replace(
+        panel.placement,
+        body_side=_OPPOSITE[panel.placement.body_side],
+        anchor=flip(panel.placement.anchor),
+    )
+    return replace(
+        panel,
+        id=panel_id,
+        name=name,
+        edges=edges,
+        grainline=grain,
+        notches=notches,
+        placement=placement,
+    )
 
 
 def vertical_grainline(x: float, height: float) -> tuple[Point, Point]:

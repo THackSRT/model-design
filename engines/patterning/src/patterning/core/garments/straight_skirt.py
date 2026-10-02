@@ -32,7 +32,18 @@ from patterning.core.garments.parts import (
     pt,
     vertical_grainline,
 )
-from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Seam
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    EdgeRole,
+    Facing,
+    Landmark,
+    Panel,
+    Pattern,
+    Placement,
+    Seam,
+    Zone,
+)
 
 MIN_SKIRT_BELOW_HIP_MM = 50
 SIDE_CONTROL_RISE = 0.5  # point de contrôle du côté galbé : à mi-hauteur taille-hanches
@@ -77,6 +88,13 @@ def _half_panel(panel_id: str, name: str, half: Half, shape: Shape) -> Panel:
         vertical_grainline((half.hip + shape.flare) / 2, shape.length),
         cut_on_fold=front,
         notches=(notch_at_start(upper), notch_at_end(waist[-1])),
+        placement=Placement(
+            Zone.TORSO,
+            BodySide.CENTER if front else BodySide.RIGHT,
+            Facing.FRONT if front else Facing.BACK,
+            pt(0.0, shape.length),  # haut du pli (devant) ou du milieu dos, à la taille
+            Landmark.WAIST,
+        ),
     )
 
 

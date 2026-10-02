@@ -1,5 +1,5 @@
 import type { Design, DesignId, OrganizationId } from '../../domain/design.js';
-import type { DesignVersion, VersionAdded } from '../../domain/design-version.js';
+import type { DesignVersion, VersionAdded, VersionSummary } from '../../domain/design-version.js';
 
 /** Persistance des modèles. Toute lecture est limitée à l'organisation de l'appelant. */
 export interface DesignRepository {
@@ -12,4 +12,13 @@ export interface DesignRepository {
     designId: DesignId,
     number: number,
   ): Promise<DesignVersion | undefined>;
+  /**
+   * Résumés des versions, numéro décroissant, au plus `limit`, seulement celles de numéro < `before`
+   * (toutes si absent). Ne lit ni les mesures ni le patron. Vide pour un modèle d'une autre organisation.
+   */
+  versionSummaries(
+    organizationId: OrganizationId,
+    designId: DesignId,
+    page: { limit: number; before?: number },
+  ): Promise<VersionSummary[]>;
 }

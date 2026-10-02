@@ -20,7 +20,7 @@ service `designs`).
 | `designs`       | `atelier/designs` (Node 22)           | 3101       | Service des modèles et des patrons ; migrations au démarrage |
 | `patterning`    | `atelier/patterning` (Python 3.12)    | 3201       | Moteur de patronage                                          |
 | `manufacturing` | `atelier/manufacturing` (Python 3.12) | 3202       | Moteur de production (squelette)                             |
-| `drape`         | `atelier/drape` (Python 3.12)         | 3203       | Moteur de drapé (squelette)                                  |
+| `drape`         | `atelier/drape` (Node 22)             | 3203       | Moteur de drapé (cœur XPBD, glTF à venir)                    |
 | `postgres`      | `postgres:17`                         | 5432       | Bases des services                                           |
 | `nats`          | `nats:2.11` (JetStream)               | 4222, 8222 | Bus d'événements et files de tâches                          |
 | `valkey`        | `valkey/valkey:8`                     | 6379       | Cache                                                        |

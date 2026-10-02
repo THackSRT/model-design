@@ -22,6 +22,11 @@ export const fr = {
   'garment.circle-skirt': 'Jupe cercle',
   'garment.trousers': 'Pantalon',
   'garment.bodice': 'Corsage',
+  'garment.show': 'Montrer le vêtement',
+  'garment.dressing': 'Habillage du mannequin…',
+  'garment.dressingFailed': 'Le vêtement n’a pas pu être habillé sur le mannequin.',
+  'garment.tightZone':
+    'Trop juste de {shortfallMm, number, ::unit/millimeter} entre {fromMm, number} et {toMm, number, ::unit/millimeter} du sol',
   'garment.withSleeve': 'Avec manches',
   'garment.unavailable': '{name} — à venir',
   'param.straight-skirt.lengthMm': 'Longueur',
@@ -87,6 +92,12 @@ export const fr = {
   'problem./problems/engine-unavailable':
     'Un moteur de calcul ne répond pas. Réessayez dans un instant.',
   'problem./problems/measurement-required': 'Une mesure nécessaire à ce vêtement manque.',
+  'problem./problems/skirt-shorter-than-hip-depth':
+    'La jupe est trop courte : elle doit descendre sous la ligne des hanches.',
+  'problem./problems/trousers-shorter-than-crotch':
+    'Le pantalon est trop court : il doit descendre sous l’entrejambe.',
+  'problem./problems/trousers-hem-too-narrow':
+    'Le bas du pantalon est trop étroit pour ces mesures.',
   'problem./problems/neckline-too-deep': 'L’encolure est trop creusée pour ces mesures.',
   'problem./problems/sleeve-shorter-than-cap': 'La manche est plus courte que sa tête.',
   'problem./problems/inconsistent-measurements': 'Ces mesures sont incohérentes entre elles.',

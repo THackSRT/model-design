@@ -94,6 +94,7 @@ export interface Panel {
    * @maxItems 200
    */
   notches?: Notch[];
+  placement?: PanelPlacement;
 }
 export interface Edge {
   id: string;
@@ -118,6 +119,44 @@ export interface NotchPlacement {
    */
   count?: number;
 }
+/**
+ * Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur.
+ */
+export interface PanelPlacement {
+  /**
+   * Partie du corps autour de laquelle la pièce s'enroule.
+   */
+  zone: 'torso' | 'leg' | 'arm';
+  /**
+   * Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.
+   */
+  bodySide: 'left' | 'right' | 'center';
+  /**
+   * Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.
+   */
+  facing: 'front' | 'back' | 'outer';
+  /**
+   * Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm.
+   */
+  anchor: {
+    point: Point;
+    /**
+     * Repère de hauteur du corps ajusté.
+     */
+    landmark: 'neck' | 'shoulder' | 'waist' | 'hip' | 'crotch' | 'knee' | 'ankle' | 'wrist';
+    /**
+     * Décalage vertical depuis le repère, en millimètres, positif vers le haut.
+     */
+    offsetMm?: number;
+  };
+  /**
+   * Distance au corps de la position de départ, en millimètres.
+   */
+  clearanceMm?: number;
+}
+/**
+ * Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas.
+ */
 export interface Seam {
   id: string;
   a: EdgeRef;
@@ -130,6 +169,10 @@ export interface Seam {
 export interface EdgeRef {
   panelId: string;
   edgeId: string;
+  /**
+   * Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.
+   */
+  side?: 'left' | 'right';
 }
 /**
  * Comment finir les pièces d'un patron : valeurs de couture et crans. Longueurs en millimètres. Absent : valeurs par défaut du moteur (10 mm partout, 30 mm aux ourlets, crans aux raccords de couture).

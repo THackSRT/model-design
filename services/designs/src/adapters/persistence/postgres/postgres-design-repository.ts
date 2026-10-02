@@ -1,8 +1,12 @@
 import type { Clock, IdGenerator } from '@atelier/kernel';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import type { DesignRepository } from '../../../application/ports/design-repository.js';
 import type { Design, DesignId, GarmentType, OrganizationId } from '../../../domain/design.js';
-import type { DesignVersion, VersionAdded } from '../../../domain/design-version.js';
+import type {
+  DesignVersion,
+  VersionAdded,
+  VersionSummary,
+} from '../../../domain/design-version.js';
 import type { Database } from './database.js';
 import { designs, designVersions, outbox } from './schema.js';
 
@@ -80,5 +84,35 @@ export class PostgresDesignRepository implements DesignRepository {
         ),
       );
     return rows[0] ? toVersion(rows[0]) : undefined;
+  }
+
+  async versionSummaries(
+    organizationId: OrganizationId,
+    designId: DesignId,
+    page: { limit: number; before?: number },
+  ): Promise<VersionSummary[]> {
+    // Ni les mesures ni le patron entier ne sont lus : seulement de quoi faire un résumé.
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.organization_id', ${organizationId}, true)`);
+      const rows = await tx
+        .select({
+          number: designVersions.number,
+          createdAt: designVersions.createdAt,
+          fingerprint: designVersions.fingerprint,
+          garment: designVersions.garment,
+          engineVersion: sql<string>`${designVersions.spec}->'engine'->>'version'`,
+        })
+        .from(designVersions)
+        .where(
+          and(
+            eq(designVersions.designId, designId),
+            eq(designVersions.organizationId, organizationId),
+            page.before === undefined ? undefined : lt(designVersions.number, page.before),
+          ),
+        )
+        .orderBy(desc(designVersions.number))
+        .limit(page.limit);
+      return rows;
+    });
   }
 }

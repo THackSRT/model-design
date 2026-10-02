@@ -32,7 +32,18 @@ from patterning.core.garments.darts import (
 )
 from patterning.core.garments.parts import mirror_panel, notch_at_end, notch_at_start, pt
 from patterning.core.garments.parts import vertical_grainline as grain
-from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Seam
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    EdgeRole,
+    Facing,
+    Landmark,
+    Panel,
+    Pattern,
+    Placement,
+    Seam,
+    Zone,
+)
 
 MIN_LEG_BELOW_CROTCH_MM = 100
 MIN_RISE_MM = 30  # la fourche reste au moins à 30 mm sous la taille
@@ -110,6 +121,7 @@ def _leg_edges(half: Half, leg: Leg, crotch: Crotch) -> tuple[Edge, ...]:
 
 
 def _leg_panel(names: tuple[str, str], half: Half, leg: Leg, crotch: Crotch) -> Panel:
+    facing = Facing.FRONT if names[0].startswith("front") else Facing.BACK
     edges = _leg_edges(half, leg, crotch)
     by_id = {e.id: e for e in edges}
     return Panel(
@@ -118,6 +130,14 @@ def _leg_panel(names: tuple[str, str], half: Half, leg: Leg, crotch: Crotch) -> 
         edges,
         grain((half.hip - crotch.extension) / 2, leg.shape.length),
         notches=(notch_at_start(by_id["side-upper"]), notch_at_end(by_id["rise"])),
+        # milieu de la taille, sur le montant ; dessinés : le devant gauche et le dos droit
+        placement=Placement(
+            Zone.LEG,
+            BodySide.LEFT if facing is Facing.FRONT else BodySide.RIGHT,
+            facing,
+            pt(0.0, leg.shape.length),
+            Landmark.WAIST,
+        ),
     )
 
 

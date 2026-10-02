@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "garment": {
     "type": "trousers"
@@ -193,7 +193,21 @@
           "distanceMm": 237.68,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "leg",
+        "bodySide": "left",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            0.0,
+            1000.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "front-right",
@@ -379,7 +393,21 @@
           "distanceMm": 0.0,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "leg",
+        "bodySide": "right",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            234.82,
+            1000.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-left",
@@ -601,7 +629,21 @@
           "distanceMm": 0.0,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "leg",
+        "bodySide": "left",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            270.18,
+            1000.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-right",
@@ -823,7 +865,21 @@
           "distanceMm": 170.74,
           "count": 1
         }
-      ]
+      ],
+      "placement": {
+        "zone": "leg",
+        "bodySide": "right",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            0.0,
+            1000.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     }
   ],
   "seams": [

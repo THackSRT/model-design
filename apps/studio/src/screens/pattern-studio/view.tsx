@@ -4,14 +4,11 @@ import {
   type PatternStudioActions,
   type PatternStudioState,
 } from '@atelier/features';
-import { ColorMannequin } from '@atelier/design-tokens';
-import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
-import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline';
-import { Suspense, useMemo } from 'react';
+import { NumberField, Panel } from '@atelier/ui-web';
 import { fieldErrorMessage, t } from '../../i18n/t.js';
 import { CutPiecesPanel, type CutPiecesPanelProps } from './cut-pieces-panel.js';
 import { GarmentPanel } from './garment-panel.js';
-import { LazyMannequinView } from './lazy-mannequin-view.js';
+import { MannequinPanel } from './mannequin-panel.js';
 
 export interface PatternStudioViewProps {
   state: PatternStudioState;
@@ -72,65 +69,6 @@ function PatternPanel({ state }: { state: PatternStudioState }) {
           ))}
         </svg>
       )}
-    </Panel>
-  );
-}
-
-const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
-const DISPLAYS = ['3d', 'outline'] as const;
-
-function DisplayToggle({ state, actions }: PatternStudioViewProps) {
-  return (
-    <div role="group" aria-label={t('mannequin.display')} className="studio-toggle">
-      {DISPLAYS.map((display) => (
-        <Button
-          key={display}
-          emphasis={state.display === display ? 'high' : 'normal'}
-          aria-pressed={state.display === display}
-          onClick={() => actions.setDisplay(display)}
-        >
-          {t(`mannequin.display.${display}`)}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-function MannequinBody({ state }: { state: PatternStudioState }) {
-  const meshes = useMemo(() => (state.mannequin ? [state.mannequin.body] : []), [state.mannequin]);
-  const labels = {
-    front: t('mannequin.view.front'),
-    side: t('mannequin.view.side'),
-    back: t('mannequin.view.back'),
-  };
-  const body = meshes[0];
-  if (!body) return null;
-  return state.display === 'outline' ? (
-    <MannequinOutline mesh={body} views={OUTLINE_VIEWS} labels={labels} />
-  ) : (
-    <Suspense fallback={<Message>{t('mannequin.loading3d')}</Message>}>
-      <LazyMannequinView
-        meshes={meshes}
-        color={ColorMannequin}
-        label={t('mannequin.label')}
-        webglUnavailableLabel={t('mannequin.webglUnavailable')}
-      />
-    </Suspense>
-  );
-}
-
-function MannequinPanel(props: PatternStudioViewProps) {
-  const { state } = props;
-  return (
-    <Panel title={t('mannequin.title')}>
-      <DisplayToggle {...props} />
-      {state.mannequinStatus === 'fitting' && <Message>{t('mannequin.fitting')}</Message>}
-      {state.mannequinStatus === 'failed' && (
-        <Message tone="danger">{t('mannequin.failed')}</Message>
-      )}
-      <div className="studio-viewer">
-        <MannequinBody state={state} />
-      </div>
     </Panel>
   );
 }

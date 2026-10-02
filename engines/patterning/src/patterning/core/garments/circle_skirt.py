@@ -16,7 +16,19 @@ from dataclasses import dataclass
 from patterning.core.body import Body
 from patterning.core.curves import arc_cubics
 from patterning.core.garments.parts import notch_at_middle, pt, vertical_grainline
-from patterning.core.model import Edge, EdgeRole, Panel, Pattern, Point, Seam
+from patterning.core.model import (
+    BodySide,
+    Edge,
+    EdgeRole,
+    Facing,
+    Landmark,
+    Panel,
+    Pattern,
+    Placement,
+    Point,
+    Seam,
+    Zone,
+)
 
 
 @dataclass(frozen=True)
@@ -56,7 +68,7 @@ def _arc_chain(prefix: str, arc: Arc, role: EdgeRole) -> tuple[Edge, ...]:
     return tuple(edges)
 
 
-def _skirt_panel(panel_id: str, name: str, circle: Circle, waist_role: EdgeRole) -> Panel:
+def _skirt_panel(panel_id: str, circle: Circle, waist_role: EdgeRole) -> Panel:
     outer = circle.radius + circle.length
     half = math.radians(circle.angle_deg / 2)
     center = pt(outer * math.sin(half), outer)
@@ -70,12 +82,21 @@ def _skirt_panel(panel_id: str, name: str, circle: Circle, waist_role: EdgeRole)
         *waist,
         Edge("side-left", waist[-1].end, hem[0].start, EdgeRole.SEAM),
     )
+    front = panel_id == "front"
     return Panel(
         panel_id,
-        name,
+        "Devant" if front else "Dos",
         edges,
         vertical_grainline(center[0], circle.length),
         notches=(notch_at_middle(waist),),
+        # milieu de l'arc de taille, qui est aussi la hauteur de la taille
+        placement=Placement(
+            Zone.TORSO,
+            BodySide.CENTER,
+            Facing.FRONT if front else Facing.BACK,
+            pt(center[0], circle.length),
+            Landmark.WAIST,
+        ),
     )
 
 
@@ -94,7 +115,16 @@ def _band(panel_id: str, name: str, band: Band) -> Panel:
         Edge("side-left", pt(0.0, height), pt(0.0, 0.0), EdgeRole.SEAM),
     )
     grain = (pt(width * 0.1, height / 2), pt(width * 0.9, height / 2))
-    return Panel(panel_id, name, edges, grain)
+    front = panel_id == "waistband-front"
+    # milieu du bas de la ceinture, posé sur la taille : la ceinture monte au-dessus
+    placement = Placement(
+        Zone.TORSO,
+        BodySide.CENTER,
+        Facing.FRONT if front else Facing.BACK,
+        pt(width / 2, 0.0),
+        Landmark.WAIST,
+    )
+    return Panel(panel_id, name, edges, grain, placement=placement)
 
 
 def _band_seams(segments: int) -> tuple[Seam, ...]:
@@ -128,8 +158,8 @@ def draft_circle_skirt(body: Body, params: Mapping[str, float]) -> Pattern:
     circle = Circle(waist / (2 * math.pi * fraction), float(params["length_mm"]), angle)
     role = EdgeRole.SEAM if band else EdgeRole.WAISTLINE
     panels = [
-        _skirt_panel("front", "Devant", circle, role),
-        _skirt_panel("back", "Dos", circle, role),
+        _skirt_panel("front", circle, role),
+        _skirt_panel("back", circle, role),
     ]
     seams = [
         Seam("side-right", ("front", "side-right"), ("back", "side-left")),

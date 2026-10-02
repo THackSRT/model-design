@@ -16,7 +16,7 @@ def test_drafts_a_straight_skirt_that_follows_the_contract() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["unit"] == "mm"
-    assert body["engine"] == {"name": "patterning", "version": "0.5.0"}
+    assert body["engine"] == {"name": "patterning", "version": "0.6.0"}
     assert [p["id"] for p in body["panels"]] == ["front", "back-right", "back-left"]
     assert all(p["notches"] for p in body["panels"])
 

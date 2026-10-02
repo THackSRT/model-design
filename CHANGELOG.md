@@ -9,6 +9,30 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Contrat du drapé physique (1.19a, compatibilité `specVersion: 1.0`) : `Panel.placement` (zone, côté, sens,
+  ancrage, aisance), tissu (sept préréglages + surcharges), schémas avatar et qualité ; routes `…/drapes`
+  (demander, lire, télécharger), événements `drape.requested`, `drape.completed`, `drape.failed` ; aucune
+  mesure journalisée (ADR 0013).
+- Moteur drapé (port 3203, ENGINE_VERSION 0.2.0, 1.19b) : cœur de simulation XPBD sur CPU en TypeScript,
+  sans dépendance de calcul (ADR 0013) ; étirement anisotrope chaîne/trame, flexion isométrique, coutures,
+  collision et frottement, arrêt au repos ou nombre d'itérations fixé ; déterministe (Float64Array, ordre
+  fixe, seulement + − × ÷ √ abs min max) ; tests physiques (chute libre, bande suspendue, porte-à-faux,
+  sphère, plan incliné, coutures, frottement) ; `/health` (nom, version). Maillage, glTF, cache S3, tâche
+  NATS à venir (1.19d–g).
+- Placement de chaque pièce autour du corps (1.19c, ENGINE_VERSION 0.6.0) : `Panel.placement` pour jupes,
+  pantalon et corsage ; convention des coutures vérifiée par tests ; références golden régénérées (placement
+  ajouté, aucune coordonnée changée).
+- Repères d'épaule et de poignet, axes des bras du mannequin (`landmarksMm.shoulder`, `.wrist` ; `armsMm`
+  par bras : pivot, poignet, axe unitaire, longueur) pour habillage géométrique précis (1.35).
+- Studio : vêtement porté sur le mannequin, habillage géométrique (1.34b) ; vue 3D translucide avec zones
+  trop justes teintées, silhouette en trait superposée ; affichage texte des zones ; bascule « Montrer le
+  vêtement ».
+- Liste et comparaison des versions d'un modèle : `GET /v1/designs/{id}/versions` (résumés récents d'abord,
+  curseur opaque, pas de mesures) et `GET .../versions/{n}/changes?since=` (différences de paramètres et
+  de mesures, organisation propriétaire seulement, `no-store`, 1.16a) ; aucune migration (ADR 0014).
+- Erreurs précises du moteur de patronage relayées (1.32) : huit types stables du contrat remontés en 422 avec
+  détail ; autre type du moteur → 422 `/problems/pattern-impossible` (détail fixé) ; validation, délai, panne
+  → 502 `/problems/engine-unavailable` sans relayer le corps (ADR 0014).
 - Moteur `manufacturing` (port 3202, ENGINE_VERSION 0.4.0) : pièces de coupe avec valeurs de couture par bord,
   crans demandés ou automatiques, droit fil et pliure ; gradation par recalcul ; plan de coupe simple et
   déterministe ; exports SVG 1:1 (1.18a), PDF A4 tuilé (1.18b) et DXF-AAMA (1.18c) ; routes RFC 9457 typées.
@@ -47,6 +71,10 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Modifié
 
+- Moteur drapé (1.19b) : devient TypeScript (`@atelier/drape`, paquet) au lieu de Python (ADR 0013,
+  exception à l'ADR 0003) ; squelette Python supprimé ; simulation sur CPU seulement pour l'instant.
+- Moteur patronage (1.19c) : ENGINE_VERSION 0.6.0, ajout de `Panel.placement` (zone, côté, sens, ancrage,
+  aisance) pour le drapé ; références golden régénérées (ajout seul, aucune coordonnée changée).
 - Moteur mannequin remplacé par modules TypeScript testés (geometry, morph, measure, fit, render, pose) ;
   exception au lint levée.
 - `engines/patterning` : GarmentCode est la référence de conception, réécrite en Python pur, typé, millimètres,

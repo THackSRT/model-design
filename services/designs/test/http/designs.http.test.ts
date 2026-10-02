@@ -6,14 +6,22 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { InMemoryDesignRepository } from '../../src/adapters/persistence/in-memory/in-memory-design-repository.js';
 import { composeApp, configSchema } from '../../src/composition.js';
 import { aSkirt, clock, sequentialIds, someMeasurements } from '../builders.js';
+import type { PatterningEngine } from '../../src/application/ports/patterning-engine.js';
 import { FakePatterningEngine } from '../doubles/fake-patterning-engine.js';
 
 const isDesign = contractValidator('design');
 const isDesignVersion = contractValidator('designVersion');
 
+/** Délègue au moteur courant : chaque test choisit le sien sans relancer l'application. */
+class SwitchableEngine implements PatterningEngine {
+  current: PatterningEngine = new FakePatterningEngine();
+  draft: PatterningEngine['draft'] = (m, g) => this.current.draft(m, g);
+}
+
 describe('API HTTP du service designs', () => {
   let app: INestApplication;
   let base: string;
+  const engine = new SwitchableEngine();
   const post = (path: string, body: unknown) =>
     fetch(`${base}${path}`, {
       method: 'POST',
@@ -25,7 +33,7 @@ describe('API HTTP du service designs', () => {
     const logger = createLogger({}, () => undefined);
     const overrides = {
       designs: new InMemoryDesignRepository(),
-      patterning: new FakePatterningEngine(),
+      patterning: engine,
       ids: sequentialIds(),
       clock,
     };
@@ -77,6 +85,54 @@ describe('API HTTP du service designs', () => {
     expect(((await response.json()) as { type: string }).type).toBe(
       '/problems/garment-type-mismatch',
     );
+  });
+
+  describe('échecs du moteur de patronage', () => {
+    const versionWith = async (outcome: ConstructorParameters<typeof FakePatterningEngine>[0]) => {
+      const design = (await (
+        await post('/v1/designs', { name: 'Jupe', garmentType: 'straight-skirt' })
+      ).json()) as Design;
+      engine.current = new FakePatterningEngine(outcome);
+      try {
+        return await post(`/v1/designs/${design.id}/versions`, {
+          measurements: someMeasurements(),
+          garment: aSkirt(),
+        });
+      } finally {
+        engine.current = new FakePatterningEngine();
+      }
+    };
+
+    it('relaie en 422 le type précis du moteur', async () => {
+      const response = await versionWith({
+        kind: 'patterning-problem',
+        type: 'neckline-too-deep',
+        detail: 'Encolure trop profonde.',
+      });
+      expect(response.status).toBe(422);
+      expect(response.headers.get('content-type')).toContain('application/problem+json');
+      const body = (await response.json()) as { type: string; detail: string };
+      expect(body).toMatchObject({
+        type: '/problems/neckline-too-deep',
+        detail: 'Encolure trop profonde.',
+      });
+    });
+
+    it('un patron impossible reste en 422 pattern-impossible', async () => {
+      const response = await versionWith({ kind: 'pattern-impossible', detail: 'fixe' });
+      expect(response.status).toBe(422);
+      expect(((await response.json()) as { type: string }).type).toBe(
+        '/problems/pattern-impossible',
+      );
+    });
+
+    it('moteur indisponible : 502 engine-unavailable', async () => {
+      const response = await versionWith({ kind: 'engine-unavailable', detail: 'x' });
+      expect(response.status).toBe(502);
+      expect(((await response.json()) as { type: string }).type).toBe(
+        '/problems/engine-unavailable',
+      );
+    });
   });
 
   it('refuse une requête hors contrat avec une erreur RFC 9457', async () => {

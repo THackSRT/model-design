@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { boundsOf, cameraDistance } from './framing.js';
+import { type TightBand, tightVertices } from './garment-colors.js';
 
 export interface MeshData {
   positions: Float32Array;
@@ -7,7 +8,36 @@ export interface MeshData {
   index: Uint32Array | Uint16Array;
 }
 
+/** Vêtement porté : maillage (cm), couleurs lues dans les jetons par l'appelant, zones trop justes. */
+export interface GarmentLayer {
+  mesh: MeshData;
+  color: string;
+  /** Teinte d'alerte des zones trop justes. */
+  tightColor: string;
+  tightZones: readonly TightBand[];
+}
+
 const FOV = 30;
+const GARMENT_OPACITY = 0.9;
+
+/** Vêtement : couleur par sommet (tissu, ou alerte dans une zone trop juste), légère transparence. */
+function toGarmentMesh(layer: GarmentLayer): THREE.Mesh {
+  const mesh = toMesh(layer.mesh, new THREE.MeshStandardMaterial());
+  const base = new THREE.Color(layer.color);
+  const alert = new THREE.Color(layer.tightColor);
+  const colors = tightVertices(layer.mesh.positions, layer.tightZones).flatMap((tight) =>
+    (tight ? alert : base).toArray(),
+  );
+  mesh.geometry.setAttribute('color', new THREE.BufferAttribute(Float32Array.from(colors), 3));
+  mesh.material = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.9,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: GARMENT_OPACITY,
+  });
+  return mesh;
+}
 
 function toMesh(data: MeshData, material: THREE.Material): THREE.Mesh {
   const geometry = new THREE.BufferGeometry();
@@ -19,11 +49,13 @@ function toMesh(data: MeshData, material: THREE.Material): THREE.Mesh {
 }
 
 /** Construit la scène : maillages centrés, lumières douces, caméra cadrée sur la hauteur. */
-export function buildScene(meshes: MeshData[], color: string) {
+export function buildScene(meshes: MeshData[], color: string, garment?: GarmentLayer) {
   const scene = new THREE.Scene();
   const material = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
   const group = new THREE.Group();
   for (const data of meshes) group.add(toMesh(data, material));
+  const garmentMesh = garment ? toGarmentMesh(garment) : undefined;
+  if (garmentMesh) group.add(garmentMesh);
   const bounds = boundsOf(meshes.map((m) => m.positions));
   const center = bounds.min.map((v, i) => (v + (bounds.max[i] ?? v)) / 2) as [
     number,
@@ -39,5 +71,10 @@ export function buildScene(meshes: MeshData[], color: string) {
   scene.add(key);
   const camera = new THREE.PerspectiveCamera(FOV, 1, 1, 10000);
   camera.position.set(0, 0, cameraDistance(bounds, FOV));
-  return { scene, camera, pivot, dispose: () => material.dispose() };
+  const dispose = () => {
+    material.dispose();
+    garmentMesh?.geometry.dispose();
+    (garmentMesh?.material as THREE.Material | undefined)?.dispose();
+  };
+  return { scene, camera, pivot, dispose };
 }

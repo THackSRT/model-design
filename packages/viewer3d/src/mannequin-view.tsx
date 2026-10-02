@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { buildScene, type MeshData } from './scene.js';
+import { buildScene, type GarmentLayer, type MeshData } from './scene.js';
 
 export interface MannequinViewProps {
   meshes: MeshData[];
@@ -9,6 +9,8 @@ export interface MannequinViewProps {
   label: string;
   /** Message affiché à la place de la vue sans WebGL (traduit par l'appelant). */
   webglUnavailableLabel: string;
+  /** Vêtement porté, dessiné par-dessus le corps ; absent : corps seul. */
+  garment?: GarmentLayer;
 }
 
 function attachRotation(canvas: HTMLCanvasElement, pivot: THREE.Object3D, render: () => void) {
@@ -31,9 +33,14 @@ function attachRotation(canvas: HTMLCanvasElement, pivot: THREE.Object3D, render
   };
 }
 
-function mount(canvas: HTMLCanvasElement, meshes: MeshData[], color: string) {
+function mount(
+  canvas: HTMLCanvasElement,
+  meshes: MeshData[],
+  color: string,
+  garment?: GarmentLayer,
+) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  const { scene, camera, pivot, dispose } = buildScene(meshes, color);
+  const { scene, camera, pivot, dispose } = buildScene(meshes, color, garment);
   const render = () => renderer.render(scene, camera);
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = canvas;
@@ -59,13 +66,19 @@ function hasWebGL(): boolean {
 }
 
 /** Mannequin en 3D : glisser pour tourner. Sans WebGL, un message remplace la vue. */
-export function MannequinView({ meshes, color, label, webglUnavailableLabel }: MannequinViewProps) {
+export function MannequinView({
+  meshes,
+  color,
+  label,
+  webglUnavailableLabel,
+  garment,
+}: MannequinViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [webgl] = useState(hasWebGL);
   useEffect(() => {
     if (!webgl || !canvasRef.current || meshes.length === 0) return;
-    return mount(canvasRef.current, meshes, color);
-  }, [webgl, meshes, color]);
+    return mount(canvasRef.current, meshes, color, garment);
+  }, [webgl, meshes, color, garment]);
   if (!webgl) return <p role="status">{webglUnavailableLabel}</p>;
   return (
     <canvas

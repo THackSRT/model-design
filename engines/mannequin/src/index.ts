@@ -6,6 +6,7 @@ import {
   type MakeHumanMeasuresCm,
   type Measured,
 } from './core/makehuman.js';
+import type { ArmJoints } from './core/pose.js';
 import { plainFace } from './core/plain-face.js';
 
 export type Morphotype = { african: number; asian: number; caucasian: number };
@@ -25,11 +26,33 @@ export interface FittedMannequin {
   measuredMm: Partial<Record<keyof MakeHumanMeasuresCm, number>>;
   /** Repères de hauteur du corps ajusté, en mm depuis le sol. */
   landmarksMm: LandmarksMm;
+  /** Épaules, poignets et axes des bras du corps posé, en mm. */
+  armsMm: ArmsMm;
+}
+
+/** Point 3D en mm : x latéral (gauche du mannequin > 0), y vertical depuis le sol, z vers l'avant. */
+export type Point3Mm = [number, number, number];
+
+export interface ArmMm {
+  /** Pivot de l'épaule (articulation de l'humérus). */
+  shoulder: Point3Mm;
+  /** Centre du poignet, bras posé. */
+  wrist: Point3Mm;
+  /** Axe unitaire épaule vers poignet. */
+  axis: Point3Mm;
+  /** Longueur épaule-poignet. */
+  lengthMm: number;
+}
+
+export interface ArmsMm {
+  left: ArmMm;
+  right: ArmMm;
 }
 
 /**
  * Hauteurs depuis le sol (mm), mesurées sur le maillage ajusté : `crotch` entrejambe, `hip` bassin,
- * `waist` taille, `neck` cou, `knee` genou, `ankle` cheville (centres des zones de mesure).
+ * `waist` taille, `neck` cou, `knee` genou, `ankle` cheville (centres des zones de mesure) ;
+ * `shoulder` hauteur du pivot de l'épaule, `wrist` hauteur moyenne des poignets (bras posés).
  */
 export interface LandmarksMm {
   crotch: number;
@@ -38,6 +61,8 @@ export interface LandmarksMm {
   neck: number;
   knee: number;
   ankle: number;
+  shoulder: number;
+  wrist: number;
 }
 
 const toCm = (mm: number | undefined): number | undefined =>
@@ -68,7 +93,7 @@ export interface MannequinEngine {
 }
 
 /** Repères de hauteur (mm) d'un corps mesuré (cm) ; une zone absente est une erreur, jamais 0. */
-function landmarksOf(measured: Measured): LandmarksMm {
+function landmarksOf(measured: Measured, arms: ArmsMm): LandmarksMm {
   const ringMm = (k: string): number => {
     const ring = measured.rings[k];
     if (!ring) throw new Error(`Repère de hauteur introuvable : zone de mesure ${k} absente`);
@@ -83,7 +108,18 @@ function landmarksOf(measured: Measured): LandmarksMm {
     neck: ringMm('neck'),
     knee: ringMm('knee'),
     ankle: ringMm('ankle'),
+    shoulder: arms.left.shoulder[1],
+    wrist: (arms.left.wrist[1] + arms.right.wrist[1]) / 2,
   };
+}
+
+function armOf(j: ArmJoints): ArmMm {
+  const shoulder = j.shoulder.map((v) => v * 10) as Point3Mm;
+  const wrist = j.wrist.map((v) => v * 10) as Point3Mm;
+  const d = [wrist[0] - shoulder[0], wrist[1] - shoulder[1], wrist[2] - shoulder[2]] as Point3Mm;
+  const lengthMm = Math.hypot(...d);
+  const axis = d.map((v) => v / (lengthMm || 1)) as Point3Mm;
+  return { shoulder, wrist, axis, lengthMm };
 }
 
 /** Charge les données MakeHuman (gzip) une fois, puis ajuste autant de corps qu'on veut. */
@@ -111,8 +147,12 @@ export async function loadMannequinEngine(
           (fit.measured[k] ?? 0) * 10,
         ]),
       );
-      const landmarksMm = landmarksOf(fit.measured);
-      return { body, measuredMm, landmarksMm };
+      const armsMm = { left: armOf(posed.joints.L), right: armOf(posed.joints.R) };
+      const landmarksMm = landmarksOf(fit.measured, armsMm);
+      return { body, measuredMm, landmarksMm, armsMm };
     },
   };
 }
+
+export { dressMannequin } from './garment/dress.js';
+export type { DressOptions, GarmentMesh, TightZone } from './garment/types.js';

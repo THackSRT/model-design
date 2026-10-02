@@ -3,7 +3,7 @@
   "unit": "mm",
   "engine": {
     "name": "patterning",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "garment": {
     "type": "bodice"
@@ -193,7 +193,21 @@
         ]
       ],
       "quantity": 1,
-      "cutOnFold": true
+      "cutOnFold": true,
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "front",
+        "anchor": {
+          "point": [
+            0.0,
+            0.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-right",
@@ -355,7 +369,21 @@
         ]
       ],
       "quantity": 1,
-      "cutOnFold": false
+      "cutOnFold": false,
+      "placement": {
+        "zone": "torso",
+        "bodySide": "right",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            0.0,
+            0.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     },
     {
       "id": "back-left",
@@ -517,7 +545,21 @@
         ]
       ],
       "quantity": 1,
-      "cutOnFold": false
+      "cutOnFold": false,
+      "placement": {
+        "zone": "torso",
+        "bodySide": "left",
+        "facing": "back",
+        "anchor": {
+          "point": [
+            240.0,
+            0.0
+          ],
+          "landmark": "waist",
+          "offsetMm": 0.0
+        },
+        "clearanceMm": 30.0
+      }
     }
   ],
   "seams": [

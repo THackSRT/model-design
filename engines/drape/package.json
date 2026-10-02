@@ -1,0 +1,32 @@
+{
+  "name": "@atelier/drape",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Moteur drape : simulation XPBD du tombé d'un tissu sur un corps, sur CPU, sans dépendance.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "dev": "tsc -p tsconfig.build.json && node dist/main.js",
+    "start": "node dist/main.js"
+  },
+  "nx": {
+    "tags": [
+      "type:engine"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4"
+  }
+}

@@ -1,16 +1,22 @@
 """Conversions contrat <-> cœur. Seul endroit qui connaît le format des contrats."""
 
 from atelier_contracts.generated.garment_spec_schema import (
-    Edge as SpecEdge,
-)
-from atelier_contracts.generated.garment_spec_schema import (
+    Anchor,
+    BodySide,
     EdgeRef,
     Engine,
+    Facing,
     Garment,
     GarmentSpec,
+    Landmark,
+    PanelPlacement,
     Point,
     Role,
     Seam,
+    Zone,
+)
+from atelier_contracts.generated.garment_spec_schema import (
+    Edge as SpecEdge,
 )
 from atelier_contracts.generated.garment_spec_schema import (
     Notch as SpecNotch,
@@ -19,7 +25,7 @@ from atelier_contracts.generated.garment_spec_schema import (
     Panel as SpecPanel,
 )
 from patterning import ENGINE_NAME, ENGINE_VERSION
-from patterning.core.model import Edge, Notch, Panel, Pattern
+from patterning.core.model import Edge, Notch, Panel, Pattern, Placement
 from patterning.core.model import Seam as CoreSeam
 from patterning.spec.request import camel_case
 
@@ -49,6 +55,21 @@ def _panel(panel: Panel) -> SpecPanel:
         quantity=panel.quantity,
         cutOnFold=panel.cut_on_fold,
         notches=[_notch(n) for n in panel.notches] or None,
+        placement=_placement(panel.placement) if panel.placement else None,
+    )
+
+
+def _placement(placement: Placement) -> PanelPlacement:
+    return PanelPlacement(
+        zone=Zone(placement.zone.value),
+        bodySide=BodySide(placement.body_side.value),
+        facing=Facing(placement.facing.value),
+        anchor=Anchor(
+            point=_point(placement.anchor),
+            landmark=Landmark(placement.landmark.value),
+            offsetMm=placement.offset_mm,
+        ),
+        clearanceMm=placement.clearance_mm,
     )
 
 

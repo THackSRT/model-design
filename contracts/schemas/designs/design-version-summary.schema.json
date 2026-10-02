@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atelier.example/schemas/designs/design-version-summary.schema.json",
+  "title": "DesignVersionSummary",
+  "description": "Résumé d'une version de modèle, pour une liste : ni mesures du client ni patron (lire la version pour les obtenir). Longueurs des paramètres en millimètres.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["number", "createdAt", "fingerprint", "engineVersion", "garment"],
+  "properties": {
+    "number": { "type": "integer", "minimum": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "engineVersion": {
+      "type": "string",
+      "description": "Version du moteur de patronage qui a tracé le patron (spec.engine.version)."
+    },
+    "garment": {
+      "$ref": "../garment-request.schema.json",
+      "description": "Type de vêtement et paramètres demandés, tels qu'envoyés."
+    }
+  }
+}

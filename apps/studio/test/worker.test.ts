@@ -12,7 +12,30 @@ const fitted = (): FittedMannequin => ({
     index: Uint32Array.of(0, 1, 2),
   },
   measuredMm: { chest: 880 },
-  landmarksMm: { crotch: 780, hip: 900, waist: 1050, neck: 1400, knee: 480, ankle: 80 },
+  landmarksMm: {
+    crotch: 780,
+    hip: 900,
+    waist: 1050,
+    neck: 1400,
+    knee: 480,
+    ankle: 80,
+    shoulder: 1330,
+    wrist: 820,
+  },
+  armsMm: {
+    left: {
+      shoulder: [180, 1330, 0],
+      wrist: [260, 820, 40],
+      axis: [0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+    right: {
+      shoulder: [-180, 1330, 0],
+      wrist: [-260, 820, 40],
+      axis: [-0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+  },
 });
 
 describe('traitement d’une demande d’ajustement (worker)', () => {

@@ -50,12 +50,89 @@ class Edge(BaseModel):
     role: Role | None = None
 
 
+class Zone(StrEnum):
+    torso = "torso"
+    leg = "leg"
+    arm = "arm"
+
+
+class BodySide(StrEnum):
+    left = "left"
+    right = "right"
+    center = "center"
+
+
+class Facing(StrEnum):
+    front = "front"
+    back = "back"
+    outer = "outer"
+
+
+class Landmark(StrEnum):
+    neck = "neck"
+    shoulder = "shoulder"
+    waist = "waist"
+    hip = "hip"
+    crotch = "crotch"
+    knee = "knee"
+    ankle = "ankle"
+    wrist = "wrist"
+
+
+class Anchor(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    point: Point
+    landmark: Landmark = Field(..., description="Repère de hauteur du corps ajusté.")
+    offsetMm: float | None = Field(
+        0,
+        description="Décalage vertical depuis le repère, en millimètres, positif vers le haut.",
+        ge=-500.0,
+        le=500.0,
+    )
+
+
+class PanelPlacement(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    zone: Zone = Field(..., description="Partie du corps autour de laquelle la pièce s'enroule.")
+    bodySide: BodySide = Field(
+        ...,
+        description="Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.",
+    )
+    facing: Facing = Field(
+        ...,
+        description="Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.",
+    )
+    anchor: Anchor = Field(
+        ...,
+        description="Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm.",
+    )
+    clearanceMm: float | None = Field(
+        30,
+        description="Distance au corps de la position de départ, en millimètres.",
+        ge=5.0,
+        le=150.0,
+    )
+
+
+class Side(StrEnum):
+    left = "left"
+    right = "right"
+
+
 class EdgeRef(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     panelId: str
     edgeId: str
+    side: Side | None = Field(
+        None,
+        description="Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.",
+    )
 
 
 class Seam(BaseModel):
@@ -111,6 +188,7 @@ class Panel(BaseModel):
         description="Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux).",
         max_length=200,
     )
+    placement: PanelPlacement | None = None
 
 
 class GarmentSpec(BaseModel):

@@ -15,9 +15,57 @@ channels:
         title: Nouvelle version d'un modèle
         payload:
           $ref: '../schemas/events/design-versioned.schema.json'
+  drapeRequested:
+    address: drape.requested
+    description: >
+      Flux DRAPE_JOBS déclaré par designs (rétention « file de travail », âge maximal 24 h). Le message
+      contient des mesures : jamais journalisé (ADR 0013).
+    messages:
+      drapeRequested:
+        name: drape.requested
+        title: Tâche de drapé d'une version de modèle
+        payload:
+          $ref: '../schemas/events/drape-requested.schema.json'
+  drapeCompleted:
+    address: drape.completed
+    description: >
+      Flux DRAPE déclaré par le moteur drape. Nats-Msg-Id = <drapeId>.completed ; livré au moins une
+      fois, le consommateur est idempotent.
+    messages:
+      drapeCompleted:
+        name: drape.completed
+        title: Drapé calculé
+        payload:
+          $ref: '../schemas/events/drape-completed.schema.json'
+  drapeFailed:
+    address: drape.failed
+    description: >
+      Flux DRAPE déclaré par le moteur drape. Nats-Msg-Id = <drapeId>.failed ; type d'erreur stable
+      (enum), aucun texte libre.
+    messages:
+      drapeFailed:
+        name: drape.failed
+        title: Drapé impossible
+        payload:
+          $ref: '../schemas/events/drape-failed.schema.json'
 operations:
   publishDesignVersioned:
     action: send
     channel: { $ref: '#/channels/designVersioned' }
     x-producer: designs
     x-consumers: []
+  publishDrapeRequested:
+    action: send
+    channel: { $ref: '#/channels/drapeRequested' }
+    x-producer: designs
+    x-consumers: [drape]
+  publishDrapeCompleted:
+    action: send
+    channel: { $ref: '#/channels/drapeCompleted' }
+    x-producer: drape
+    x-consumers: [designs]
+  publishDrapeFailed:
+    action: send
+    channel: { $ref: '#/channels/drapeFailed' }
+    x-producer: drape
+    x-consumers: [designs]

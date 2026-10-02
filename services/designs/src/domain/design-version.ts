@@ -62,3 +62,20 @@ export function addVersion(design: Design, draft: VersionDraft): Result<VersionA
   };
   return ok({ design: { ...design, latestVersionNumber: number }, version, events: [event] });
 }
+
+/** Résumé d'une version pour une liste : ni mesures du client ni patron. */
+export interface VersionSummary {
+  readonly number: number;
+  readonly createdAt: Date;
+  readonly fingerprint: string;
+  readonly engineVersion: string;
+  readonly garment: GarmentRequest;
+}
+
+export const summaryOf = (v: DesignVersion): VersionSummary => ({
+  number: v.number,
+  createdAt: v.createdAt,
+  fingerprint: v.fingerprint,
+  engineVersion: v.spec.engine.version,
+  garment: v.garment,
+});

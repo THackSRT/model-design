@@ -10,14 +10,23 @@ type PoseData = Pick<MhData, 'joints' | 'arm'>;
 /** Rotation d'axe k (unitaire) et d'angle th autour du point J. */
 interface ArmFrame {
   shoulder: Vec3;
+  /** Centre du poignet avant la pose. */
+  wrist: Vec3;
   axis: Vec3;
   angle: number;
+}
+
+export interface ArmJoints {
+  shoulder: Vec3;
+  wrist: Vec3;
 }
 
 export interface PoseResult {
   pos: Float32Array;
   /** Applique la rotation complète de chaque bras à un point (anneaux de mesure). */
   rot: { L: (p: Vec3) => Vec3; R: (p: Vec3) => Vec3 };
+  /** Articulations du bras posé (cm) : épaule (pivot, immobile) et centre du poignet. */
+  joints: { L: ArmJoints; R: ArmJoints };
 }
 
 function centroid(pos: Float32Array, list: number[]): Vec3 {
@@ -39,7 +48,7 @@ function armFrame(pos: Float32Array, data: PoseData, side: 'L' | 'R', angleDeg: 
   const s = Math.hypot(...k);
   const c = dot(d, t);
   const axis: Vec3 = [k[0] / (s || 1), k[1] / (s || 1), k[2] / (s || 1)];
-  return { shoulder, axis, angle: Math.atan2(s, c) };
+  return { shoulder, wrist, axis, angle: Math.atan2(s, c) };
 }
 
 /** Tourne le point p de la fraction `frac` de la rotation (formule de Rodrigues). */
@@ -65,6 +74,7 @@ function rotate(f: ArmFrame, p: Vec3, frac: number): Vec3 {
 export function pose(data: PoseData, pos: Float32Array, angle = 9): PoseResult {
   const out = Float32Array.from(pos);
   const rots = {} as PoseResult['rot'];
+  const joints = {} as PoseResult['joints'];
   for (const side of ['L', 'R'] as const) {
     const frame = armFrame(pos, data, side, angle);
     const { idx, w } = data.arm[side];
@@ -78,6 +88,7 @@ export function pose(data: PoseData, pos: Float32Array, angle = 9): PoseResult {
       out[j + 2] = r[2];
     }
     rots[side] = (p) => rotate(frame, p, 1);
+    joints[side] = { shoulder: frame.shoulder, wrist: rotate(frame, frame.wrist, 1) };
   }
-  return { pos: out, rot: rots };
+  return { pos: out, rot: rots, joints };
 }

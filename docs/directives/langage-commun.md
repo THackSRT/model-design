@@ -4,32 +4,38 @@ Le code, les contrats, la base et les journaux sont en anglais ; l'interface est
 langues) par les catalogues de traduction. Chaque terme métier a un seul nom dans le code, fixé ici ; un nouveau
 terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'introduit.
 
-| Terme métier                                                                  | Nom dans le code                                                  | Service propriétaire           |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------ |
-| Organisation (atelier, boutique de tissus, prestataire, livreur, marque)      | `Organization`, `OrganizationKind`                                | organizations                  |
-| Membre                                                                        | `Member`                                                          | organizations                  |
-| Fiche client                                                                  | `CustomerProfile`                                                 | customers                      |
-| Jeu de mesures                                                                | `MeasurementSet`                                                  | customers                      |
-| Avatar                                                                        | `Avatar`                                                          | avatars                        |
-| Modèle, version de modèle                                                     | `Design`, `DesignVersion`                                         | designs                        |
-| Patron (spécification), pièce, bord, couture, cran, emplacement de cran       | `GarmentSpec`, `Panel`, `Edge`, `Seam`, `Notch`, `NotchPlacement` | designs                        |
-| Droit fil, laize, métrage                                                     | `grainline`, `fabricWidthMm`, `fabricLengthMm`                    | designs, production            |
-| Pièces de coupe, pièce de coupe, ligne de coupe, ligne de couture, cran tracé | `CutPattern`, `CutPiece`, `cutLine`, `seamLine`, `NotchMark`      | moteur manufacturing           |
-| Pince (deux bords consécutifs cousus ensemble), pont de pince                 | `dart_pairs`, `bridge_contour` (moteur)                           | moteur manufacturing           |
-| Valeur de couture (par bord ou par défaut)                                    | `seamAllowance`, `allowanceMm`, `FinishingOptions`                | moteur manufacturing           |
-| Taille, gradation, écart de gradation                                         | `SizeLabel`, `GradedPattern`, `gradeRules`                        | moteur manufacturing           |
-| Plan de coupe, placement, efficience                                          | `CuttingPlan`, `Placement`, `efficiency`                          | moteur manufacturing           |
-| Tissu plié ou à plat, sens du tissu, lisière                                  | `layout`, `FabricDirection`, `selvedge`                           | moteur manufacturing           |
-| Commande client, étape                                                        | `Order`, `OrderStage`                                             | orders                         |
-| Tâche                                                                         | `Task`                                                            | production                     |
-| Dépôt de matière                                                              | `MaterialDeposit`                                                 | workshop-stock                 |
-| Article tissu, coloris, rouleau                                               | `FabricArticle`, `Colorway`, `Roll`                               | fabric-catalog, supplier-stock |
-| Réservation                                                                   | `Reservation`                                                     | supplier-stock                 |
-| Commande d'achat                                                              | `PurchaseOrder`                                                   | purchasing                     |
-| Demande de prestation                                                         | `ServiceJob`                                                      | subcontracting                 |
-| Paiement, versement                                                           | `Payment`, `Payout`                                               | payments                       |
-| Envoi                                                                         | `Shipment`                                                        | delivery                       |
-| Publication, annonce                                                          | `Post`, `Listing`                                                 | community                      |
+| Terme métier                                                                  | Nom dans le code                                                           | Service propriétaire           |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------ |
+| Organisation (atelier, boutique de tissus, prestataire, livreur, marque)      | `Organization`, `OrganizationKind`                                         | organizations                  |
+| Membre                                                                        | `Member`                                                                   | organizations                  |
+| Fiche client                                                                  | `CustomerProfile`                                                          | customers                      |
+| Jeu de mesures                                                                | `MeasurementSet`                                                           | customers                      |
+| Avatar                                                                        | `Avatar`                                                                   | avatars                        |
+| Modèle, version de modèle                                                     | `Design`, `DesignVersion`                                                  | designs                        |
+| Patron (spécification), pièce, bord, couture, cran, emplacement de cran       | `GarmentSpec`, `Panel`, `Edge`, `Seam`, `Notch`, `NotchPlacement`          | designs                        |
+| Placement d'une pièce autour du corps                                         | `Panel.placement` : zone, côté, sens, ancrage, aisance                     | designs, moteur patronage      |
+| Habillage (vêtement sur le corps, géométrique)                                | `GarmentMesh`, `dressMannequin()`                                          | mannequin                      |
+| Drapé (vêtement simulé avec dynamique physique)                               | `Drape` : spécification, avatar, tissu, résultat glTF                      | designs, moteur drapé          |
+| Zone trop juste (lieu où le vêtement est serré)                               | `tightZones`, perte d'aisance                                              | mannequin, drapé               |
+| Aisance (distance initiale pièce–corps, aussi écart dorsal à la fin)          | `clearanceMm` (placement), `ease` (résultat)                               | patronage, drapé               |
+| Tissu préréglé (propriétés estimées)                                          | `FabricPreset` : cotton-poplin, wax, bazin, linen, denim, silk-sat, jersey | drapé                          |
+| Droit fil, laize, métrage                                                     | `grainline`, `fabricWidthMm`, `fabricLengthMm`                             | designs, production            |
+| Pièces de coupe, pièce de coupe, ligne de coupe, ligne de couture, cran tracé | `CutPattern`, `CutPiece`, `cutLine`, `seamLine`, `NotchMark`               | moteur manufacturing           |
+| Pince (deux bords consécutifs cousus ensemble), pont de pince                 | `dart_pairs`, `bridge_contour` (moteur)                                    | moteur manufacturing           |
+| Valeur de couture (par bord ou par défaut)                                    | `seamAllowance`, `allowanceMm`, `FinishingOptions`                         | moteur manufacturing           |
+| Taille, gradation, écart de gradation                                         | `SizeLabel`, `GradedPattern`, `gradeRules`                                 | moteur manufacturing           |
+| Plan de coupe, placement, efficience                                          | `CuttingPlan`, `Placement`, `efficiency`                                   | moteur manufacturing           |
+| Tissu plié ou à plat, sens du tissu, lisière                                  | `layout`, `FabricDirection`, `selvedge`                                    | moteur manufacturing           |
+| Commande client, étape                                                        | `Order`, `OrderStage`                                                      | orders                         |
+| Tâche                                                                         | `Task`                                                                     | production                     |
+| Dépôt de matière                                                              | `MaterialDeposit`                                                          | workshop-stock                 |
+| Article tissu, coloris, rouleau                                               | `FabricArticle`, `Colorway`, `Roll`                                        | fabric-catalog, supplier-stock |
+| Réservation                                                                   | `Reservation`                                                              | supplier-stock                 |
+| Commande d'achat                                                              | `PurchaseOrder`                                                            | purchasing                     |
+| Demande de prestation                                                         | `ServiceJob`                                                               | subcontracting                 |
+| Paiement, versement                                                           | `Payment`, `Payout`                                                        | payments                       |
+| Envoi                                                                         | `Shipment`                                                                 | delivery                       |
+| Publication, annonce                                                          | `Post`, `Listing`                                                          | community                      |
 
 ## Unités et valeurs
 

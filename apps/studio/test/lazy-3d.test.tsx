@@ -23,7 +23,30 @@ const fitted: FittedMannequin = {
     index: Uint32Array.from([0, 1, 2]),
   },
   measuredMm: {},
-  landmarksMm: { crotch: 780, hip: 900, waist: 1050, neck: 1400, knee: 480, ankle: 80 },
+  landmarksMm: {
+    crotch: 780,
+    hip: 900,
+    waist: 1050,
+    neck: 1400,
+    knee: 480,
+    ankle: 80,
+    shoulder: 1330,
+    wrist: 820,
+  },
+  armsMm: {
+    left: {
+      shoulder: [180, 1330, 0],
+      wrist: [260, 820, 40],
+      axis: [0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+    right: {
+      shoulder: [-180, 1330, 0],
+      wrist: [-260, 820, 40],
+      axis: [-0.155, -0.985, 0.077],
+      lengthMm: 518,
+    },
+  },
 };
 const actions: PatternStudioActions = {
   setDisplay: vi.fn(),
@@ -32,6 +55,7 @@ const actions: PatternStudioActions = {
   setGarmentType: vi.fn(),
   setParam: vi.fn(),
   setWithSleeve: vi.fn(),
+  setShowGarment: vi.fn(),
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
 };
@@ -42,6 +66,8 @@ const state: PatternStudioState = {
   mannequinStatus: 'ready',
   mannequin: fitted,
   display: '3d',
+  dressing: { status: 'idle' },
+  showGarment: true,
 };
 
 describe('chargement différé de la vue 3D', () => {
