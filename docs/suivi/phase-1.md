@@ -28,17 +28,23 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
   pour 1700 mm de stature). Habillage géométrique rapide (`dressMannequin()`, 35–50 ms). Ajustement dans un
   Web Worker (`apps/studio`) : l'écran du studio ne fige plus.
 - **Silhouettes 2D du mannequin** (face, profil, dos) affichées dans le studio de patron : bascule interactif 3D / silhouettes vectorielles.
+- **Drapé sur l'avatar** (ENGINE_VERSION 0.5.0) : calcule le mannequin depuis les mesures et les options, place
+  chaque pièce autour du corps selon `Panel.placement`, simule, applique l'aisance et l'allongement ; jupe
+  droite en brouillon drape correctement (convergence 116 pas, aisance bassin ~6 mm). Autres vêtements non
+  maintenus (1.19e2 à venir).
 - **Moteur de fabrication** (`engines/manufacturing`, port 3202, ENGINE_VERSION 0.4.0) : pièces de coupe avec
   valeurs de couture par bord, crans demandés ou automatiques, droit fil, pliure, pinces (pont) ; gradation par
   recalcul ; plan de coupe simple et déterministe ; exports SVG 1:1, PDF A4 tuilé et DXF-AAMA en mm. Erreurs
   RFC 9457 typées.
-- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.3.0) : cœur de
+- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.5.0) : cœur de
   simulation XPBD sur CPU en TypeScript (ADR 0013, exception à l'ADR 0003), sans dépendance de calcul,
   déterministe ; étirement chaîne/trame, flexion, coutures, collision, frottement, arrêt au repos ; λ cumulé
   par sous-pas (XPBD correct), option `iterations` (1–32), validation des maillages ; essai de drapé de
-  Cusick simulé (coefficient de drapé, 0,75–2 s) ; tests physiques, `/health`. Maillage, glTF en S3 à cache
-  (version + avatar), tâche NATS, événements `drape.requested`, `drape.completed`, `drape.failed` à venir
-  (1.19d–g).
+  Cusick simulé (coefficient de drapé, 0,75–2 s) ; tests physiques, `/health`. Recalcule le mannequin depuis
+  les mesures et les options, place chaque pièce selon `Panel.placement`, applique l'aisance et l'allongement ;
+  jupe droite en brouillon drape correctement (convergence 116 pas, aisance bassin ~6 mm). Autres vêtements non
+  maintenus (1.19e2 à venir). Tâche NATS, résultats glTF lus depuis S3 (1.19g1–g2 : routes dans `designs`,
+  consommateur, variables S3).
 - **Banc d'essai des tissus** (ADR 0015) : contrats et schémas (`fabric-physics`, mesures, valeurs dérivées,
   rapport de validation) ; moteur : essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement),
   tolérances et écarts, essai de Cusick simulé ; features : modèle de vue `useFabricBench`, import/export du
@@ -71,8 +77,10 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
    tuilé (1.18b) et DXF-AAMA (1.18c).
 6. 🟡 **`engines/drape`** : contrat du drapé physique (1.19a ✅, `Panel.placement`) ; simulation XPBD sur CPU
    en TypeScript (1.19b ✅, ENGINE_VERSION 0.2.0–0.4.0) ; placement de chaque pièce (1.19c ✅) ; maillage
-   triangulaire Delaunay contraint (1.19d ✅, ENGINE_VERSION 0.4.0, 0,02–0,17 s pour les références) ; restent
-   1.19e avatar, départ, aisance ; 1.19f glTF S3, NATS événements ; 1.19g route `/drapes`.
+   triangulaire Delaunay contraint (1.19d ✅, ENGINE_VERSION 0.4.0, 0,02–0,17 s pour les références) ;
+   drapé sur l'avatar avec aisance (1.19e ✅, ENGINE_VERSION 0.5.0, jupe droite brouillon validée) ;
+   routes `/drapes` dans `designs` avec consommateur et modèle glTF depuis S3 (1.19g1–g2 ✅). Restent
+   1.19e2 (maintien des autres vêtements), 1.19f (glTF et S3 complétement intégrés).
 7. ✅ **Relais de l'outbox vers NATS JetStream** : implémenté dans `service-kit` et branché dans `designs`
    avec flux `DESIGNS` (sujets `design.>`), variables d'environnement `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`.
 8. ✅ **Studio** : `three.js` chargé à la demande (paquet de 806 kB réduit à 303 kB) ; bibliothèque de

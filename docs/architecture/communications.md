@@ -23,7 +23,7 @@ Cinq modes d'échange suffisent : appels d'API pour lire et demander, événemen
 2. Le service Modèles appelle le moteur de Patronage (synchrone, < 1 s) avec les paramètres et les mesures de l'avatar choisi.
 3. La spécification revient ; le studio affiche aussitôt le patron 2D et l'aperçu 2D ou 2,5D.
 4. Le service Modèles dépose une tâche `drape` dans la file (spécification, avatar, tissu).
-5. Un worker du moteur de Drapé (1.19b : cœur de simulation XPBD sur CPU) simule ; maillage, glTF en S3, publication `drape.completed` ou `drape.failed` à venir (1.19d–g).
+5. Le service Modèles publie la tâche `drape.requested` (flux `DRAPE_JOBS`). Le moteur de Drapé sait draper sur l'avatar (1.19e, ENGINE_VERSION 0.5.0) ; son travailleur NATS, l'écriture du glTF dans S3 et la publication de `drape.completed` ou `drape.failed` sont à venir (1.19f). Le service Modèles consomme déjà ces résultats et sert le glTF depuis S3 (1.19g).
 6. Le moteur de Rendu calcule les vues 2D et les cartes 2,5D, publie `render.ready`.
 7. Le studio reçoit l'avis en temps réel et charge la vue 3D ; si le client a accès au projet, il la voit aussi.
 

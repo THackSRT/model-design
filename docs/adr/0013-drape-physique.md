@@ -181,3 +181,19 @@ sinon `InvalidInputError` ; les boucles géométriques tournent sur un indice en
 est estimé avant tout travail coûteux (longueur des bords / h, aire / (√3/2·h²)) et le budget restant du vêtement
 est passé à chaque pièce, de sorte que `DrapeTooLargeError` tombe avant le maillage ; le nombre de coutures est
 borné. Une borne des coordonnées dans le contrat (`Point`) reste à décider (tâche 1.41).
+
+**Borne au contrat (02/10/2026, tâche 1.41).** La borne est désormais aussi dans le contrat : chaque coordonnée
+d'un `Point` de `GarmentSpec` est comprise entre −10 000 et 10 000 mm, bornes comprises, de sorte qu'une entrée
+hostile est refusée dès la validation à l'entrée d'un service ou d'un moteur. Les sorties de la fabrication
+(`CutPattern`, `CuttingPlan`) ont leur propre `Point`, non borné : la ligne de coupe dépasse la ligne de couture
+des valeurs de couture, et un plan de coupe en série dépasse 10 m.
+
+**Avatar et premier drapé (1.19e, 02/10/2026, décision de l'orchestrateur).** L'import de `@atelier/mannequin` par
+`engines/drape` est une exception étroite aux contraintes de dépendance du lint : seul `src/body/` (et ses
+tests) peut l'importer ; elle est déclarée dans `eslint.config.mjs` du moteur et commentée à la racine, sans
+relâcher les autres règles. `drapeGarment(job)` (ENGINE_VERSION 0.5.0) drape la jupe droite en brouillon :
+convergence, aucune pénétration, coutures fermées, aisance cohérente avec l'habillage géométrique. Les autres
+vêtements ne sont pas encore tenus : jupe cercle et pantalon finissent en `seam-not-closed`, le corsage en
+`body-penetration`, le corsage à manches converge mais avec une aisance négative. Il leur faut un maintien
+(ceinture, épaules), un pantalon posé jambe par jambe et des réglages par type de vêtement (tâche 1.19e2) ; ces
+problèmes typés sont rendus tels quels, jamais masqués.

@@ -22,3 +22,5 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0013](0013-drape-physique.md)                | Drapé physique en TypeScript (XPBD, CPU), en tâche NATS                    | Acceptée             |
 | [0014](0014-versions-et-erreurs-relayees.md)  | Versions d'un modèle et erreurs du patronage relayées                      | Acceptée             |
 | [0015](0015-banc-d-essai-des-tissus.md)       | Banc d'essai des tissus : préréglages validés par un modéliste, rapport    | Acceptée             |
+| [0016](0016-storybook-et-captures.md)         | Storybook et captures comparées (Vitest navigateur, Chromium dans Docker)  | Acceptée             |
+| [0017](0017-tests-de-bout-en-bout.md)         | Tests de bout en bout : Playwright sur la pile Docker, hors `pnpm check`   | Acceptée             |

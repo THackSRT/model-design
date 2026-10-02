@@ -48,14 +48,16 @@ Il rend la spécification utilisable en atelier.
 
 Il coud virtuellement les pièces sur l'avatar et simule le tombé du tissu (ADR 0013).
 
-1. **Positionnement initial** : les pièces sont placées autour du corps selon les repères fournis par le patronage (`Panel.placement` : zone, côté, sens, ancrage, aisance).
-2. **Maillage triangulaire** : Delaunay contrainte des pièces à pas régulier h (25 mm en brouillon, 15 mm en standard ; arêtes ≤ 1,2 h, angle minimal > 20°) ; vêtement complet à plat `meshGarment` avec pièces sur pliure dépliées, copies miroir pour `quantity: 2`, coutures appariées point à point, droit fil par triangle ; limites : 40 pièces, 2 000 bords, 30 000 sommets ; cinq vêtements de référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets).
-3. **Simulation physique** : dynamique à base de positions étendue (XPBD) sur CPU, sans dépendance ; étirement anisotrope chaîne/trame, flexion isométrique, coutures virtuelles, collision avec le corps et frottement, arrêt au repos ou au nombre d'itérations fixé.
-4. **Habillage géométrique** : approximation instantanée en anneaux horizontaux (35–50 ms, `dressMannequin()`) pour aperçu pendant le calcul du drapé.
-5. **Sorties** : vêtement drapé glTF binaire (mètres, `POSITION`, `NORMAL`, `TEXCOORD_0` du patron, attributs personnalisés `_EASE_MM` et `_STRAIN`), mis en cache par (version du patron, avatar, tissu, ENGINE_VERSION) dans S3.
-6. **Tâche** : demande asynchrone via NATS, rétention 24 h, publication `drape.completed` ou `drape.failed` ; types d'erreur stables : placement manquant, échec du placement, couture non fermée, pénétration du corps, trop volumineux.
+1. **Avatar recalculé** : le moteur recalcule le mannequin depuis les mesures et les options (`@atelier/mannequin`), garanti compatible avec le patronage.
+2. **Positionnement initial** : les pièces sont placées autour du corps selon les repères fournis par le patronage (`Panel.placement` : zone, côté, sens, ancrage, aisance).
+3. **Maillage triangulaire** : Delaunay contrainte des pièces à pas régulier h (25 mm en brouillon, 15 mm en standard ; arêtes ≤ 1,2 h, angle minimal > 20°) ; vêtement complet à plat `meshGarment` avec pièces sur pliure dépliées, copies miroir pour `quantity: 2`, coutures appariées point à point, droit fil par triangle ; limites : 40 pièces, 2 000 bords, 30 000 sommets ; cinq vêtements de référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets).
+4. **Simulation physique** : dynamique à base de positions étendue (XPBD) sur CPU, sans dépendance ; étirement anisotrope chaîne/trame, flexion isométrique, coutures virtuelles, collision avec le corps et frottement, arrêt au repos ou au nombre d'itérations fixé.
+5. **Habillage géométrique** : approximation instantanée en anneaux horizontaux (35–50 ms, `dressMannequin()`) pour aperçu pendant le calcul du drapé.
+6. **Sorties** (à venir, 1.19f) : vêtement drapé glTF binaire (mètres, `POSITION`, `NORMAL`, `TEXCOORD_0` du patron, attributs personnalisés `_EASE_MM` et `_STRAIN`), mis en cache par (version du patron, avatar, tissu, ENGINE_VERSION) dans S3.
+7. **Routes dans le service `designs`** : `POST …/versions/{n}/drapes` demande un drapé (idempotent : même tissu, avatar et finesse sur la même version) ; `GET …/drapes/{drapeId}` lit l'état ; `GET …/drapes/{drapeId}/model` récupère le glTF depuis S3.
+8. **Tâche** : demande asynchrone par le flux NATS `DRAPE_JOBS` (file de travail, 24 h), déjà publiée par `designs` ; le travailleur du moteur et la publication de `drape.completed` ou `drape.failed` sont à venir (1.19f) ; types d'erreur stables : placement manquant, échec du placement, couture non fermée, pénétration du corps, trop volumineux.
 
-Implémentation actuelle : TypeScript sur CPU (paquet `@atelier/drape`). GPU (WebGPU navigateur, ou Warp serveur) viendra par une nouvelle ADR si les performances le justifient. Propriétés des sept tisus préréglés (cotton-poplin, wax, bazin, linen, denim, silk-satin, jersey) : estimées, à faire valider.
+Implémentation actuelle : TypeScript sur CPU (paquet `@atelier/drape`, ENGINE_VERSION 0.5.0). La jupe droite en brouillon donne un résultat valide (convergence en 116 pas, aucune pénétration, coutures fermées, aisance bassin ~6 mm) ; autres vêtements à affiner (ceinture, épaules, pantalon jambe par jambe). GPU (WebGPU navigateur, ou Warp serveur) viendra par une nouvelle ADR si les performances le justifient. Propriétés des sept tisus préréglés (cotton-poplin, wax, bazin, linen, denim, silk-satin, jersey) : estimées, à faire valider.
 
 ## 5.5 Moteur de Rendu 2D, 2,5D et 3D
 

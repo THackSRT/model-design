@@ -137,6 +137,8 @@ nav:
       - 0013 Drapé physique: adr/0013-drape-physique.md
       - 0014 Versions et erreurs relayées: adr/0014-versions-et-erreurs-relayees.md
       - 0015 Banc d'essai des tissus: adr/0015-banc-d-essai-des-tissus.md
+      - 0016 Storybook et captures comparées: adr/0016-storybook-et-captures.md
+      - 0017 Tests de bout en bout: adr/0017-tests-de-bout-en-bout.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md

@@ -46,6 +46,13 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   point à point, droit fil par triangle ; limites (40 pièces, 2 000 bords, 30 000 sommets, 200 coutures,
   coordonnées à 10 m) vérifiées avant tout travail coûteux, contre une entrée hostile ; cinq vêtements de
   référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets) ; ADR 0013 complétée.
+- Drapé de l'avatar (1.19e, ENGINE_VERSION 0.5.0) : `drapeGarment(job)` recalcule le mannequin depuis les
+  mesures et les options (`@atelier/mannequin`, seul import autorisé) ; place chaque pièce autour du corps selon
+  `Panel.placement` ; simule, puis rend l'aisance par sommet, l'allongement maximal et la convergence, ou un
+  problème typé (`placement-missing`, `placement-failed`, `seam-not-closed`, `body-penetration`,
+  `drape-too-large`). Jupe droite en brouillon
+  drape correctement (convergence 116 pas, aucune pénétration, aisance bassin ~6 mm) ; autres vêtements non
+  maintenus (tâche 1.19e2 : ceinture/épaules, pantalon jambe par jambe, réglages par type).
 - Repères d'épaule et de poignet, axes des bras du mannequin (`landmarksMm.shoulder`, `.wrist` ; `armsMm`
   par bras : pivot, poignet, axe unitaire, longueur) pour habillage géométrique précis (1.35).
 - Studio : vêtement porté sur le mannequin, habillage géométrique (1.34b) ; vue 3D translucide avec zones
@@ -100,9 +107,24 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   variables `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, arrêt propre avec `SIGTERM/SIGINT`.
 - Relais générique de l'outbox vers NATS JetStream (`@atelier/service-kit`) : au moins une fois,
   déduplication par `Nats-Msg-Id` (ADR 0008).
+- Routes du drapé dans `designs` (1.19g1) : `POST …/versions/{n}/drapes` (202 création + événement
+  `drape.requested` par l'outbox ; 200 pour demande identique, idempotent) ; `GET …/drapes/{drapeId}` (statut ;
+  `drape-timeout` après 10 min, calculé à la lecture) ; migration 0002_drapes ; flux `DRAPE_JOBS` (24 h).
+- Consommateur des résultats drapé dans `designs` (1.19g2) : événements `drape.completed` / `drape.failed` sur
+  flux `DRAPE` (consommateur durable `designs-drape`, premier résultat gagne) ; `GET …/drapes/{drapeId}/model` : modèle glTF depuis S3
+  (aws4fetch), 409 si non terminé, 502 si stockage échoue ; variables d'environnement `S3_ENDPOINT`,
+  `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_BUCKET`, `S3_TIMEOUT_MS`.
 
 ### Modifié
 
+- Contrat du drapé (1.41) : coordonnées d'un `Point` de GarmentSpec bornées à ±10 000 mm (la plus grande
+  valeur des références actuelles est 1 506,9 mm) ; patronage et fabrication adaptées ; une coupe hors borne est refusée (422 `/problems/invalid-request`) ;
+  un plan de coupe de plus de 10 m reste accepté.
+- Service `designs` (1.42) : toutes les requêtes PostgreSQL fixent l'organisation (sécurité au niveau des lignes) ;
+  test d'isolation avec un rôle non propriétaire ; service-kit : `StreamDeclaration` gagne `retention` et `maxAgeMs`.
+- Moteurs Python (1.43) : une requête hors schéma répond 422 `application/problem+json` `/problems/invalid-request`
+  (au plus 20 erreurs avec `path` et `constraint`, jamais la valeur reçue) ; designs la traite comme moteur
+  indisponible (502).
 - Moteur drapé (1.19b) : devient TypeScript (`@atelier/drape`, paquet) au lieu de Python (ADR 0013,
   exception à l'ADR 0003) ; squelette Python supprimé ; simulation sur CPU seulement pour l'instant.
 - Moteur patronage (1.19c) : ENGINE_VERSION 0.6.0, ajout de `Panel.placement` (zone, côté, sens, ancrage,
