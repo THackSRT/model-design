@@ -64,6 +64,7 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
 - **Pénétration** (0.6.0) : mesurée par parité (`core/inside.ts`, rayon de direction fixe, grille 2D), sans limite de
   portée ; `vertexEase` en tire son signe. **Tenues** : `ClothMesh.holds?` (sommet, axe unitaire, cible) et
   `SimulationSettings.holdReleaseSteps?` (0 à 1 000) ; actives pendant la couture, relâchées ensuite ; sans elles, rien ne change.
+- **Pantalon** (0.8.0) : `placement/leg-align.ts` pose chaque pièce `leg` (devant ou dos) autour du tube de sa jambe : sous `crotch`, milieu de l'isoligne sur l'extrême avant ou arrière ; au-dessus de `crotch` + 50 mm, bout côté milieu du corps sur `midlineArc` de la demi-coupe du bassin ; entre les deux, interpolé. `PieceField.span(d)` donne l'étendue en s d'une isoligne.
 - **Mise en place** (0.7.0) : tronc et jambes par la ligne d'ancrage (`anchor-line.ts`, `piece-field.ts`, coordonnées (s, d)) ;
   `holds.ts` tient les bords `waistline` pendant la couture. Jupe cercle : critères de l'ADR en partie non tenus (page du composant).
 - **Simulation** : petits pas (1/60 s), 10 sous-pas par défaut, jusqu'à 300–600 pas (borne dure 1 000), arrêt au repos

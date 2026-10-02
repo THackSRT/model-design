@@ -177,17 +177,50 @@ autour de l'ancrage (tronc : enveloppe cumulée depuis l'ancrage, elle ne rétr�
 enveloppe les hanches ; jambe et bras : coupe du niveau) ; `place-garment.ts` : l'abscisse de la pièce (x moins l'ancre,
 `shiftXMm` de `GarmentPiece` retiré) devient l'abscisse curviligne dans le sens horaire vu d'en haut (de face comme de dos),
 depuis le milieu de la face (`facing`), la hauteur de la pièce devient la hauteur sur le corps (bras : le long de son axe).
-`widths.ts` : tour fini du tube à chaque hauteur ; si le tour fini dépasse la courbe, elle est agrandie (λ, jupe évasée)
+**Ligne d'ancrage (0.7.0, tronc et jambes ; les bras gardent l'ordonnée du patron)** : `contour-walk.ts` suit le
+contour depuis le segment le plus proche de l'ancre (à un coin : le plus horizontal), de chaque côté tant que l'angle au
+raccord reste sous 45°, en enjambant une pince (deux bords de la pièce cousus l'un à l'autre, adjacents) et sans suivre un
+bord `fold` ; `anchor-line.ts` assemble la chaîne (orientée vers les x croissants à l'ancre) ; `line-projection.ts` repère un
+point par (σ, d) sur la chaîne complète, corde des pinces comprise (prolongements en droite dans la direction de la courbe
+au bout, estimée sur trois points), puis s = σ − σ de l'ancre, largeur des pinces entre le point et l'ancre retirée à la
+profondeur du point (elle tombe à 0 à la pointe : sous la pointe la pièce garde sa largeur, les deux côtés d'une pince
+coïncident), d positif vers le bas ; `piece-field.ts` : (s, d) de chaque sommet, longueurs des isolignes d (pas de 5 mm,
+marche sur les triangles à plat), k(d) = part de l'isoligne qui se projette sur la ligne / longueur de la ligne, et
+l'abscisse sur la courbe = s × k(d) dans l'étendue de la ligne, s au-delà. Hauteur sur le corps = repère − d. Jupe droite :
+sous la pointe des pinces, départ identique à 0.5.0 ; à la taille les pinces sont fermées (jusqu'à ≈ 65 mm de décalage sur
+le dos). `holds.ts` : `garmentHolds(mesh, spec, avatar, startMm)` tient les sommets des bords `waistline` des pièces `torso`
+et `leg` (axe vertical, cible = hauteur de départ) ; `DRAPE_SETTINGS` : `holdReleaseSteps` 30 / 45, 400 pas en brouillon.
+`widths.ts` : tour fini du tube à chaque hauteur (tronc, jambes : somme des longueurs d'isoligne, maximum juste au-dessus et
+juste au-dessous pour ne pas compter deux fois la jonction jupe / ceinture ; bras : étendue en x) ; si le tour fini dépasse la courbe, elle est agrandie (λ, jupe évasée)
 pour que les exemplaires tiennent côte à côte ; sinon les coutures de côté partent écartées (jusqu'à ≈ 100 mm sur la jupe
 droite). `clearance.ts` : aucun sommet à moins de 3 mm du corps au départ (repoussé le long de la normale, au plus 100 mm
 sinon `placement-failed`). `assertPlacements` : `placement-missing`. `PlacementError` (`code`, `panelId`, jamais de mesure).
 
-Limites : pantalon et manches posés au mieux (jonction au niveau de l'entrejambe discontinue ; manche = coupe autour de
+Jupe cercle (brouillon, mesures fictives, popeline, avatar par défaut, 0.7.0) : coutures à 89 mm au plus au départ (227 à 971 mm
+avant) ; le drapé se termine en `seam-not-closed` (écart 5,7 mm, convergé en 265 pas) avec 13 mm de pénétration (bras à 9° :
+nul à 30°) et un bas de ceinture à ≈ 55 mm sous la taille. Cause mesurée : la ceinture s'allonge de 37 % sous le poids de la jupe
+(quatre itérations par sous-pas ne tiennent pas une chaîne de 650 mm) ; avec 20 sous-pas, 4 itérations : allongement 21 %, 0 mm
+de pénétration, écart 2,2 mm, ceinture à la taille, mais non convergé en 400 pas ; 30 sous-pas : convergé, 1,1 mm, ceinture
+26 mm trop haute. Réglage à décider (ADR 0013 fixe 10 sous-pas) ; les critères de l'ADR sont donc encore ouverts.
+
+**Pantalon jambe par jambe (0.8.0, `leg-align.ts`)** : les pièces `leg` (devant et dos, dessinées vues de dehors : l'abscisse croît dans le
+sens horaire vu d'en haut) s'enroulent autour du tube de leur jambe, et non plus par le coin de taille. Sous `crotch`, le milieu de
+l'isoligne de la pièce (`PieceField.span(d)`, étendue en s interpolée entre niveaux de 5 mm) va au milieu de la face de la coupe
+(milieu des points les plus avancés ou reculés, pour qu'une arête plate ne décale rien) ; au-dessus de `crotch` + 50 mm, le bout de
+l'isoligne côté milieu du corps (s fort pour le devant de la jambe droite et le dos de la jambe gauche, s faible sinon) va à
+`midlineArc` de la demi-coupe du bassin, le facteur λ se calculant sur l'arc extérieur entre milieu devant et milieu dos ; entre
+les deux, le point est interpolé linéairement (poids de 0 à 1 sur 50 mm). Le tour fini est celui du tube de chaque jambe (`widths.ts`).
+Mesuré (brouillon, mesures fictives, popeline, avatar par défaut) : coutures à 114 mm au plus au départ (239 mm avant ; entrejambe
+et fourche à 52 mm au plus, le plus grand écart est la couture de côté au niveau du pied, `hem` à 0), `ok`, convergé en 135 pas,
+pénétration 0 mm, écart de couture 0,004 mm, ceinture à waist − 30 mm, jambes sans croisement (x signé minimal −0,7 mm), aisance
+minimale ≈ 2 mm, allongement maximal 28 %, `costRatio` 8,5 à 9. Test : `drape-trousers.test.ts`.
+
+Limites : manches posées au mieux (manche = coupe autour de
 l'axe du bras, rayon ≤ 150 mm) ; corsage sans maintien (rien ne le retient aux épaules) : il tombe.
 
 ### Drape — orchestration
 
-`src/drape/` (1.19e) : `drapeGarment(job: DrapeJob, { maxSteps? }): DrapeOutcome`. Ordre : placements, `meshGarment`, avatar,
+`src/drape/` (1.19e ; tenues de ceinture 0.7.0) : `drapeGarment(job: DrapeJob, { maxSteps? }): DrapeOutcome`. Ordre : placements, `meshGarment`, avatar,
 `placeGarment`, `keepClearOfBody`, `simulate` (réglages `DRAPE_SETTINGS` par qualité : pas de 1/60 s, 10 sous-pas, couture 30
 / 45 pas, itérations 4 / 6, au plus 300 / 600 pas, borne dure `MAX_STEPS_LIMIT` = 1 000 ; une itération par sous-pas laissait
 la jupe glisser de 90 mm et s'allonger de 95 %), indicateurs (`metrics.ts`). Succès : `{ ok: true, result: DrapeResultCore,
@@ -203,8 +236,8 @@ Mesuré (poste de développement) : jupe droite en brouillon (1 364 sommets) : a
 allongement maximal 25 % (taille sur les hanches, autour des pinces). Test de coût : `costRatio` 4,5 à 9, seuil 20. Écart
 moyen de position avec l'habillage géométrique 1.34a : 32 mm, seuil 50 mm (les deux ne visent pas la même chose : le drapé
 tombe et se serre, l'habillage est un tube à tour fini). Hors jupe droite (draft, mesures de la référence) : jupe cercle
-`seam-not-closed` (18 s), pantalon `seam-not-closed`, corsage `body-penetration`, corsage à manches converge (écart de
-couture 1,3 mm, aisance minimale −60 mm) : à reprendre (maintien du vêtement, ceinture, pantalon par jambe).
+`seam-not-closed` (18 s), pantalon (avant 0.8.0 : `seam-not-closed`), corsage `body-penetration`, corsage à manches converge (écart de
+couture 1,3 mm, aisance minimale −60 mm) : à reprendre (corsages et manches : 1.19e2c).
 
 ### Validation des tissus — ADR 0015
 

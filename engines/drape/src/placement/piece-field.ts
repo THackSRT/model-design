@@ -28,6 +28,8 @@ export interface PieceField {
   scale(d: number): number;
   /** Abscisse sur la courbe d'enroulement du point (s, d) : s × k(d) dans l'étendue de la ligne, s au-delà. */
   abscissa(s: number, d: number): number;
+  /** Étendue [s min, s max] de l'isoligne d (0, 0 hors de la pièce). */
+  span(d: number): readonly [number, number];
 }
 
 /** Longueurs des isolignes aux niveaux `first + i` pas : totale, et part dans l'étendue de la ligne. */
@@ -38,6 +40,9 @@ interface Samples {
   dMax: number;
   full: Float64Array;
   inside: Float64Array;
+  /** Plus petit et plus grand s de l'isoligne à chaque niveau (±Infinity sans isoligne). */
+  sLow: Float64Array;
+  sHigh: Float64Array;
 }
 
 /** Valeur interpolée au niveau d ; 0 hors de la pièce, bornée aux niveaux échantillonnés au bord. */
@@ -76,6 +81,30 @@ function addIsoline(samples: Samples, k: number, corners: Corner[], range: [numb
   const i = k - samples.first;
   samples.full[i] = f(samples.full, i) + length;
   samples.inside[i] = f(samples.inside, i) + length * insideFraction(p.s, q.s, range);
+  samples.sLow[i] = Math.min(f(samples.sLow, i), p.s, q.s);
+  samples.sHigh[i] = Math.max(f(samples.sHigh, i), p.s, q.s);
+}
+
+/** Étendue en s de l'isoligne d : interpolée entre les deux niveaux échantillonnés voisins, sinon le plus proche. */
+function spanAt(samples: Samples, d: number): readonly [number, number] {
+  if (d < samples.dMin - EDGE_TOLERANCE || d > samples.dMax + EDGE_TOLERANCE) return [0, 0];
+  const last = samples.sLow.length - 1;
+  const x = Math.max(0, Math.min(last, d / ISO_STEP_MM - samples.first));
+  const i = Math.min(Math.floor(x), last);
+  const t = x - i;
+  const has = (k: number): boolean => k <= last && f(samples.sLow, k) <= f(samples.sHigh, k);
+  if (has(i) && has(i + 1)) {
+    return [
+      f(samples.sLow, i) + t * (f(samples.sLow, i + 1) - f(samples.sLow, i)),
+      f(samples.sHigh, i) + t * (f(samples.sHigh, i + 1) - f(samples.sHigh, i)),
+    ];
+  }
+  for (let k = 0; k <= last; k++) {
+    for (const j of [i - k, i + 1 + k]) {
+      if (j >= 0 && has(j)) return [f(samples.sLow, j), f(samples.sHigh, j)];
+    }
+  }
+  return [0, 0];
 }
 
 /** Part (0 à 1) du segment de s = a à s = b dont l'abscisse est dans l'étendue de la ligne. */
@@ -124,6 +153,8 @@ function sampleIsolines(
     dMax: hi,
     full: new Float64Array(size),
     inside: new Float64Array(size),
+    sLow: new Float64Array(size).fill(Infinity),
+    sHigh: new Float64Array(size).fill(-Infinity),
   };
   for (let t = piece.triangleStart; t < piece.triangleStart + piece.triangleCount; t++) {
     const corners = cornersOf(mesh, piece, coords, t);
@@ -163,6 +194,7 @@ export function pieceField(
     s,
     d,
     fullLength: (dd) => interpolate(samples.full, samples, dd),
+    span: (dd) => spanAt(samples, dd),
     scale,
     abscissa(sv, dd) {
       const inside = Math.max(range[0], Math.min(range[1], sv));
