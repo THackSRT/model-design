@@ -1,3 +1,5 @@
+import type { frBench } from './fr-bench.js';
+
 /**
  * Catalogue français au format ICU MessageFormat (pluriels, select, nombres, unités).
  * Toute phrase de l'interface passe par une clé ; jamais de concaténation.
@@ -115,6 +117,12 @@ export const fr = {
   'problem./problems/network': 'Le service est injoignable. Vérifiez qu’il est démarré.',
   'problem.default': 'Le calcul a échoué.',
   'unit.cm': 'cm',
+  'tabs.label': 'Sections du studio',
+  'tabs.pattern': 'Patron',
+  'tabs.fabrics': 'Tissus',
+  'fabricBench.loading': 'Chargement du banc d’essai…',
 } as const;
 
-export type MessageKey = keyof typeof fr;
+/** Clés du catalogue d'entrée ; celles du banc (`fr-bench.ts`) s'y ajoutent à l'ouverture de l'onglet Tissus. */
+export type CoreMessageKey = keyof typeof fr;
+export type MessageKey = CoreMessageKey | keyof typeof frBench;

@@ -4,7 +4,7 @@ import {
   garmentFields,
   sleeveFields,
 } from '@atelier/features';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { fr } from '../src/i18n/fr.js';
 import {
   fieldErrorMessage,
@@ -13,6 +13,7 @@ import {
   paramLabel,
   problemMessage,
   t,
+  translate,
 } from '../src/i18n/t.js';
 
 describe('traduction ICU', () => {
@@ -107,5 +108,25 @@ describe('catalogue des vêtements', () => {
     expect(fieldErrorMessage({ code: 'ratioRange', min: 0.25, max: 1 }, 'cm')).toBe(
       'Entre 0,25 et 1',
     );
+  });
+});
+
+describe('clé absente du catalogue', () => {
+  it('le typage refuse une clé du banc dans t (elle passe par tBench)', () => {
+    // @ts-expect-error : 'fabricBench.title' appartient au catalogue du banc, pas à celui de l'entrée
+    expect(() => t('fabricBench.title')).toBeDefined();
+  });
+
+  it('en dev et en test : une erreur', () => {
+    expect(() => translate('absente.cle', undefined, true)).toThrow(/absente\.cle/);
+  });
+
+  it('en production : chaîne vide et un seul console.error par clé', () => {
+    const report = vi.fn();
+    expect(translate('absente.prod', undefined, false, report)).toBe('');
+    expect(translate('absente.prod', undefined, false, report)).toBe('');
+    expect(report).toHaveBeenCalledOnce();
+    expect(translate('autre.prod', undefined, false, report)).toBe('');
+    expect(report).toHaveBeenCalledTimes(2);
   });
 });

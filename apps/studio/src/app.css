@@ -102,3 +102,121 @@ body {
   color: var(--color-garment-tight);
   font-size: var(--font-size-sm);
 }
+
+/* Banc d'essai des tissus */
+.bench {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+.bench-header {
+  grid-column: 1 / -1;
+}
+.bench-header h1 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+.bench-header p {
+  margin: 0;
+  color: var(--color-ink-muted);
+}
+.bench-side,
+.bench-results,
+.bench-measurements {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+.bench-main {
+  display: grid;
+  grid-template-columns: minmax(16rem, 24rem) 1fr;
+  gap: var(--space-4);
+}
+.bench-presets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.bench-presets .ui-button {
+  width: 100%;
+  text-align: left;
+}
+.bench-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.bench-tip {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+.bench-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.bench-table th,
+.bench-table td {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+  text-align: left;
+}
+.bench-table tr[data-within='false'] td {
+  color: var(--color-danger);
+}
+.bench-drape {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+.bench-drape-test {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  margin: 0;
+}
+.bench-drape-test figcaption {
+  font-weight: var(--font-weight-strong);
+}
+.bench-drape-coefficient {
+  margin: 0;
+}
+.bench-drape-view {
+  width: 100%;
+  max-height: 20rem;
+}
+.bench-drape-view circle,
+.bench-drape-view polygon {
+  vector-effect: non-scaling-stroke;
+  stroke-width: var(--stroke-pattern);
+}
+.bench-drape-specimen {
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-dasharray: 6 4;
+}
+.bench-drape-shadow {
+  fill: var(--color-garment);
+  stroke: var(--color-garment-stroke);
+}
+.bench-drape-disc {
+  fill: var(--color-mannequin);
+  stroke: var(--color-line);
+}
+.bench-corrected {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+@media (max-width: 900px) {
+  .bench,
+  .bench-main {
+    grid-template-columns: 1fr;
+  }
+}

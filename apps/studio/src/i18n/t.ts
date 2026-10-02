@@ -1,6 +1,16 @@
 import type { FieldError } from '@atelier/features';
 import { IntlMessageFormat } from 'intl-messageformat';
-import { fr, type MessageKey } from './fr.js';
+import { fr, type CoreMessageKey } from './fr.js';
+
+/** Catalogue en cours : celui de l'entrée, complété par les catalogues chargés avec leur écran. */
+const catalog: Record<string, string> = { ...fr };
+
+/** Ajoute un catalogue (synchrone) ; à appeler à l'import du module d'un écran chargé à la demande. */
+export function registerMessages(messages: Readonly<Record<string, string>>): void {
+  Object.assign(catalog, messages);
+}
+
+export const hasMessage = (key: string): boolean => Object.hasOwn(catalog, key);
 
 export const LOCALE = 'fr-FR';
 
@@ -18,14 +28,40 @@ export function formatMessage(pattern: string, values: MessageValues = {}): stri
   return String(format.format(values));
 }
 
-/** Traduit une clé du catalogue ; une clé inconnue est refusée par TypeScript. */
-export function t(key: MessageKey, values?: MessageValues): string {
-  return formatMessage(fr[key], values);
+const reported = new Set<string>();
+
+/**
+ * Traduit une clé du catalogue courant. Une clé absente lève une erreur en développement et en test (elle se voit
+ * tout de suite) ; en production elle est signalée une fois par clé et rend une chaîne vide, jamais une page blanche.
+ */
+export function translate(
+  key: string,
+  values: MessageValues | undefined,
+  strict: boolean,
+  report: (message: string) => void = console.error,
+): string {
+  const pattern = Object.hasOwn(catalog, key) ? catalog[key] : undefined;
+  if (pattern !== undefined) return formatMessage(pattern, values);
+  const message = `Texte absent du catalogue : ${key}`;
+  if (strict) throw new Error(message);
+  if (!reported.has(key)) {
+    reported.add(key);
+    report(message);
+  }
+  return '';
+}
+
+/** Vrai en développement et en test : une clé absente y est une erreur. */
+export const STRICT_MESSAGES: boolean = import.meta.env.DEV || import.meta.env.MODE === 'test';
+
+/** Traduit une clé du catalogue d'entrée ; une clé inconnue (ou propre au banc : voir `tBench`) est refusée par TypeScript. */
+export function t(key: CoreMessageKey, values?: MessageValues): string {
+  return translate(key, values, STRICT_MESSAGES);
 }
 
 export function problemMessage(type: string): string {
   const key = `problem.${type}`;
-  return key in fr ? t(key as MessageKey) : t('problem.default');
+  return hasMessage(key) ? t(key as CoreMessageKey) : t('problem.default');
 }
 
 /** Unité dans laquelle le champ est saisi (et donc dans laquelle ses bornes s'affichent). */
@@ -55,11 +91,11 @@ export function fieldErrorMessage(error: FieldError, unit: FieldUnit): string {
 /** Nom d'un type de vêtement ; un type du contrat inconnu du studio garde son identifiant. */
 export function garmentName(type: string): string {
   const key = `garment.${type}`;
-  return key in fr ? t(key as MessageKey) : type;
+  return hasMessage(key) ? t(key as CoreMessageKey) : type;
 }
 
 /** Libellé d'un paramètre d'un type de vêtement ; repli sur le nom du paramètre. */
 export function paramLabel(type: string, param: string): string {
   const key = `param.${type}.${param}`;
-  return key in fr ? t(key as MessageKey) : param;
+  return hasMessage(key) ? t(key as CoreMessageKey) : param;
 }
