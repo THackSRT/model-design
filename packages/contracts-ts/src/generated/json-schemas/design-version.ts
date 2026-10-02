@@ -1,0 +1,19 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « designVersion ». */
+export const designVersionJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/designs/design-version.schema.json',
+  title: 'DesignVersion',
+  type: 'object',
+  additionalProperties: false,
+  required: ['designId', 'number', 'createdAt', 'measurements', 'garment', 'fingerprint', 'spec'],
+  properties: {
+    designId: { type: 'string', format: 'uuid' },
+    number: { type: 'integer', minimum: 1 },
+    createdAt: { type: 'string', format: 'date-time' },
+    measurements: { $ref: '../measurement-set.schema.json' },
+    garment: { $ref: '../garment-request.schema.json' },
+    fingerprint: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+    spec: { $ref: '../garment-spec.schema.json' },
+  },
+} as const;

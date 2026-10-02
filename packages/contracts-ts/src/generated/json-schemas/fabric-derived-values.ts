@@ -1,0 +1,71 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « fabricDerivedValues ». */
+export const fabricDerivedValuesJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/drape/fabric-derived-values.schema.json',
+  title: 'FabricDerivedValues',
+  description:
+    "Grandeurs physiques déduites des mesures brutes (FabricBenchMeasurements) par les fonctions du banc d'essai du moteur de drapé (ADR 0015). Une grandeur n'est présente que si l'essai correspondant a été saisi. Informatives dans un rapport : recalculées depuis les mesures brutes à chaque import. Elles peuvent sortir des bornes de Fabric (le tissu ne se modélise alors pas tel quel).",
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    weightGPerM2: {
+      type: 'number',
+      description: 'Grammage, en grammes par mètre carré.',
+      minimum: 0,
+    },
+    thicknessMm: {
+      type: 'number',
+      description: 'Épaisseur moyenne, en millimètres.',
+      minimum: 0,
+    },
+    stretchWarpPercent: {
+      type: 'number',
+      description: 'Allongement chaîne ramené à 10 N sur 50 mm de large, en pourcentage.',
+      minimum: 0,
+    },
+    stretchWeftPercent: {
+      type: 'number',
+      description: 'Allongement trame ramené à 10 N sur 50 mm de large, en pourcentage.',
+      minimum: 0,
+    },
+    bendingLengthWarpMm: {
+      type: 'number',
+      description:
+        'Longueur de flexion dans le sens chaîne (porte-à-faux moyen / 2), en millimètres.',
+      minimum: 0,
+    },
+    bendingLengthWeftMm: {
+      type: 'number',
+      description: 'Longueur de flexion dans le sens trame, en millimètres.',
+      minimum: 0,
+    },
+    bendingRigidityWarpMicroNm: {
+      type: 'number',
+      description: 'Rigidité de flexion par unité de largeur, sens chaîne, en µN·m.',
+      minimum: 0,
+    },
+    bendingRigidityWeftMicroNm: {
+      type: 'number',
+      description: 'Rigidité de flexion par unité de largeur, sens trame, en µN·m.',
+      minimum: 0,
+    },
+    bendingRigidityMicroNm: {
+      type: 'number',
+      description:
+        'Rigidité de flexion retenue, en µN·m : moyenne géométrique chaîne et trame, ou le seul sens mesuré (le moteur de drapé a une flexion isotrope).',
+      minimum: 0,
+    },
+    bendingWeightSource: {
+      type: 'string',
+      description:
+        'Grammage utilisé pour la rigidité de flexion : measured (pesée saisie) ou estimated (grammage du préréglage, faute de pesée).',
+      enum: ['measured', 'estimated'],
+    },
+    frictionCoefficient: {
+      type: 'number',
+      description: 'Coefficient de frottement statique (moyenne des tan θ), sans unité.',
+      minimum: 0,
+    },
+  },
+} as const;

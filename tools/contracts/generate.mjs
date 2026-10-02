@@ -60,18 +60,29 @@ async function generateSchemaTypes(outRoot) {
         ? `export type { ${title} } from './${name}.js';`
         : `export type * from './${name}.js';`,
     );
-    raw.push({ key: camel(name), json: json.trim() });
+    raw.push({ key: camel(name), name, json: json.trim() });
   }
   writeFileSync(join(outDir, 'index.ts'), `${BANNER}${exports.join('\n')}\n`);
-  // Une constante par schéma (import nommé : le bundler écarte les autres), puis l'objet par clé.
-  const consts = raw.map(
-    ({ key, json }) =>
-      `/** Schéma JSON brut « ${key} ». */\nexport const ${key}JsonSchema = ${json} as const;\n`,
-  );
+  writeJsonSchemaModules(join(outRoot, TS_OUT, 'json-schemas'), raw);
+}
+
+// Un module par schéma (le bundler place chacun dans le chunk qui l'utilise), un index de
+// réexports nommés, et un module agrégé `jsonSchemas` pour la validation par clé.
+function writeJsonSchemaModules(dir, raw) {
+  mkdirSync(dir, { recursive: true });
+  for (const { key, name, json } of raw) {
+    writeFileSync(
+      join(dir, `${name}.ts`),
+      `${BANNER}/** Schéma JSON brut « ${key} ». */\nexport const ${key}JsonSchema = ${json} as const;\n`,
+    );
+  }
+  const reexports = raw.map(({ key, name }) => `export { ${key}JsonSchema } from './${name}.js';`);
+  writeFileSync(join(dir, 'index.ts'), `${BANNER}${reexports.join('\n')}\n`);
+  const imports = raw.map(({ key, name }) => `import { ${key}JsonSchema } from './${name}.js';`);
   const entries = raw.map(({ key }) => `  ${key}: ${key}JsonSchema,`);
   writeFileSync(
-    join(outDir, 'json.ts'),
-    `${BANNER}${consts.join('\n')}\n/** Tous les schémas par clé, pour la validation à l'exécution (Ajv). */\nexport const jsonSchemas = {\n${entries.join('\n')}\n} as const;\n`,
+    join(dir, 'all.ts'),
+    `${BANNER}${imports.join('\n')}\n\n/** Tous les schémas par clé, pour la validation à l'exécution (Ajv). */\nexport const jsonSchemas = {\n${entries.join('\n')}\n} as const;\n`,
   );
 }
 

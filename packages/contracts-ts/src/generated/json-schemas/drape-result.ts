@@ -1,0 +1,75 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « drapeResult ». */
+export const drapeResultJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/drape/drape-result.schema.json',
+  title: 'DrapeResult',
+  description:
+    "Résultat d'un drapé réussi : le modèle glTF binaire (vêtement seul) écrit dans le stockage objet, et ses indicateurs. Longueurs en millimètres, surfaces en millimètres carrés.",
+  type: 'object',
+  additionalProperties: false,
+  required: [
+    'modelKey',
+    'sizeBytes',
+    'sha256',
+    'ease',
+    'maxStrainPercent',
+    'fabricEstimated',
+    'engineVersion',
+    'vertexCount',
+    'simulatedSteps',
+    'converged',
+  ],
+  properties: {
+    modelKey: {
+      type: 'string',
+      description:
+        "Clé de l'objet dans le seau privé des drapés : drapes/<organizationId>/<cacheKey>.glb. Jamais d'URL publique.",
+      pattern: '^drapes/[0-9a-f-]{36}/[a-f0-9]{64}[.]glb$',
+      maxLength: 120,
+    },
+    sizeBytes: { type: 'integer', minimum: 1, maximum: 268435456 },
+    sha256: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+    ease: { $ref: '#/$defs/DrapeEase' },
+    maxStrainPercent: {
+      type: 'number',
+      description:
+        'Allongement relatif maximal du tissu, en pourcentage (négatif : compression partout).',
+      minimum: -100,
+      maximum: 1000,
+    },
+    fabricEstimated: {
+      type: 'boolean',
+      description: "Vrai si une propriété du tissu vient d'un préréglage estimé.",
+    },
+    engineVersion: { type: 'string', minLength: 1, maxLength: 64 },
+    vertexCount: { type: 'integer', minimum: 1, maximum: 30000 },
+    simulatedSteps: { type: 'integer', minimum: 0, maximum: 1000000 },
+    converged: {
+      type: 'boolean',
+      description:
+        'Vrai si la vitesse maximale est restée sous 1 mm/s pendant 10 pas avant la fin.',
+    },
+  },
+  $defs: {
+    DrapeEase: {
+      type: 'object',
+      description:
+        "Aisance : distance du tissu au corps moins l'épaisseur du tissu, en millimètres (négative : pénétration).",
+      additionalProperties: false,
+      required: ['minMm', 'medianMm', 'maxMm', 'tightAreaMm2'],
+      properties: {
+        minMm: { type: 'number', minimum: -1000, maximum: 2000 },
+        medianMm: { type: 'number', minimum: -1000, maximum: 2000 },
+        maxMm: { type: 'number', minimum: -1000, maximum: 2000 },
+        tightAreaMm2: {
+          type: 'number',
+          description:
+            "Surface du vêtement où l'aisance est nulle (tissu au contact du corps), en mm².",
+          minimum: 0,
+          maximum: 100000000,
+        },
+      },
+    },
+  },
+} as const;

@@ -1,0 +1,292 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « garmentSpec ». */
+export const garmentSpecJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/garment-spec.schema.json',
+  title: 'GarmentSpec',
+  description:
+    'Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique.',
+  type: 'object',
+  additionalProperties: false,
+  required: ['specVersion', 'unit', 'engine', 'garment', 'panels', 'seams'],
+  properties: {
+    specVersion: {
+      const: '1.0',
+    },
+    unit: {
+      const: 'mm',
+    },
+    engine: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['name', 'version'],
+      properties: {
+        name: {
+          type: 'string',
+        },
+        version: {
+          type: 'string',
+        },
+      },
+    },
+    garment: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type'],
+      properties: {
+        type: {
+          type: 'string',
+        },
+      },
+    },
+    panels: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        $ref: '#/$defs/Panel',
+      },
+    },
+    seams: {
+      type: 'array',
+      items: {
+        $ref: '#/$defs/Seam',
+      },
+    },
+    estimatedMeasurements: {
+      type: 'array',
+      description:
+        'Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation.',
+      uniqueItems: true,
+      items: {
+        type: 'string',
+      },
+    },
+  },
+  $defs: {
+    Point: {
+      type: 'array',
+      description: '[x, y] en millimètres.',
+      items: {
+        type: 'number',
+      },
+      minItems: 2,
+      maxItems: 2,
+    },
+    Edge: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['id', 'from', 'to'],
+      properties: {
+        id: {
+          type: 'string',
+        },
+        from: {
+          $ref: '#/$defs/Point',
+        },
+        to: {
+          $ref: '#/$defs/Point',
+        },
+        controls: {
+          type: 'array',
+          description:
+            "Points de contrôle d'une courbe de Bézier (1 : quadratique, 2 : cubique). Absent : segment droit.",
+          items: {
+            $ref: '#/$defs/Point',
+          },
+          maxItems: 2,
+        },
+        role: {
+          type: 'string',
+          enum: ['seam', 'fold', 'hem', 'waistline', 'opening'],
+        },
+      },
+    },
+    Panel: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['id', 'name', 'edges', 'quantity'],
+      properties: {
+        id: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+        edges: {
+          type: 'array',
+          description:
+            'Contour fermé, dans le sens trigonométrique : la fin de chaque bord est le début du suivant.',
+          minItems: 3,
+          items: {
+            $ref: '#/$defs/Edge',
+          },
+        },
+        grainline: {
+          type: 'array',
+          description: 'Droit fil : deux points.',
+          items: {
+            $ref: '#/$defs/Point',
+          },
+          minItems: 2,
+          maxItems: 2,
+        },
+        quantity: {
+          type: 'integer',
+          minimum: 1,
+          description: 'Nombre de pièces à couper.',
+        },
+        cutOnFold: {
+          type: 'boolean',
+          default: false,
+        },
+        notches: {
+          type: 'array',
+          description:
+            'Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux).',
+          maxItems: 200,
+          items: {
+            $ref: '#/$defs/Notch',
+          },
+        },
+        placement: {
+          $ref: '#/$defs/PanelPlacement',
+        },
+      },
+    },
+    PanelPlacement: {
+      type: 'object',
+      description:
+        "Pose de la pièce autour du corps, pour l'habillage et le drapé (ADR 0013). Facultative : sans elle, la pièce ne peut pas être drapée. Une pièce cutOnFold est dépliée par symétrie sur son bord de rôle fold, sa moitié dessinée allant du côté bodySide. Une pièce quantity: 2 donne deux exemplaires : une copie telle que dessinée du côté bodySide et une copie retournée (miroir) de l'autre côté du porteur.",
+      additionalProperties: false,
+      required: ['zone', 'bodySide', 'facing', 'anchor'],
+      properties: {
+        zone: {
+          type: 'string',
+          enum: ['torso', 'leg', 'arm'],
+          description: "Partie du corps autour de laquelle la pièce s'enroule.",
+        },
+        bodySide: {
+          type: 'string',
+          enum: ['left', 'right', 'center'],
+          description:
+            'Côté du porteur (sa gauche, sa droite, ou à cheval sur le milieu) où va la pièce telle que dessinée.',
+        },
+        facing: {
+          type: 'string',
+          enum: ['front', 'back', 'outer'],
+          description:
+            "Face du corps vers laquelle regarde l'endroit de la pièce ; outer pour une pièce enroulée autour d'un membre.",
+        },
+        anchor: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['point', 'landmark'],
+          description:
+            'Point de la pièce posé sur la ligne médiane de la face facing, à la hauteur du repère landmark plus offsetMm.',
+          properties: {
+            point: {
+              $ref: '#/$defs/Point',
+            },
+            landmark: {
+              type: 'string',
+              enum: ['neck', 'shoulder', 'waist', 'hip', 'crotch', 'knee', 'ankle', 'wrist'],
+              description: 'Repère de hauteur du corps ajusté.',
+            },
+            offsetMm: {
+              type: 'number',
+              minimum: -500,
+              maximum: 500,
+              default: 0,
+              description:
+                'Décalage vertical depuis le repère, en millimètres, positif vers le haut.',
+            },
+          },
+        },
+        clearanceMm: {
+          type: 'number',
+          minimum: 5,
+          maximum: 150,
+          default: 30,
+          description: 'Distance au corps de la position de départ, en millimètres.',
+        },
+      },
+    },
+    EdgeRef: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['panelId', 'edgeId'],
+      properties: {
+        panelId: {
+          type: 'string',
+        },
+        edgeId: {
+          type: 'string',
+        },
+        side: {
+          type: 'string',
+          enum: ['left', 'right'],
+          description:
+            'Exemplaire du bord à coudre, côté du porteur, quand la règle de la couture (Seam) ne suffit pas. Absent : règle de Seam.',
+        },
+      },
+    },
+    Seam: {
+      type: 'object',
+      description:
+        "Couture entre deux bords. Convention, une fois les pièces dépliées (cutOnFold) et les copies retournées (quantity: 2) posées (PanelPlacement) : a se coud de son début (from) vers sa fin sur b de sa fin vers son début (sens opposés). Une couture entre deux bords présents des deux côtés du porteur est dupliquée côté par côté (gauche avec gauche, droite avec droite) ; entre un bord présent des deux côtés et un bord d'un seul côté, elle prend la copie de ce côté. EdgeRef.side force la copie quand la règle ne suffit pas.",
+      additionalProperties: false,
+      required: ['id', 'a', 'b'],
+      properties: {
+        id: {
+          type: 'string',
+        },
+        a: {
+          $ref: '#/$defs/EdgeRef',
+        },
+        b: {
+          $ref: '#/$defs/EdgeRef',
+        },
+        easeMm: {
+          type: 'number',
+          description:
+            'Embu : le bord a est plus long que le bord b de cette valeur, qui se répartit en le cousant sur b (ex. tête de manche). Absent : 0, les deux bords ont la même longueur.',
+          minimum: 0,
+          maximum: 50,
+        },
+      },
+    },
+    NotchPlacement: {
+      type: 'object',
+      description:
+        "Emplacement d'un cran, seule définition partagée par Panel.notches (Notch) et la fabrication (NotchRequest) : sur la ligne de couture du bord edgeId, à distanceMm de son début (from), mesurée le long du bord. Ouvert pour être étendu (allOf) ; Notch et NotchRequest le ferment.",
+      required: ['edgeId', 'distanceMm'],
+      properties: {
+        edgeId: {
+          type: 'string',
+        },
+        distanceMm: {
+          type: 'number',
+          minimum: 0,
+          maximum: 10000,
+        },
+        count: {
+          type: 'integer',
+          description: 'Cran simple, double (dos, par convention) ou triple.',
+          minimum: 1,
+          maximum: 3,
+          default: 1,
+        },
+      },
+    },
+    Notch: {
+      type: 'object',
+      description: "Cran d'une pièce : un emplacement (NotchPlacement) sur un de ses bords.",
+      allOf: [
+        {
+          $ref: '#/$defs/NotchPlacement',
+        },
+      ],
+      unevaluatedProperties: false,
+    },
+  },
+} as const;

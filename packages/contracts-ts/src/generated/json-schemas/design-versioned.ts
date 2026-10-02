@@ -1,0 +1,19 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « designVersioned ». */
+export const designVersionedJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/events/design-versioned.schema.json',
+  title: 'DesignVersioned',
+  description:
+    "Données de l'événement design.versioned : une nouvelle version d'un modèle existe, avec son patron.",
+  type: 'object',
+  additionalProperties: false,
+  required: ['designId', 'versionNumber', 'organizationId', 'fingerprint', 'engineVersion'],
+  properties: {
+    designId: { type: 'string', format: 'uuid' },
+    versionNumber: { type: 'integer', minimum: 1 },
+    organizationId: { type: 'string', format: 'uuid' },
+    fingerprint: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+    engineVersion: { type: 'string' },
+  },
+} as const;
