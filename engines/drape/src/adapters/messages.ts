@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { DrapeCompleted, DrapeFailed, DrapeJob } from '@atelier/contracts-ts';
 
 // Lecture d'une tâche `drape.requested` (enveloppe CloudEvents + DrapeJob) et fabrication des enveloppes de résultat,
@@ -79,6 +80,24 @@ export interface ResultMessage {
   body: Uint8Array;
 }
 
+/**
+ * UUID déterministe (version 8, RFC 9562) : 128 premiers bits du SHA-256 de `name`, bits de version (8) et de variante
+ * (10) posés. Le contrat CloudEvents exige un UUID dans `id` ; même drapé et même issue donnent le même `id`.
+ */
+export function deterministicUuid(name: string): string {
+  const bytes = createHash('sha256').update(name).digest().subarray(0, 16);
+  bytes[6] = ((bytes[6] as number) & 0x0f) | 0x80;
+  bytes[8] = ((bytes[8] as number) & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join('-');
+}
+
 function resultMessage(
   subject: ResultMessage['subject'],
   data: DrapeCompleted | DrapeFailed,
@@ -87,7 +106,7 @@ function resultMessage(
   const msgId = `${data.drapeId}:${subject === 'drape.completed' ? 'completed' : 'failed'}`;
   const envelope = {
     specversion: '1.0',
-    id: msgId,
+    id: deterministicUuid(msgId),
     source: SOURCE,
     type: subject,
     subject: data.drapeId,

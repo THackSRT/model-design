@@ -46,7 +46,18 @@ function stringErrors(value: unknown, schema: Schema): string[] {
   if (pattern !== undefined && !new RegExp(pattern).test(value)) errors.push('pattern');
   const max = schema['maxLength'] as number | undefined;
   if (max !== undefined && value.length > max) errors.push('maxLength');
-  if (schema['format'] === 'uuid' && !/^[0-9a-f-]{36}$/.test(value)) errors.push('uuid');
+  if (
+    schema['format'] === 'uuid' &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
+  ) {
+    errors.push('uuid');
+  }
+  if (
+    schema['format'] === 'date-time' &&
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/.test(value)
+  ) {
+    errors.push('date-time');
+  }
   return errors;
 }
 
@@ -63,6 +74,7 @@ function numberErrors(value: unknown, schema: Schema, type: string): string[] {
 
 function scalarErrors(value: unknown, schema: Schema, type: string | undefined): string[] {
   let errors: string[] = [];
+  if ('const' in schema && schema['const'] !== value) return ['const'];
   if (type === 'string') errors = stringErrors(value, schema);
   else if (type === 'number' || type === 'integer') errors = numberErrors(value, schema, type);
   else if (type === 'boolean' && typeof value !== 'boolean') errors = ['not a boolean'];

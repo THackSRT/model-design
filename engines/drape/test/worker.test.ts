@@ -46,6 +46,43 @@ describe('tâche valide', () => {
   });
 });
 
+describe('enveloppe publiée', () => {
+  const envelopeSchema = jsonSchemas.cloudEvent as unknown as Schema;
+
+  it.each([
+    ['completed', undefined],
+    ['failed', '/problems/drape-placement-missing' as const],
+  ])(
+    '%s : enveloppe complète conforme à cloud-event.schema.json, id stable',
+    async (_, problem) => {
+      const run = async () => {
+        const { publisher, runner, deps } = setup();
+        runner.problem = problem;
+        await createTaskHandler(deps)(taskOf(job));
+        return publisher;
+      };
+      const first = await run();
+      const second = await run();
+      const [envelope] = first.envelopes();
+      expect(errorsOf(envelope, envelopeSchema)).toEqual([]);
+      expect(envelope?.['id']).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-8[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      );
+      expect(second.envelopes()[0]?.['id']).toBe(envelope?.['id']);
+      expect(first.messages[0]?.msgId).toBe(`${job.drapeId}:${_}`);
+    },
+  );
+
+  it('l’id diffère entre les issues et entre les drapés', async () => {
+    const a = setup();
+    const b = setup();
+    b.runner.problem = '/problems/drape-placement-missing';
+    await createTaskHandler(a.deps)(taskOf(job));
+    await createTaskHandler(b.deps)(taskOf(job));
+    expect(a.publisher.envelopes()[0]?.['id']).not.toBe(b.publisher.envelopes()[0]?.['id']);
+  });
+});
+
 describe('modèle déjà calculé', () => {
   it('ne simule pas et publie le même événement', async () => {
     const { store, publisher, runner, deps } = setup();
