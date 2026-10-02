@@ -137,6 +137,14 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@atelier/contracts-ts',
+              importNames: ['jsonSchemas'],
+              message:
+                'jsonSchemas rassemble tous les schémas du contrat et les ramène dans le paquet d’entrée du studio : importez le schéma voulu par son nom (fabricJsonSchema, garmentRequestJsonSchema…).',
+            },
+          ],
           patterns: [
             {
               group: ['react-dom', 'react-dom/*', 'react-native', '@atelier/ui-*'],

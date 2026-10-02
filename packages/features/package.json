@@ -4,6 +4,7 @@
   "private": true,
   "description": "Modèles de vue partagés web et mobile : données, état, validation, actions. Aucun composant visuel.",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@atelier/contracts-ts": "workspace:*",
+    "@atelier/drape": "workspace:*",
     "@atelier/kernel": "workspace:*",
     "@atelier/mannequin": "workspace:*",
     "@tanstack/react-query": "^5.104.0",

@@ -19,3 +19,29 @@ Pièces de coupe : `cut-pieces/` (`useCutPieces`, `layoutCutPieces` pure) demand
 par le port `FileSaver`, branché par l'application ; le nom de fichier vient de `Content-Disposition` par un motif
 strict (`exportFileName`, repli `patron.<ext>`). Corsage : `sleeve` est un sous-objet facultatif (`withSleeve`,
 `sleeveCm`, champs de `sleeveFields()`) ; ses erreurs sont indexées `sleeve.<champ>`.
+
+Rapport de validation des tissus : `fabric-bench/report-file.ts` lit un fichier non fiable
+(`parseFabricValidationReport` : 256 Kio en octets, JSON, version lue dans le schéma, validation stricte, une seule
+revue par préréglage) et rend une erreur à code traduisible (`ReportImportError`) ; `serializeFabricValidationReport`
+rend un JSON stable. `fabric-bench/schema-check.ts` est un validateur minimal de JSON Schema piloté par
+un registre local de six schémas (`SCHEMA_REGISTRY` ; un `$ref` hors registre lève une `Error`) (pas d'Ajv : CSP stricte) ; un mot-clé hors du sous-ensemble lève une `Error`, et le test de
+couverture parcourt les schémas `fabric-*`. Un nouveau mot-clé dans ces schémas demande de l'ajouter à `CHECKS`.
+
+Banc d'essai des tissus : `useFabricBench(deps)` (`fabric-bench/use-fabric-bench.ts`) rend `{ state, actions }`, une
+revue (`PresetBenchState`) par préréglage de `@atelier/drape`. Les champs de saisie et leurs bornes sont lus dans
+`fabricBenchMeasurements` (`measurement-fields.ts`, `BENCH_TESTS`), les bornes de `Fabric` dans `fabricJsonSchema`
+(`fabric-bounds.ts`). Le brouillon est indexé par chemin (`stretchWarp.loadedLengthMm`, `thickness.readingsMm.2`) ;
+`buildMeasurements` n'en garde que les essais complets et valides, les erreurs (`BenchError`) portent le même chemin.
+Les calculs (grandeurs déduites, écarts, valeurs candidates) sont ceux de `@atelier/drape` ; `settle` (`bench-model.ts`)
+recalcule tout ce qui se déduit des entrées. L'essai de Cusick passe par le port `CusickRunner` (branché par le
+studio, Worker) ; un résultat périmé (tissu simulé modifié entre-temps) est ignoré. `toReport` et `fromReport`
+(`report-mapping.ts`) font le va-et-vient avec le rapport du contrat ; l'export passe par `FileSaver` après un
+garde-fou `checkSchema`. Les actions s'exécutent sur un accès synchrone à l'état (`BenchStore`), sans rendu entre deux.
+
+Paquet : `"sideEffects": false` (aucun module n'a d'effet à l'import) permet à Vite de laisser hors du paquet d'entrée du studio le code du banc (`fabric-bench/*`), importé seulement par son écran chargé à la demande. Ne pas ajouter d'effet de bord à l'import.
+
+L'objet agrégé `jsonSchemas` est interdit dans `src/` (règle `no-restricted-imports`) : il ramène tous les schémas du
+contrat dans le paquet d'entrée du studio ; importer le schéma par son nom (`fabricJsonSchema`…). Pour l'écran :
+`PresetBenchState.drapeComparisons` (`{ estimated, candidate }`, chacun `DrapeComparison` ou `undefined`) compare le
+coefficient de drapé mesuré à chaque essai prêt (il remplace `drapeComparison`) ; `candidateSource` (`'corrected'` ou
+`'candidate'`) dit d'où vient le tissu de l'essai « candidat ».
