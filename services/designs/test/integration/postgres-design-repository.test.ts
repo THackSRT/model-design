@@ -26,7 +26,11 @@ describe('dépôt PostgreSQL', () => {
   const repository = new PostgresDesignRepository(db, { ids: sequentialIds(), clock });
 
   beforeAll(async () => {
-    expect(await runMigrations(db, MIGRATIONS)).toEqual(['0001_init.sql', '0002_drapes.sql']);
+    expect(await runMigrations(db, MIGRATIONS)).toEqual([
+      '0001_init.sql',
+      '0002_drapes.sql',
+      '0003_service_role_grants.sql',
+    ]);
     expect(await runMigrations(db, MIGRATIONS)).toEqual([]);
   });
 

@@ -16,15 +16,25 @@ export interface PostgresPersistence {
   close(): Promise<void>;
 }
 
+async function migrateAsOwner(url: string, directory: string): Promise<void> {
+  const pool = new pg.Pool({ connectionString: url, max: 1 });
+  try {
+    await runMigrations(drizzle(pool), directory);
+  } finally {
+    await pool.end();
+  }
+}
+
 /** Ouvre la base : dépôt, outbox et fermeture du pool. */
 export async function openPostgres(options: {
   url: string;
-  migrate: boolean;
+  /** Connexion du propriétaire des tables, ouverte le temps des migrations seulement. */
+  migrationUrl?: string;
   migrationsDir: string;
 }): Promise<PostgresPersistence> {
+  if (options.migrationUrl) await migrateAsOwner(options.migrationUrl, options.migrationsDir);
   const pool = new pg.Pool({ connectionString: options.url });
   const db = drizzle(pool);
-  if (options.migrate) await runMigrations(db, options.migrationsDir);
   return {
     designs: new PostgresDesignRepository(db, { ids: systemIdGenerator, clock: systemClock }),
     drapes: new PostgresDrapeRepository(db, { ids: systemIdGenerator, clock: systemClock }),

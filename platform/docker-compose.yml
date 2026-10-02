@@ -16,8 +16,12 @@ services:
       POSTGRES_USER: atelier
       POSTGRES_PASSWORD: atelier-dev
       POSTGRES_DB: designs
+      # Mot de passe de développement du rôle de service `designs_app` (créé par le script d'initialisation).
+      DESIGNS_APP_PASSWORD: designs-app-dev
     ports: ['5432:5432']
-    volumes: [postgres:/var/lib/postgresql/data]
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./postgres/init-designs-app.sh:/docker-entrypoint-initdb.d/init-designs-app.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U atelier -d designs']
       interval: 5s
@@ -64,7 +68,9 @@ services:
     build: { context: .., dockerfile: services/designs/Dockerfile, secrets: [ca] }
     image: atelier/designs:local
     environment:
-      DATABASE_URL: postgres://atelier:atelier-dev@postgres:5432/designs
+      # Service : rôle sans privilège (sécurité par lignes active). Migrations : propriétaire des tables.
+      DATABASE_URL: postgres://designs_app:designs-app-dev@postgres:5432/designs
+      MIGRATION_DATABASE_URL: postgres://atelier:atelier-dev@postgres:5432/designs
       MIGRATE_ON_START: 'true'
       PATTERNING_URL: http://patterning:8000
       MANUFACTURING_URL: http://manufacturing:8000

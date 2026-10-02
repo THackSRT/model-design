@@ -23,6 +23,8 @@ import { type ConnectBus, startRelay } from './start-relay.js';
 export const configSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3101),
   DATABASE_URL: z.url().optional(),
+  // Connexion du propriétaire des tables, utilisée seulement avec MIGRATE_ON_START (DATABASE_URL = rôle de service).
+  MIGRATION_DATABASE_URL: z.url().optional(),
   MIGRATE_ON_START: z.stringbool().default(false),
   MIGRATIONS_DIR: z.string().default('migrations'),
   PATTERNING_URL: z.url().default('http://localhost:3201'),
@@ -72,9 +74,15 @@ async function persistence(config: DesignsConfig, logger: Logger): Promise<Persi
       close: async () => undefined,
     };
   }
+  // Jamais de migration avec le compte du service : sans MIGRATION_DATABASE_URL, on refuse de démarrer.
+  if (config.MIGRATE_ON_START && !config.MIGRATION_DATABASE_URL) {
+    throw new Error(
+      'MIGRATE_ON_START exige MIGRATION_DATABASE_URL (connexion du propriétaire des tables)',
+    );
+  }
   return openPostgres({
     url: config.DATABASE_URL,
-    migrate: config.MIGRATE_ON_START,
+    migrationUrl: config.MIGRATE_ON_START ? config.MIGRATION_DATABASE_URL : undefined,
     migrationsDir: config.MIGRATIONS_DIR,
   });
 }
