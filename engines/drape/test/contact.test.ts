@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { simulate, type FabricPhysics } from '../src/index.js';
 import {
   boxBody,
-  cpuSeconds,
+  costRatio,
   FABRIC,
   gridCloth,
   mergeCloths,
@@ -108,11 +108,12 @@ describe('simulate : performance', () => {
     });
     const body = sphereBody([0, 0, 0], radius, 36, 72);
     let positionsLength = 0;
-    const seconds = cpuSeconds(() => {
+    const ratio = costRatio(() => {
       positionsLength = simulate(cloth, body, FABRIC, { ...SETTINGS, maxSteps: 100 }).positionsMm
         .length;
     });
     expect(positionsLength).toBe(3 * 70 * 70);
-    expect(seconds).toBeLessThan(10);
+    // Au repos : rapport 11 à 13 (≈ 7 s CPU pour une référence de 0,55 s) ; k = 25.
+    expect(ratio).toBeLessThan(25);
   });
 });

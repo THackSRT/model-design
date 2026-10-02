@@ -53,3 +53,26 @@ export type {
   SimulationResult,
   SimulationSettings,
 } from './core/types.js';
+export {
+  DrapeTooLargeError,
+  MAX_COORDINATE_MM,
+  MAX_EDGES_PER_GARMENT,
+  MAX_PANELS_PER_GARMENT,
+  MAX_SEAMS_PER_GARMENT,
+  MAX_VERTICES_PER_GARMENT,
+  MESH_EDGE_MM,
+  assertWithinDrapeLimits,
+} from './mesh/limits.js';
+export type { MeshQuality } from './mesh/limits.js';
+export {
+  FLATNESS_RATIO,
+  MAX_EDGE_RATIO,
+  edgeSampling,
+  flattenPanelOutline,
+} from './mesh/outline.js';
+export { meshPanel } from './mesh/panel-mesh.js';
+export type { MeshPanelOptions, PanelMesh } from './mesh/panel-mesh.js';
+export { PIECE_GAP_MM, meshGarment } from './mesh/garment-mesh.js';
+export type { GarmentMesh, GarmentPiece } from './mesh/garment-mesh.js';
+export type { SeamReport } from './mesh/seams.js';
+export type { Side } from './mesh/copies.js';

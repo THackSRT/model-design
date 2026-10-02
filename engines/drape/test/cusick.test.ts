@@ -9,7 +9,7 @@ import {
   simulate,
   type CusickEdgeMm,
 } from '../src/index.js';
-import { FABRIC, cpuSeconds, sameBits } from './helpers.js';
+import { FABRIC, costRatio, sameBits } from './helpers.js';
 
 const edges: CusickEdgeMm[] = [5, 7.5, 10, 15];
 
@@ -109,7 +109,7 @@ describe('essai de Cusick', () => {
   });
 
   it('performance : 10 mm en moins de 5 s', () => {
-    // Temps CPU, pas d'horloge murale (voir `cpuSeconds`).
-    expect(cpuSeconds(() => void runCusickTest(FABRIC, { edgeMm: 10 }))).toBeLessThan(5);
+    // Coût relatif à la charge de référence (voir `costRatio`).
+    expect(costRatio(() => void runCusickTest(FABRIC, { edgeMm: 10 }))).toBeLessThan(4); // au repos : 1,5 à 1,9
   });
 });

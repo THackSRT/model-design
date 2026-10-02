@@ -159,3 +159,25 @@ peuvent être régénérées pour y ajouter `placement` (ajout seul, tâche 1.19
 repères d'épaule et de poignet et l'axe des bras (tâche à part, avant 1.19d). Les propriétés des préréglages de
 tissu (dont wax et bazin) sont des estimations, signalées comme telles, à faire valider par un modéliste ou un
 vendeur de tissus.
+
+**Décisions de l'orchestrateur, sur délégation de l'utilisateur (02/10/2026) : maillage des pièces (1.19d).**
+La triangulation de Delaunay est construite par insertion incrémentale avec retournements de Lawson (même
+résultat que Bowyer-Watson, plus robuste aux points cocycliques du réseau), les arêtes de bord sont récupérées
+par retournements (Sloan) et les triangles hors de la pièce retirés par un parcours pair-impair. Un raffinement
+ajoute un sommet au milieu des arêtes intérieures de plus de 1,2 h (au plus 8 passes) : sans lui, le réseau seul
+laisse des arêtes de 1,6 h. Les bords cousus entre eux, de proche en proche (une manche cousue au devant et aux
+deux dos), forment un groupe qui reçoit un seul nombre de parts, ceil(plus grande longueur / h), pour que les
+points soient appariés un à un. Les coutures sont appariées dans le sens du parcours antihoraire une fois posé,
+rang i contre rang n − i. Règles de côté : une pièce sans `placement` est au centre ; une pièce au centre avec
+`quantity: 2` a sa copie 0 à droite ; une pièce sur pliure avec `quantity` différente de 1, ou une `quantity`
+supérieure à 2, est refusée (`InvalidInputError`) ; une couture entre un bord à deux exemplaires et un bord unique
+au centre exige `EdgeRef.side`. Limites : 40 pièces (`MAX_PANELS_PER_GARMENT`), 2 000 bords, 30 000 sommets
+(`DrapeTooLargeError`). `ENGINE_VERSION` 0.4.0.
+
+**Bornes contre une entrée hostile (02/10/2026, décision de l'orchestrateur après relecture).** Le maillage sera
+exposé par 1.19g à des `GarmentSpec` venus du réseau : aucune entrée ne doit le faire tourner sans fin ni
+allouer sans borne. Les coordonnées doivent être finies et de valeur absolue au plus 10 m (`MAX_COORDINATE_MM`),
+sinon `InvalidInputError` ; les boucles géométriques tournent sur un indice entier borné ; le nombre de sommets
+est estimé avant tout travail coûteux (longueur des bords / h, aire / (√3/2·h²)) et le budget restant du vêtement
+est passé à chaque pièce, de sorte que `DrapeTooLargeError` tombe avant le maillage ; le nombre de coutures est
+borné. Une borne des coordonnées dans le contrat (`Point`) reste à décider (tâche 1.41).
