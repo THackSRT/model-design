@@ -1,7 +1,7 @@
 // Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
 
 /**
- * [x, y] en millimètres.
+ * [x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé).
  *
  * @minItems 2
  * @maxItems 2

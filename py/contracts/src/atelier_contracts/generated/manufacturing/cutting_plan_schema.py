@@ -5,9 +5,8 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
-from .. import garment_spec_schema
 from . import cut_pattern_schema, size_label_schema
 
 
@@ -19,6 +18,15 @@ class Layout(StrEnum):
 class Direction(StrEnum):
     one_way = "one-way"
     two_way = "two-way"
+
+
+class Point(RootModel[list[float]]):
+    root: list[float] = Field(
+        ...,
+        description="[x, y] en millimètres, dans le repère du plan. Non borné : x va jusqu'au métrage (fabricLengthMm), qui dépasse 10 m pour une série ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.",
+        max_length=2,
+        min_length=2,
+    )
 
 
 class Placement(BaseModel):
@@ -53,7 +61,7 @@ class Placement(BaseModel):
         ...,
         description="Vrai : le bord de pliure de la pièce est posé sur la pliure du tissu (y = 0).",
     )
-    outline: list[garment_spec_schema.Point] = Field(
+    outline: list[Point] = Field(
         ...,
         description="Ligne de coupe placée, dans le repère du plan (dépliée si la pièce sur pliure est coupée à plat).",
         min_length=3,

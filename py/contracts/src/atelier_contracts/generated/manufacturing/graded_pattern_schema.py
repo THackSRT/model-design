@@ -9,6 +9,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from . import cut_pattern_schema, size_label_schema
 
 
+class SizedCutPattern(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    size: size_label_schema.SizeLabel
+    pieces: list[cut_pattern_schema.CutPiece] = Field(..., min_length=1)
+
+
 class SizeDelta(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -16,14 +24,6 @@ class SizeDelta(BaseModel):
     size: size_label_schema.SizeLabel
     dxMm: float
     dyMm: float
-
-
-class SizedCutPattern(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    size: size_label_schema.SizeLabel
-    pieces: list[cut_pattern_schema.CutPiece] = Field(..., min_length=1)
 
 
 class VertexGradeRule(BaseModel):

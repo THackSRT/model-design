@@ -76,6 +76,16 @@ export const cuttingPlanJsonSchema = {
     },
   },
   $defs: {
+    Point: {
+      type: 'array',
+      description:
+        "[x, y] en millimètres, dans le repère du plan. Non borné : x va jusqu'au métrage (fabricLengthMm), qui dépasse 10 m pour une série ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.",
+      items: {
+        type: 'number',
+      },
+      minItems: 2,
+      maxItems: 2,
+    },
     Placement: {
       type: 'object',
       additionalProperties: false,
@@ -131,7 +141,7 @@ export const cuttingPlanJsonSchema = {
             'Ligne de coupe placée, dans le repère du plan (dépliée si la pièce sur pliure est coupée à plat).',
           minItems: 3,
           items: {
-            $ref: '../garment-spec.schema.json#/$defs/Point',
+            $ref: '#/$defs/Point',
           },
         },
       },

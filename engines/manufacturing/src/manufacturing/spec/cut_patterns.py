@@ -31,7 +31,7 @@ from manufacturing.core.model import (
 
 
 def _point(raw: Any) -> Point:
-    return (float(raw.root[0]), float(raw.root[1]))
+    return (float(raw.root[0].root), float(raw.root[1].root))
 
 
 def _placement(raw: Any) -> NotchPlacement:

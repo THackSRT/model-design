@@ -42,6 +42,16 @@ export const cutPatternJsonSchema = {
     },
   },
   $defs: {
+    Point: {
+      type: 'array',
+      description:
+        "[x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.",
+      items: {
+        type: 'number',
+      },
+      minItems: 2,
+      maxItems: 2,
+    },
     EngineRef: {
       type: 'object',
       additionalProperties: false,
@@ -59,7 +69,7 @@ export const cutPatternJsonSchema = {
       type: 'array',
       description: 'Segment de deux points.',
       items: {
-        $ref: '../garment-spec.schema.json#/$defs/Point',
+        $ref: '#/$defs/Point',
       },
       minItems: 2,
       maxItems: 2,
@@ -103,7 +113,7 @@ export const cutPatternJsonSchema = {
             'Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties.',
           minItems: 3,
           items: {
-            $ref: '../garment-spec.schema.json#/$defs/Point',
+            $ref: '#/$defs/Point',
           },
         },
         seamLine: {
@@ -131,7 +141,7 @@ export const cutPatternJsonSchema = {
           description: 'Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai.',
         },
         labelAnchor: {
-          $ref: '../garment-spec.schema.json#/$defs/Point',
+          $ref: '#/$defs/Point',
           description: 'Point intérieur à la pièce où placer son étiquette.',
         },
         bounds: {
@@ -168,7 +178,7 @@ export const cutPatternJsonSchema = {
           description: 'Polyligne du bord (courbe de Bézier aplatie), du début à la fin.',
           minItems: 2,
           items: {
-            $ref: '../garment-spec.schema.json#/$defs/Point',
+            $ref: '#/$defs/Point',
           },
         },
       },
@@ -196,7 +206,7 @@ export const cutPatternJsonSchema = {
           enum: ['requested', 'auto'],
         },
         position: {
-          $ref: '../garment-spec.schema.json#/$defs/Point',
+          $ref: '#/$defs/Point',
           description: 'Point de la ligne de couture repéré par le cran.',
         },
         segments: {
@@ -218,10 +228,10 @@ export const cutPatternJsonSchema = {
       required: ['min', 'max'],
       properties: {
         min: {
-          $ref: '../garment-spec.schema.json#/$defs/Point',
+          $ref: '#/$defs/Point',
         },
         max: {
-          $ref: '../garment-spec.schema.json#/$defs/Point',
+          $ref: '#/$defs/Point',
         },
       },
     },

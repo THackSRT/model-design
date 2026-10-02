@@ -149,5 +149,5 @@ def test_the_spec_carries_the_placement_of_each_panel(case: str) -> None:
         assert panel.placement.bodySide.value == core.placement.body_side.value
         assert panel.placement.facing.value == core.placement.facing.value
         assert panel.placement.anchor.landmark.value == core.placement.landmark.value
-        assert panel.placement.anchor.point.root == list(core.placement.anchor)
+        assert panel.placement.anchor.point.model_dump() == list(core.placement.anchor)
         assert panel.placement.clearanceMm == 30.0

@@ -121,11 +121,14 @@ components:
         parallèle au droit fil sur tissu plié), /problems/piece-wider-than-fabric (pièce plus large que
         la laize utile), /problems/too-many-pieces (plus de 500 placements),
         /problems/export-format-unavailable (format pas encore livré par cette version du moteur). Une
-        requête hors schéma
-        reçoit la réponse 422 de validation de FastAPI.
+        requête hors schéma reçoit le problème /problems/invalid-request (InvalidRequestProblem :
+        chemins et contraintes, jamais les valeurs reçues).
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/Problem' }
+          schema:
+            anyOf:
+              - { $ref: '#/components/schemas/Problem' }
+              - { $ref: '#/components/schemas/InvalidRequestProblem' }
   schemas:
     Problem:
       type: object
@@ -135,6 +138,37 @@ components:
         title: { type: string }
         status: { type: integer }
         detail: { type: string }
+    InvalidRequestProblem:
+      description: >
+        Requête hors schéma (RFC 9457), rendue par le kit des moteurs (py/engine-kit) : type
+        /problems/invalid-request, statut 422. errors liste au plus 20 violations ; detail en donne le
+        nombre total. Aucune entrée ne recopie la valeur reçue (mesures de client).
+      allOf:
+        - { $ref: '#/components/schemas/Problem' }
+        - type: object
+          required: [type, status, errors]
+          properties:
+            type: { const: /problems/invalid-request }
+            status: { const: 422 }
+            errors:
+              type: array
+              maxItems: 20
+              items: { $ref: '#/components/schemas/ValidationError' }
+    ValidationError:
+      type: object
+      additionalProperties: false
+      required: [path, constraint]
+      properties:
+        path:
+          type: string
+          description: >
+            Chemin JSON de la valeur fautive dans le corps, sans préfixe body (ex. panels[0].edges[2].from[1],
+            measurements.waistGirthMm) ; $ pour le corps entier.
+        constraint:
+          type: string
+          description: >
+            Type de contrainte violée, celui de Pydantic (ex. missing, less_than_equal, extra_forbidden,
+            literal_error). Jamais la valeur reçue.
     CutPatternRequest:
       $ref: '../schemas/manufacturing/cut-pattern-request.schema.json'
     CutPattern:

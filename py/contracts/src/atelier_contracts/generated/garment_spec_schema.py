@@ -23,8 +23,17 @@ class Garment(BaseModel):
     type: str
 
 
-class Point(RootModel[list[float]]):
-    root: list[float] = Field(..., description="[x, y] en millimètres.", max_length=2, min_length=2)
+class PointItem(RootModel[float]):
+    root: float = Field(..., ge=-10000.0, le=10000.0)
+
+
+class Point(RootModel[list[PointItem]]):
+    root: list[PointItem] = Field(
+        ...,
+        description="[x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé).",
+        max_length=2,
+        min_length=2,
+    )
 
 
 class Role(StrEnum):

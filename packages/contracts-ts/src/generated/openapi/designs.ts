@@ -565,7 +565,7 @@ export interface components {
       measurements: components['schemas']['measurement-set.schema'];
       garment: components['schemas']['garment-request.schema'];
     };
-    /** @description [x, y] en millimètres. */
+    /** @description [x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé). */
     Point: number[];
     Edge: {
       id: string;
@@ -678,7 +678,7 @@ export interface components {
       /** @description Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation. */
       estimatedMeasurements?: string[];
       $defs: {
-        /** @description [x, y] en millimètres. */
+        /** @description [x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé). */
         Point: number[];
         Edge: {
           id: string;
@@ -911,6 +911,8 @@ export interface components {
       /** @description Taille ou repère reporté sur les pièces. Jamais de nom de client. */
       sizeLabel?: components['schemas']['size-label.schema'];
     };
+    /** @description [x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm. */
+    '$defs-Point': number[];
     SeamLineEdge: {
       edgeId: string;
       /**
@@ -921,10 +923,10 @@ export interface components {
       /** @description Valeur de couture appliquée à ce bord (0 pour une pliure). */
       allowanceMm: number;
       /** @description Polyligne du bord (courbe de Bézier aplatie), du début à la fin. */
-      points: components['schemas']['Point'][];
+      points: components['schemas']['$defs-Point'][];
     };
     /** @description Segment de deux points. */
-    Segment: components['schemas']['Point'][];
+    Segment: components['schemas']['$defs-Point'][];
     NotchMark: {
       edgeId: string;
       /** @description Distance le long de la ligne de couture depuis le début du bord. */
@@ -933,14 +935,14 @@ export interface components {
       /** @enum {string} */
       source?: 'requested' | 'auto';
       /** @description Point de la ligne de couture repéré par le cran. */
-      position: components['schemas']['Point'];
+      position: components['schemas']['$defs-Point'];
       /** @description Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce. */
       segments: components['schemas']['Segment'][];
     };
     /** @description Rectangle englobant de la ligne de coupe. */
     Bounds: {
-      min: components['schemas']['Point'];
-      max: components['schemas']['Point'];
+      min: components['schemas']['$defs-Point'];
+      max: components['schemas']['$defs-Point'];
     };
     EngineRef: {
       name: string;
@@ -954,7 +956,7 @@ export interface components {
       /** @description Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine). */
       cutOnFold: boolean;
       /** @description Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties. */
-      cutLine: components['schemas']['Point'][];
+      cutLine: components['schemas']['$defs-Point'][];
       /** @description Ligne de couture, bord par bord, dans l'ordre de Panel.edges ; la fin de chaque bord est le début du suivant. */
       seamLine: components['schemas']['SeamLineEdge'][];
       notches: components['schemas']['NotchMark'][];
@@ -963,7 +965,7 @@ export interface components {
       /** @description Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai. */
       foldLine?: components['schemas']['Segment'];
       /** @description Point intérieur à la pièce où placer son étiquette. */
-      labelAnchor: components['schemas']['Point'];
+      labelAnchor: components['schemas']['$defs-Point'];
       bounds: components['schemas']['Bounds'];
       /** @description Aire de la ligne de coupe, en mm², telle que dessinée (moitié de pièce si cutOnFold). */
       cutAreaMm2: number;
@@ -984,12 +986,14 @@ export interface components {
       sizeLabel?: components['schemas']['size-label.schema'];
       pieces: components['schemas']['CutPiece'][];
       $defs: {
+        /** @description [x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm. */
+        Point: number[];
         EngineRef: {
           name: string;
           version: string;
         };
         /** @description Segment de deux points. */
-        Segment: components['schemas']['Point'][];
+        Segment: components['schemas']['$defs-Point'][];
         CutPiece: {
           panelId: string;
           name: string;
@@ -998,7 +1002,7 @@ export interface components {
           /** @description Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine). */
           cutOnFold: boolean;
           /** @description Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties. */
-          cutLine: components['schemas']['Point'][];
+          cutLine: components['schemas']['$defs-Point'][];
           /** @description Ligne de couture, bord par bord, dans l'ordre de Panel.edges ; la fin de chaque bord est le début du suivant. */
           seamLine: components['schemas']['SeamLineEdge'][];
           notches: components['schemas']['NotchMark'][];
@@ -1007,7 +1011,7 @@ export interface components {
           /** @description Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai. */
           foldLine?: components['schemas']['Segment'];
           /** @description Point intérieur à la pièce où placer son étiquette. */
-          labelAnchor: components['schemas']['Point'];
+          labelAnchor: components['schemas']['$defs-Point'];
           bounds: components['schemas']['Bounds'];
           /** @description Aire de la ligne de coupe, en mm², telle que dessinée (moitié de pièce si cutOnFold). */
           cutAreaMm2: number;
@@ -1022,7 +1026,7 @@ export interface components {
           /** @description Valeur de couture appliquée à ce bord (0 pour une pliure). */
           allowanceMm: number;
           /** @description Polyligne du bord (courbe de Bézier aplatie), du début à la fin. */
-          points: components['schemas']['Point'][];
+          points: components['schemas']['$defs-Point'][];
         };
         NotchMark: {
           edgeId: string;
@@ -1032,14 +1036,14 @@ export interface components {
           /** @enum {string} */
           source?: 'requested' | 'auto';
           /** @description Point de la ligne de couture repéré par le cran. */
-          position: components['schemas']['Point'];
+          position: components['schemas']['$defs-Point'];
           /** @description Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce. */
           segments: components['schemas']['Segment'][];
         };
         /** @description Rectangle englobant de la ligne de coupe. */
         Bounds: {
-          min: components['schemas']['Point'];
-          max: components['schemas']['Point'];
+          min: components['schemas']['$defs-Point'];
+          max: components['schemas']['$defs-Point'];
         };
       };
     };
@@ -1175,7 +1179,7 @@ export interface components {
         'application/problem+json': components['schemas']['Problem'];
       };
     };
-    /** @description Version impossible à créer, au format RFC 9457. /problems/garment-type-mismatch : le type de vêtement demandé n'est pas celui du modèle. Sinon, le service relaie le type stable du moteur de patronage (contracts/openapi/patterning.yaml), seulement s'il est dans cette liste : /problems/measurement-required, /problems/inconsistent-measurements, /problems/garment-type-not-supported, /problems/skirt-shorter-than-hip-depth, /problems/trousers-shorter-than-crotch, /problems/trousers-hem-too-narrow, /problems/neckline-too-deep, /problems/sleeve-shorter-than-cap ; le détail est relayé (il ne contient jamais de mesure). Un autre type /problems/… du moteur devient /problems/pattern-impossible, avec un détail fixé par le service. Une erreur de validation du moteur (422 sans type /problems/…), un délai dépassé ou une réponse hors contrat deviennent 502 /problems/engine-unavailable ; leur corps n'est ni relayé ni journalisé. */
+    /** @description Version impossible à créer, au format RFC 9457. /problems/garment-type-mismatch : le type de vêtement demandé n'est pas celui du modèle. Sinon, le service relaie le type stable du moteur de patronage (contracts/openapi/patterning.yaml), seulement s'il est dans cette liste : /problems/measurement-required, /problems/inconsistent-measurements, /problems/garment-type-not-supported, /problems/skirt-shorter-than-hip-depth, /problems/trousers-shorter-than-crotch, /problems/trousers-hem-too-narrow, /problems/neckline-too-deep, /problems/sleeve-shorter-than-cap ; le détail est relayé (il ne contient jamais de mesure). Un autre type /problems/… du moteur devient /problems/pattern-impossible, avec un détail fixé par le service. Une erreur de validation du moteur (422 /problems/invalid-request, ou 422 sans type), un délai dépassé ou une réponse hors contrat deviennent 502 /problems/engine-unavailable ; leur corps n'est ni relayé ni journalisé. */
     DraftingProblem: {
       headers: {
         [name: string]: unknown;
@@ -1184,7 +1188,7 @@ export interface components {
         'application/problem+json': components['schemas']['Problem'];
       };
     };
-    /** @description Pièces impossibles à finir avec ces options, au format RFC 9457. Le service relaie le type stable du moteur de fabrication (contracts/openapi/manufacturing.yaml), seulement s'il est dans cette liste : /problems/unknown-edge, /problems/allowance-on-fold, /problems/allowance-on-dart, /problems/adjacent-darts, /problems/notch-outside-edge, /problems/open-contour, /problems/fold-edge-missing, /problems/cut-line-self-intersects, /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur, devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure. */
+    /** @description Pièces impossibles à finir avec ces options, au format RFC 9457. Le service relaie le type stable du moteur de fabrication (contracts/openapi/manufacturing.yaml), seulement s'il est dans cette liste : /problems/unknown-edge, /problems/allowance-on-fold, /problems/allowance-on-dart, /problems/adjacent-darts, /problems/notch-outside-edge, /problems/open-contour, /problems/fold-edge-missing, /problems/cut-line-self-intersects, /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur (/problems/invalid-request), devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure. */
     ManufacturingProblem: {
       headers: {
         [name: string]: unknown;

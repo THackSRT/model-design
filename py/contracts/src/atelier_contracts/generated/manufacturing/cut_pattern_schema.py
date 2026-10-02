@@ -7,7 +7,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
-from .. import garment_spec_schema
 from . import size_label_schema
 
 
@@ -18,6 +17,15 @@ class Garment(BaseModel):
     type: str
 
 
+class Point(RootModel[list[float]]):
+    root: list[float] = Field(
+        ...,
+        description="[x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.",
+        max_length=2,
+        min_length=2,
+    )
+
+
 class EngineRef(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -26,23 +34,18 @@ class EngineRef(BaseModel):
     version: str
 
 
+class Segment(RootModel[list[Point]]):
+    root: list[Point] = Field(
+        ..., description="Segment de deux points.", max_length=2, min_length=2
+    )
+
+
 class Role(StrEnum):
     seam = "seam"
     fold = "fold"
     hem = "hem"
     waistline = "waistline"
     opening = "opening"
-
-
-class Source(StrEnum):
-    requested = "requested"
-    auto = "auto"
-
-
-class Segment(RootModel[list[garment_spec_schema.Point]]):
-    root: list[garment_spec_schema.Point] = Field(
-        ..., description="Segment de deux points.", max_length=2, min_length=2
-    )
 
 
 class SeamLineEdge(BaseModel):
@@ -56,11 +59,16 @@ class SeamLineEdge(BaseModel):
         description="Valeur de couture appliquée à ce bord (0 pour une pliure).",
         ge=0,
     )
-    points: list[garment_spec_schema.Point] = Field(
+    points: list[Point] = Field(
         ...,
         description="Polyligne du bord (courbe de Bézier aplatie), du début à la fin.",
         min_length=2,
     )
+
+
+class Source(StrEnum):
+    requested = "requested"
+    auto = "auto"
 
 
 class NotchMark(BaseModel):
@@ -75,9 +83,7 @@ class NotchMark(BaseModel):
     )
     count: int = Field(..., ge=1, le=3)
     source: Source | None = None
-    position: garment_spec_schema.Point = Field(
-        ..., description="Point de la ligne de couture repéré par le cran."
-    )
+    position: Point = Field(..., description="Point de la ligne de couture repéré par le cran.")
     segments: list[Segment] = Field(
         ...,
         description="Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce.",
@@ -90,8 +96,8 @@ class Bounds(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    min: garment_spec_schema.Point
-    max: garment_spec_schema.Point
+    min: Point
+    max: Point
 
 
 class CutPiece(BaseModel):
@@ -109,7 +115,7 @@ class CutPiece(BaseModel):
         ...,
         description="Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine).",
     )
-    cutLine: list[garment_spec_schema.Point] = Field(
+    cutLine: list[Point] = Field(
         ...,
         description="Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties.",
         min_length=3,
@@ -128,7 +134,7 @@ class CutPiece(BaseModel):
         None,
         description="Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai.",
     )
-    labelAnchor: garment_spec_schema.Point = Field(
+    labelAnchor: Point = Field(
         ..., description="Point intérieur à la pièce où placer son étiquette."
     )
     bounds: Bounds
