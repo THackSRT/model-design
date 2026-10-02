@@ -4,11 +4,13 @@ import type {
   DesignVersionChanges,
   DesignVersionPage,
   DesignVersionSummary,
+  Drape as DrapeBody,
 } from '@atelier/contracts-ts';
 import type { VersionComparison } from '../../application/use-cases/get-version-changes.js';
 import type { VersionPage } from '../../application/use-cases/list-design-versions.js';
 import type { Design, DesignId } from '../../domain/design.js';
 import type { DesignVersion, VersionSummary } from '../../domain/design-version.js';
+import type { Drape } from '../../domain/drape.js';
 
 export const presentDesign = (d: Design): DesignBody => ({
   id: d.id,
@@ -54,4 +56,17 @@ export const presentChanges = (designId: DesignId, c: VersionComparison): Design
   sameFingerprint: c.sameFingerprint,
   params: c.params,
   measurements: c.measurements,
+});
+
+export const presentDrape = (d: Drape): DrapeBody => ({
+  id: d.id,
+  status: d.status,
+  ...(d.problemType === undefined
+    ? {}
+    : { problemType: d.problemType as DrapeBody['problemType'] }),
+  ...(d.ease === undefined ? {} : { ease: d.ease }),
+  ...(d.maxStrainPercent === undefined ? {} : { maxStrainPercent: d.maxStrainPercent }),
+  ...(d.fabricEstimated === undefined ? {} : { fabricEstimated: d.fabricEstimated }),
+  createdAt: d.createdAt.toISOString(),
+  ...(d.completedAt === undefined ? {} : { completedAt: d.completedAt.toISOString() }),
 });

@@ -38,7 +38,11 @@ function failureOf(failure: HttpFailure): PatterningFailure {
         detail: typeof detail === 'string' ? detail : IMPOSSIBLE_DETAIL,
       };
     }
-    if (type !== undefined) return { kind: 'pattern-impossible', detail: IMPOSSIBLE_DETAIL };
+    // invalid-request : le moteur refuse la requête de designs (désaccord de contrat, faute interne, pas celle
+    // de l'utilisateur) ; traité comme une panne du moteur, corps non relayé.
+    if (type !== undefined && type !== 'invalid-request') {
+      return { kind: 'pattern-impossible', detail: IMPOSSIBLE_DETAIL };
+    }
   }
   // Validation du moteur (corps qui recopie les mesures reçues), panne, délai : corps jamais relayé.
   return { kind: 'engine-unavailable', detail: `moteur de patronage : ${failure.kind}` };

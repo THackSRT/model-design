@@ -4,7 +4,11 @@ import { createLogger } from '@atelier/service-kit';
 import { describe, expect, it } from 'vitest';
 import type { EventBus } from '../../src/adapters/messaging/nats-event-bus.js';
 import { composeService, configSchema } from '../../src/composition.js';
+import type { SubscribeDrapeResults } from '../../src/start-drape-consumer.js';
 import type { ConnectBus } from '../../src/start-relay.js';
+
+/** Aucune connexion réseau réelle dans un test unitaire : la réception des résultats est simulée. */
+const noSubscribe: SubscribeDrapeResults = async () => ({ close: async () => undefined });
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -47,7 +51,11 @@ describe('composition : relais de l’outbox', () => {
   it('démarre le relais avec NATS_URL, puis l’arrête et ferme la connexion à la fermeture', async () => {
     const { calls, logger, store, connectBus } = fakes();
     const config = configSchema.parse({ NATS_URL: 'nats://nats:4222', OUTBOX_INTERVAL_MS: '5' });
-    const service = await composeService(config, logger, { outbox: store, connectBus });
+    const service = await composeService(config, logger, {
+      outbox: store,
+      connectBus,
+      subscribeDrapeResults: noSubscribe,
+    });
     await wait(60);
     expect(calls[0]).toBe('connect nats://nats:4222');
     expect(calls).toContain('fetch');
@@ -70,6 +78,7 @@ describe('composition : relais de l’outbox', () => {
     const service = await composeService(config, logger, {
       outbox: store,
       connectBus: neverConnects,
+      subscribeDrapeResults: noSubscribe,
     });
     await service.app.listen(0);
     const response = await fetch(`${await service.app.getUrl()}/v1/designs/unknown`);
@@ -86,7 +95,11 @@ describe('composition : relais de l’outbox', () => {
       throw new Error('secret://ne-pas-journaliser');
     };
     const config = configSchema.parse({ NATS_URL: 'nats://nats:4222' });
-    const service = await composeService(config, logger, { outbox: store, connectBus: failing });
+    const service = await composeService(config, logger, {
+      outbox: store,
+      connectBus: failing,
+      subscribeDrapeResults: noSubscribe,
+    });
     await wait(20);
     await service.close();
     expect(logs.map((l) => l.event)).toContain('outbox-relay-failed');
@@ -98,7 +111,11 @@ describe('composition : relais de l’outbox', () => {
     let release: (bus: EventBus) => void = () => undefined;
     const late: ConnectBus = () => new Promise<EventBus>((resolve) => (release = resolve));
     const config = configSchema.parse({ NATS_URL: 'nats://nats:4222', OUTBOX_INTERVAL_MS: '5' });
-    const service = await composeService(config, logger, { outbox: store, connectBus: late });
+    const service = await composeService(config, logger, {
+      outbox: store,
+      connectBus: late,
+      subscribeDrapeResults: noSubscribe,
+    });
     await service.close();
     release({
       publisher: { publish: async () => undefined },
@@ -113,7 +130,10 @@ describe('composition : relais de l’outbox', () => {
   it('n’ouvre pas de connexion sans outbox (pas de base)', async () => {
     const { calls, logger, connectBus } = fakes();
     const config = configSchema.parse({ NATS_URL: 'nats://nats:4222' });
-    const service = await composeService(config, logger, { connectBus });
+    const service = await composeService(config, logger, {
+      connectBus,
+      subscribeDrapeResults: noSubscribe,
+    });
     await service.close();
     expect(calls).toEqual([]);
   });

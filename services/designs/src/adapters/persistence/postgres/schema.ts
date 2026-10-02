@@ -1,5 +1,16 @@
 import type { GarmentRequest, GarmentSpec, MeasurementSet } from '@atelier/contracts-ts';
-import { integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import type { DrapeEase } from '../../../domain/drape.js';
 
 // Reflet des migrations SQL (migrations/*.sql), qui font foi.
 export const designs = pgTable('designs', {
@@ -33,4 +44,20 @@ export const outbox = pgTable('outbox', {
   data: jsonb('data').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
   publishedAt: timestamp('published_at', { withTimezone: true }),
+});
+
+export const drapes = pgTable('drapes', {
+  id: uuid('id').primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
+  designId: uuid('design_id').notNull(),
+  versionNumber: integer('version_number').notNull(),
+  requestFingerprint: text('request_fingerprint').notNull(),
+  status: text('status').$type<'pending' | 'completed' | 'failed'>().notNull(),
+  problemType: text('problem_type'),
+  ease: jsonb('ease').$type<DrapeEase>(),
+  maxStrainPercent: doublePrecision('max_strain_percent'),
+  fabricEstimated: boolean('fabric_estimated'),
+  modelKey: text('model_key'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
 });
