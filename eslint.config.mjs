@@ -14,6 +14,52 @@ const FRAMEWORKS = [
   '@atelier/service-kit',
 ];
 
+/**
+ * Contraintes de dépendance entre projets (tags Nx). `allow` : chemins d'import exemptés ; la seule exception est
+ * celle de engines/drape (ADR 0013), déclarée dans son eslint.config.mjs pour src/body et ses tests.
+ */
+const DEP_CONSTRAINTS = [
+  { sourceTag: 'type:kernel', onlyDependOnLibsWithTags: [] },
+  { sourceTag: 'type:contracts', onlyDependOnLibsWithTags: [] },
+  { sourceTag: 'type:tokens', onlyDependOnLibsWithTags: [] },
+  {
+    sourceTag: 'type:service-kit',
+    onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts'],
+  },
+  {
+    sourceTag: 'type:service',
+    onlyDependOnLibsWithTags: ['type:kernel', 'type:service-kit', 'type:contracts'],
+  },
+  {
+    sourceTag: 'type:engine',
+    onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts'],
+  },
+  { sourceTag: 'type:ui', onlyDependOnLibsWithTags: ['type:tokens'] },
+  { sourceTag: 'type:viewer', onlyDependOnLibsWithTags: ['type:kernel'] },
+  {
+    sourceTag: 'type:feature',
+    onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts', 'type:engine'],
+  },
+  {
+    sourceTag: 'type:app',
+    onlyDependOnLibsWithTags: [
+      'type:feature',
+      'type:ui',
+      'type:tokens',
+      'type:contracts',
+      'type:viewer',
+      'type:kernel',
+      'type:engine',
+    ],
+  },
+  { sourceTag: 'type:tool', onlyDependOnLibsWithTags: ['*'] },
+];
+
+export const boundaries = (allow) => [
+  'error',
+  { enforceBuildableLibDependency: false, allow, depConstraints: DEP_CONSTRAINTS },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -42,49 +88,7 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'error',
       // Les modules NestJS sont des classes vides décorées.
       '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: false,
-          allow: [],
-          depConstraints: [
-            { sourceTag: 'type:kernel', onlyDependOnLibsWithTags: [] },
-            { sourceTag: 'type:contracts', onlyDependOnLibsWithTags: [] },
-            { sourceTag: 'type:tokens', onlyDependOnLibsWithTags: [] },
-            {
-              sourceTag: 'type:service-kit',
-              onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts'],
-            },
-            {
-              sourceTag: 'type:service',
-              onlyDependOnLibsWithTags: ['type:kernel', 'type:service-kit', 'type:contracts'],
-            },
-            {
-              sourceTag: 'type:engine',
-              onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts'],
-            },
-            { sourceTag: 'type:ui', onlyDependOnLibsWithTags: ['type:tokens'] },
-            { sourceTag: 'type:viewer', onlyDependOnLibsWithTags: ['type:kernel'] },
-            {
-              sourceTag: 'type:feature',
-              onlyDependOnLibsWithTags: ['type:kernel', 'type:contracts', 'type:engine'],
-            },
-            {
-              sourceTag: 'type:app',
-              onlyDependOnLibsWithTags: [
-                'type:feature',
-                'type:ui',
-                'type:tokens',
-                'type:contracts',
-                'type:viewer',
-                'type:kernel',
-                'type:engine',
-              ],
-            },
-            { sourceTag: 'type:tool', onlyDependOnLibsWithTags: ['*'] },
-          ],
-        },
-      ],
+      '@nx/enforce-module-boundaries': boundaries([]),
     },
   },
   {

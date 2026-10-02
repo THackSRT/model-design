@@ -46,6 +46,11 @@ export interface GarmentPiece {
   unfolded: boolean;
   /** Copie miroir (symétrie gauche/droite des positions, triangles redressés). */
   mirrored: boolean;
+  /**
+   * Abscisse ajoutée aux coordonnées de la pièce (miroir comprise) pour la poser côte à côte : x de `flatMm` moins
+   * `shiftXMm` = x dans le repère du patron (1.19e : mise en place autour du corps).
+   */
+  shiftXMm: number;
   vertexStart: number;
   vertexCount: number;
   triangleStart: number;
@@ -200,6 +205,7 @@ function placeCopy(buf: Buffers, p: Placed, grains: Float64Array, copy: 0 | 1): 
     side: unfolded ? 'center' : flip ? oppositeSide(plan.drawnSide) : plan.drawnSide,
     unfolded,
     mirrored: flip,
+    shiftXMm: shift,
     vertexStart,
     vertexCount: nv,
     triangleStart: buf.nextTriangle,

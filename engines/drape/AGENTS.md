@@ -3,13 +3,19 @@
 Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique à base de positions étendue, XPBD, sur
 CPU, sans aucune dépendance). Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin).
 Aujourd'hui : le socle du paquet `@atelier/drape`, le cœur de simulation (tâche 1.19b), le maillage d'une pièce
-(1.19d1) et du vêtement entier à plat (1.19d2) ; mise en place autour de l'avatar, glTF et tâche NATS suivent (1.19e).
+(1.19d1), du vêtement entier à plat (1.19d2), l'avatar, la mise en place et le drapé complet `drapeGarment` (1.19e) ;
+glTF et tâche NATS suivent (1.19f).
 
-- `src/index.ts` : API (`simulate`, `meshGarment`, `FABRIC_PRESETS`, `toXpbdParams`, types, `ENGINE_VERSION`) ;
+- `src/index.ts` : API compatible navigateur (importée par le studio, son Worker et le banc d'essai) : `simulate`, `meshGarment`,
+  `FABRIC_PRESETS`, `toXpbdParams`, types, constantes, `ENGINE_VERSION`. Aucun `node:*` ni `@atelier/mannequin` n'y est atteignable
+  (`test/browser-entry.test.ts` parcourt ses imports statiques).
+- `src/node.ts` (exports `./node`, `@atelier/drape/node`) : entrée réservée à Node : `loadAvatarEngine`, `buildAvatar`, `buildBody`,
+  `weldBody`, la mise en place (`placeGarment`, `assertPlacements`, `keepClearOfBody`, `PlacementError`) et `drapeGarment`. Serveur du
+  moteur et tests de drapé l'importent ; jamais le navigateur.
   `src/server.ts` + `src/main.ts` : `GET /health` (`{ name: "drape", version }`), `node:http`, port `PORT` ou 8000.
 - `src/core/` : cœur pur et déterministe (ni E/S, ni horloge, ni hasard ; mm, g, s ; axe Y vers le haut). Le lint
-  (`eslint.config.mjs`) interdit à `src/core/` d'importer `node:*`, `adapters/`, `output/`, `body/`. À venir hors du
-  cœur : `src/body/` (avatar par `@atelier/mannequin`, cm → mm ici seulement), `src/output/` (glTF, mètres ici
+  (`eslint.config.mjs`) interdit à `src/core/` d'importer `node:*`, `adapters/`, `output/`, `body/`. Hors du
+  cœur : `src/body/` (fait, 1.19e : avatar par `@atelier/mannequin`, cm → mm ici seulement) ; à venir : `src/output/` (glTF, mètres ici
   seulement), `src/adapters/` (NATS, stockage).
   - `types.ts` : `ClothMesh`, `BodyMesh`, `FabricPhysics`, `SimulationSettings`, `SimulationResult` (interface
     partagée avec 1.19d : ne pas la changer sans le signaler ; `iterations?` est un ajout facultatif : entier de 1 à `MAX_ITERATIONS` = 32, 1 par défaut) ;
@@ -121,6 +127,48 @@ stitchCount }`, une entrée par couple de bords cousus (une couture du contrat e
     `meshGarment` passe à `meshPanel` le budget restant (`maxVertices`, divisé par le nombre d'exemplaires). Boucles
     géométriques sur indice entier (`x0 + i·h`), `Math.sqrt` à la place de `Math.hypot`. Test : `mesh-hardening.test.ts`
     (dont fixtures identiques octet pour octet aux références golden du patronage).
+- `src/body/` (1.19e, seul à importer `@atelier/mannequin`, exception de dépendance déclarée dans `eslint.config.mjs` pour
+  `src/body` et `test/`) : `loadAvatarEngine(loadBytes?)` (asynchrone, une fois ; par défaut lit `makehuman.mhz` du paquet),
+  puis `buildAvatar(measurements, avatarOptions): AvatarShape` (synchrone, 0,5 à 1 s) et `buildBody` (le seul
+  `BodyMesh`). `weld.ts` : cm → mm (seule conversion du moteur) et soudure des sommets dédoublés aux coutures UV.
+  Constat : après soudure (13 524 sommets), le maillage MakeHuman ajusté est fermé (chaque arête orientée a son
+  opposée, aucun bord) et ses normales sont sortantes (volume signé positif), mains et pieds compris : la collision
+  de l'ADR 0013 s'applique telle quelle. Le corps est symétrique autour de x = 0 ; x > 0 = gauche du porteur.
+- `src/placement/` (1.19e, pur : mêmes imports interdits que `src/core`) : chaque exemplaire de pièce est enroulé autour de
+  la coupe du corps à la hauteur de son repère (`placement.anchor`, plus `offsetMm`), décalée de `clearanceMm`.
+  `section.ts` coupe le maillage par un plan (composantes connexes) ; `select.ts` choisit les points (tronc sans les
+  bras, une jambe, un bras ; une coupe qui réunit les jambes est coupée en deux sur x = 0) ; `hull.ts` : enveloppe
+  convexe, courbe décalée (coins arrondis par pas de 20 degrés, sans trigonométrie), abscisse curviligne ; `levels.ts` :
+  une pile de niveaux tous les 5 mm autour de l'ancrage (tronc : enveloppe cumulée depuis l'ancrage, elle ne rétrécit
+  jamais, donc une jupe ancrée à la taille enveloppe les hanches ; jambe et bras : coupe du niveau) ;
+  `place-garment.ts` : l'abscisse de la pièce (x moins l'ancre, `shiftXMm` de `GarmentPiece` retiré) devient
+  l'abscisse curviligne dans le sens horaire vu d'en haut (de face comme de dos), depuis le milieu de la face
+  (`facing`), la hauteur de la pièce devient la hauteur sur le corps (bras : le long de son axe). `widths.ts` : tour fini du
+  tube à chaque hauteur ; si le tour fini dépasse la courbe, elle est agrandie (λ, jupe évasée) pour que les exemplaires
+  tiennent côte à côte ; sinon les coutures de côté partent écartées (jusqu'à ≈ 100 mm sur la jupe droite).
+  `clearance.ts` : aucun sommet à moins de 3 mm du corps au départ (repoussé le long de la normale, au plus 100 mm
+  sinon `placement-failed`). `assertPlacements` : `placement-missing`. `PlacementError` (`code`, `panelId`, jamais de mesure).
+  Limites : pantalon et manches posés au mieux (jonction au niveau de l'entrejambe discontinue ; manche = coupe
+  autour de l'axe du bras, rayon ≤ 150 mm) ; corsage sans maintien (rien ne le retient aux épaules) : il tombe.
+- `src/drape/` (1.19e) : `drapeGarment(job: DrapeJob, { maxSteps? }): DrapeOutcome`. Ordre : placements, `meshGarment`,
+  avatar, `placeGarment`, `keepClearOfBody`, `simulate` (réglages `DRAPE_SETTINGS` par qualité : pas de 1/60 s, 10
+  sous-pas, couture 30 / 45 pas, itérations 4 / 6, au plus 300 / 600 pas, borne dure `MAX_STEPS_LIMIT` = 1 000 ; une
+  itération par sous-pas laissait la jupe glisser de 90 mm et s'allonger de 95 %), indicateurs (`metrics.ts`).
+  Succès : `{ ok: true, result: DrapeResultCore, positionsMm: Float32Array (0,1 mm), easeMm, strain (fraction, max des
+arêtes du sommet), mesh: GarmentMesh, diagnostics }` ; `DrapeResultCore` = `DrapeResult` sans `modelKey`, `sizeBytes`,
+  `sha256` (1.19f). Aisance = distance signée au corps moins l'épaisseur (au-delà de 60 mm : distance au sommet du
+  corps le plus proche) ; `tightAreaMm2` = surface (tiers des triangles) des sommets d'aisance ≤ 3 mm. Échec : `{ ok: false,
+problem: { type, panelId? } }`, `type` = `placement-missing`, `placement-failed`, `seam-not-closed` (écart de couture
+  plus de 2 mm), `body-penetration` (plus de 3 mm), `drape-too-large`, `invalid-input` (patron refusé par le maillage). Une autre erreur
+  est un bogue et se propage.
+  Mesuré (poste de développement) : jupe droite en brouillon (1 364 sommets) : avatar 0,6 s, mise en place 0,3 s,
+  simulation 3 à 4 s, 116 pas, convergée, pénétration 0, écart de couture < 0,01 mm, aisance au bassin ≈ 6 mm
+  (patron : 4 mm), allongement maximal 25 % (taille sur les hanches, autour des pinces). Test de coût :
+  `costRatio` 4,5 à 9, seuil 20. Écart moyen de position avec l'habillage géométrique 1.34a : 32 mm, seuil 50 mm
+  (les deux ne visent pas la même chose : le drapé tombe et se serre, l'habillage est un tube à tour fini).
+  Hors jupe droite (draft, mesures de la référence) : jupe cercle `seam-not-closed` (18 s), pantalon `seam-not-closed`,
+  corsage `body-penetration`, corsage à manches converge (écart de couture 1,3 mm, aisance minimale −60 mm) :
+  à reprendre (maintien du vêtement, ceinture, pantalon par jambe).
 - Appliquer un rapport de validation des tissus (ADR 0015) : pour chaque revue `corrected`, remplacer les valeurs
   de `FABRIC_PRESETS` par celles de `corrected` ; mettre `'validated'` dans `FABRIC_PRESET_STATUS` pour les verdicts
   `validated` et `corrected` ; `to-review` ne change rien ; monter `ENGINE_VERSION` (mineure) ; ajouter une ligne
@@ -143,7 +191,8 @@ stitchCount }`, une entrée par couple de bords cousus (une couture du contrat e
   (pas de traversée tant que la vitesse reste sous environ 4 m/s).
 - Tests (`test/`, Vitest) : déterminisme, chute libre, bande suspendue (étirement), porte-à-faux (flexion, solution
   exacte de l'élastique pesant dans `elastica.ts`), sphère, plan incliné, coutures, performance (70 × 70 sommets en
-  moins de 10 s), conversions, `/health`, maillage de pièce (`mesh-*.test.ts` : rectangle, pièces en L et à pince,
+  moins de 10 s), conversions, `/health`, maillage de pièce (`avatar.test.ts`, `not-loaded.test.ts`, `placement.test.ts`, `drape-skirt.test.ts` : avatar, mise en place,
+  drapé de la jupe droite, cohérence avec 1.34a ; `mesh-*.test.ts` : rectangle, pièces en L et à pince,
   bord courbe, correspondance des bords, déterminisme, limites, jupe droite de `test/fixtures/straight-skirt.json`,
   copie de la référence du moteur de patronage ; `mesh-garment*.test.ts` : coutures, pliure, exemplaires, limites, cinq
   références golden en draft et standard, déterminisme, performance).

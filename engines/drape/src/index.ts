@@ -76,3 +76,12 @@ export { PIECE_GAP_MM, meshGarment } from './mesh/garment-mesh.js';
 export type { GarmentMesh, GarmentPiece } from './mesh/garment-mesh.js';
 export type { SeamReport } from './mesh/seams.js';
 export type { Side } from './mesh/copies.js';
+export { problemOf } from './drape/problems.js';
+export type { DrapeProblem, DrapeProblemType } from './drape/problems.js';
+export {
+  DRAPE_SETTINGS,
+  MAX_STEPS_LIMIT,
+  PENETRATION_TOLERANCE_MM,
+  SEAM_TOLERANCE_MM,
+  TIGHT_EASE_MM,
+} from './drape/settings.js';
