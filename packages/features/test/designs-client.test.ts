@@ -33,6 +33,59 @@ describe('client : pièces de coupe', () => {
   });
 });
 
+const URL_VERSIONS = `/api/designs/v1/designs/${ID}/versions`;
+const notFound = { type: '/problems/not-found', title: 'x', status: 404 };
+const readInit = { method: 'GET', headers: { accept: 'application/json' }, cache: 'no-store' };
+
+describe('client : versions', () => {
+  it('listVersions sans paramètre : première page', async () => {
+    const page = { designId: ID, items: [] };
+    const fetchFn = vi.fn<typeof fetch>(async () => json(page));
+    const result = await createDesignsClient('/api/designs', fetchFn).listVersions(ID);
+    expect(result.isOk() && result.value).toEqual(page);
+    expect(fetchFn).toHaveBeenCalledWith(URL_VERSIONS, readInit);
+  });
+
+  it('listVersions passe limit et curseur (encodé)', async () => {
+    const fetchFn = vi.fn<typeof fetch>(async () => json({ designId: ID, items: [] }));
+    await createDesignsClient('/api/designs', fetchFn).listVersions(ID, {
+      cursor: 'a/b c',
+      limit: 5,
+    });
+    expect(fetchFn).toHaveBeenCalledWith(`${URL_VERSIONS}?limit=5&cursor=a%2Fb+c`, readInit);
+  });
+
+  it('getVersion lit la version, sans cache', async () => {
+    const fetchFn = vi.fn<typeof fetch>(async () => json({ number: 3 }));
+    const result = await createDesignsClient('/api/designs', fetchFn).getVersion(ID, 3);
+    expect(result.isOk() && result.value).toEqual({ number: 3 });
+    expect(fetchFn).toHaveBeenCalledWith(`${URL_VERSIONS}/3`, readInit);
+  });
+
+  it('getVersionChanges passe since', async () => {
+    const fetchFn = vi.fn<typeof fetch>(async () => json({ params: [] }));
+    await createDesignsClient('/api/designs', fetchFn).getVersionChanges(ID, 4, 2);
+    expect(fetchFn).toHaveBeenCalledWith(`${URL_VERSIONS}/4/changes?since=2`, readInit);
+  });
+
+  it('un 404 rend le problème RFC 9457 pour chaque lecture', async () => {
+    const client = createDesignsClient('/api', async () => json(notFound, 404));
+    for (const result of [
+      await client.listVersions(ID),
+      await client.getVersion(ID, 9),
+      await client.getVersionChanges(ID, 9, 1),
+    ]) {
+      expect(result.isErr() && result.error).toEqual(notFound);
+    }
+  });
+
+  it('une panne réseau rend /problems/network', async () => {
+    const client = createDesignsClient('/api', async () => Promise.reject(new Error('down')));
+    const result = await client.getVersion(ID, 1);
+    expect(result.isErr() && result.error.type).toBe('/problems/network');
+  });
+});
+
 describe('client : export', () => {
   it('rend les octets intacts et le nom de Content-Disposition', async () => {
     const bytes = Uint8Array.from([0, 255, 1, 128, 37, 80, 68, 70]);

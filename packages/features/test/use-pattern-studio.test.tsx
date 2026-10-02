@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { initialForm } from '../src/pattern-studio/form.js';
 import { usePatternStudio } from '../src/pattern-studio/use-pattern-studio.js';
 import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
 import { designName, fakeDesigns, fakeMannequin, fittedBody, garmentMesh } from './fakes.js';
@@ -241,5 +242,48 @@ describe('vêtement porté sur le mannequin', () => {
     act(() => result.current.actions.generate());
     await waitFor(() => expect(result.current.state.versionNumber).toBe(1));
     expect(dress).not.toHaveBeenCalled();
+  });
+
+  it('applyForm : remplace le formulaire et efface le patron, sans modification en attente', async () => {
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.status).toBe('ready'));
+    expect(result.current.state.dirty).toBe(false);
+    act(() => result.current.actions.setMeasurement('chestGirthMm', 100));
+    expect(result.current.state.dirty).toBe(true);
+    const next = { ...initialForm, sex: 'male' as const, garmentType: 'trousers' as const };
+    act(() => result.current.actions.applyForm(next));
+    expect(result.current.state.form).toBe(next);
+    expect(result.current.state.status).toBe('idle');
+    expect(result.current.state.layout).toBeUndefined();
+    expect(result.current.state.versionNumber).toBeUndefined();
+    expect(result.current.state.dirty).toBe(false);
+  });
+
+  it('applyForm : un calcul encore en cours ne rétablit pas l’ancien patron', async () => {
+    const deps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    act(() => result.current.actions.applyForm(initialForm));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(result.current.state.versionNumber).toBeUndefined();
+  });
+
+  it('dirty : un calcul en échec laisse la saisie non enregistrée, un succès l’enregistre', async () => {
+    const failing = { type: '/problems/pattern-impossible', title: 'x', status: 422 };
+    const deps = { designs: fakeDesigns(failing), mannequin: fakeMannequin(), designName };
+    const bad = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => bad.result.current.actions.setMeasurement('chestGirthMm', 100));
+    act(() => bad.result.current.actions.generate());
+    await waitFor(() => expect(bad.result.current.state.status).toBe('failed'));
+    expect(bad.result.current.state.dirty).toBe(true);
+    const okDeps = { designs: fakeDesigns(), mannequin: fakeMannequin(), designName };
+    const good = renderHook(() => usePatternStudio(okDeps), { wrapper });
+    act(() => good.result.current.actions.setMeasurement('chestGirthMm', 100));
+    act(() => good.result.current.actions.generate());
+    expect(good.result.current.state.dirty).toBe(true);
+    await waitFor(() => expect(good.result.current.state.status).toBe('ready'));
+    expect(good.result.current.state.dirty).toBe(false);
   });
 });

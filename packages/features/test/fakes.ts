@@ -68,6 +68,9 @@ export function fakeDesigns(problem?: ApiProblem): FakeDesigns {
       client.created.push(body);
       return ok({ ...design, ...body, id: `${design.id.slice(0, -4)}d00${client.created.length}` });
     },
+    listVersions: async () => err(unused),
+    getVersion: async () => err(unused),
+    getVersionChanges: async () => err(unused),
     cutPattern: async () => err(unused),
     exportFile: async () => err(unused),
     createVersion: async (id: string, body: Pick<DesignVersion, 'measurements' | 'garment'>) => {

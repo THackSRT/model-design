@@ -14,11 +14,33 @@ défauts lus dans `jsonSchemas.garmentRequest.$defs`, jamais recopiés) ; `DRAFT
 tracés (les autres restent visibles mais désactivés). `StudioForm.paramsByType` garde la saisie de chaque type ; la
 session garde un `designId` par type et le nom du modèle vient de `PatternStudioDeps.designName`.
 
+`useStudioHistory(deps, studio, confirm)` (`design-history/`) branche l'historique sur le studio : garde le dernier modèle
+de la session, lit la version, puis confirme sur la saisie COURANTE (`dirty`) et applique (`ResumeOutcome` : `applied`,
+`declined`, `superseded` si un calcul (`state.runs`) a démarré pendant la lecture, `stale` si le modèle a changé,
+`failed`). `dirty` ne devient faux qu'à la création d'une version (calcul réussi) ou à une reprise.
+
+`actions.applyForm(form)` remplace tout le formulaire et efface le patron (reprise d'une version) ; `state.dirty` dit
+que la saisie a changé depuis le dernier calcul ou la dernière reprise.
+
 Pièces de coupe : `cut-pieces/` (`useCutPieces`, `layoutCutPieces` pure) demande les pièces d'une version
 (`POST …/cut-patterns`, corps `{}`) et lance les téléchargements (`exportFile`). L'enregistrement d'un fichier passe
 par le port `FileSaver`, branché par l'application ; le nom de fichier vient de `Content-Disposition` par un motif
 strict (`exportFileName`, repli `patron.<ext>`). Corsage : `sleeve` est un sous-objet facultatif (`withSleeve`,
 `sleeveCm`, champs de `sleeveFields()`) ; ses erreurs sont indexées `sleeve.<champ>`.
+
+Historique d'un modèle : `useDesignHistory(deps, { designId, versionNumber })` (`design-history/`) rend `{ state, actions }`.
+On lui donne le `designId` et le `versionNumber` de `usePatternStudio` : la première page de résumés
+(`state.versions`, sans mesures, la plus récente d'abord, `HISTORY_PAGE_SIZE` = 20) est relue à chaque nouvelle
+version, et tout est vidé au changement de modèle. `state` : `status` (`idle` | `loading` | `ready` | `failed`),
+`versions`, `hasMore`, `loadingMore`, `problem?`, `resume` (`ResumeState`), `comparison` (`ComparisonState`).
+`actions` : `loadMore()` (curseur opaque, dédoublonné par numéro), `resume(n, base?)` (promesse d'un `Result` portant
+le `StudioForm` rendu par `versionToForm` : le studio applique ce formulaire, rien n'est appliqué ici),
+`compare(from, to)` puis `state.comparison.result` (`VersionComparison` : `changes` du service, plus `panels` : aire
+mm² et périmètre mm par pièce de même `id`, courbes de Bézier aplaties en 64 segments, pour l'affichage seulement,
+ADR 0014), `clearComparison()`. `versionToForm` ne complète jamais par un défaut : un champ absent de la version reste
+absent. Une version contient les mesures d'un client : rien n'est écrit dans le stockage du navigateur, ni cache
+(les lectures du client sont `cache: 'no-store'`). Limite connue : sans liste des modèles d'une organisation (ADR 0014),
+l'historique est celui du modèle de la session ; il n'y a pas d'historique après un rechargement de la page.
 
 Rapport de validation des tissus : `fabric-bench/report-file.ts` lit un fichier non fiable
 (`parseFabricValidationReport` : 256 Kio en octets, JSON, version lue dans le schéma, validation stricte, une seule

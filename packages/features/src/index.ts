@@ -3,7 +3,37 @@ export {
   createDesignsClient,
   type DesignsClient,
   type ExportedFile,
+  type VersionPageQuery,
 } from './api/designs-client.js';
+export {
+  comparePanels,
+  type PanelComparison,
+  type VersionComparison,
+} from './design-history/compare.js';
+export {
+  type ComparisonState,
+  type DesignHistoryActions,
+  type DesignHistoryDeps,
+  type DesignHistoryState,
+  HISTORY_PAGE_SIZE,
+  type HistoryModelRef,
+  type ResumeState,
+} from './design-history/history-state.js';
+export {
+  flattenOutline,
+  measurePanels,
+  type PanelMetrics,
+  polygonArea,
+  polygonPerimeter,
+} from './design-history/panel-metrics.js';
+export { useDesignHistory } from './design-history/use-design-history.js';
+export { versionToForm } from './design-history/version-to-form.js';
+export {
+  useStudioHistory,
+  type ResumeOutcome,
+  type StudioHistoryActions,
+} from './design-history/use-studio-history.js';
+export { GARMENT_PARAM_KEYS, MEASUREMENT_SET_KEYS } from './design-history/contract-keys.js';
 export { exportFileName } from './api/file-name.js';
 export {
   type CutPieceLabel,

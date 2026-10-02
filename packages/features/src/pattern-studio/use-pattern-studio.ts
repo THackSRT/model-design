@@ -10,7 +10,7 @@ import {
   type StudioForm,
   toVersionRequest,
 } from './form.js';
-import type { DesignVersion } from '@atelier/contracts-ts';
+import type { CreateDesignVersionRequest, DesignVersion } from '@atelier/contracts-ts';
 import type {
   DressingState,
   MannequinDisplay,
@@ -43,6 +43,10 @@ export interface PatternStudioState {
   versionNumber?: number;
   /** Modèle de la version calculée : avec `versionNumber`, ce qu'il faut pour les pièces de coupe. */
   designId?: string;
+  /** La saisie diffère de celle du dernier calcul (ou de la dernière reprise) : à confirmer avant de la remplacer. */
+  dirty: boolean;
+  /** Nombre de calculs lancés dans la session : change dès qu'un calcul démarre. */
+  runs: number;
 }
 
 export interface PatternStudioActions {
@@ -58,11 +62,13 @@ export interface PatternStudioActions {
   setDisplay(display: MannequinDisplay): void;
   setShowGarment(show: boolean): void;
   generate(): void;
+  /** Remplace tout le formulaire (reprise d'une version) et efface le patron, comme le ferait une saisie. */
+  applyForm(form: StudioForm): void;
 }
 
 type FormActions = Omit<
   PatternStudioActions,
-  'generate' | 'setDisplay' | 'setGarmentType' | 'setShowGarment'
+  'generate' | 'applyForm' | 'setDisplay' | 'setGarmentType' | 'setShowGarment'
 >;
 
 function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions {
@@ -103,12 +109,60 @@ function useLayout(result?: GenerationResult) {
   return useMemo(() => (result?.version ? layoutPanels(result.version.spec) : undefined), [result]);
 }
 
+interface FormSession {
+  form: StudioForm;
+  setForm: Dispatch<SetStateAction<StudioForm>>;
+  /** Saisie du dernier calcul ou de la dernière reprise : la saisie a-t-elle changé depuis ? */
+  dirty: boolean;
+  markSaved(form: StudioForm): void;
+  /** Nombre de calculs lancés dans la session. */
+  runs: number;
+  countRun(): void;
+}
+
+function useFormSession(): FormSession {
+  const [form, setForm] = useState(initialForm);
+  const [baseline, setBaseline] = useState(initialForm);
+  const [runs, setRuns] = useState(0);
+  const countRun = () => setRuns((n) => n + 1);
+  return { form, setForm, dirty: form !== baseline, markSaved: setBaseline, runs, countRun };
+}
+
+type SessionActions = Pick<PatternStudioActions, 'setGarmentType' | 'generate' | 'applyForm'>;
+
+/** Actions qui touchent à la fois la saisie et le patron affiché. */
+function sessionActions(
+  { form, setForm, markSaved, countRun }: FormSession,
+  run: (request: CreateDesignVersionRequest, onCreated?: () => void) => void,
+  clearPatron: () => void,
+): SessionActions {
+  return {
+    setGarmentType: (type) => {
+      if (type === form.garmentType || !isDraftedGarmentType(type)) return;
+      setForm((f) => ({ ...f, garmentType: type }));
+      clearPatron();
+    },
+    generate: () => {
+      const request = toVersionRequest(form);
+      if (!request.isOk()) return;
+      countRun();
+      run(request.value, () => markSaved(form));
+    },
+    applyForm: (next) => {
+      setForm(next);
+      markSaved(next);
+      clearPatron();
+    },
+  };
+}
+
 /** Modèle de vue de l'atelier de patron : l'écran ne reçoit que { state, actions }. */
 export function usePatternStudio(deps: PatternStudioDeps): {
   state: PatternStudioState;
   actions: PatternStudioActions;
 } {
-  const [form, setForm] = useState(initialForm);
+  const session = useFormSession();
+  const { form, setForm, dirty } = session;
   const [display, setDisplay] = useState<MannequinDisplay>('3d');
   const [showGarment, setShowGarment] = useState(true);
   const { patron, body, run, clearPatron } = useStudioRun(deps);
@@ -120,21 +174,14 @@ export function usePatternStudio(deps: PatternStudioDeps): {
     ...formActions(setForm),
     setDisplay,
     setShowGarment,
-    setGarmentType: (type) => {
-      if (type === form.garmentType || !isDraftedGarmentType(type)) return;
-      setForm((f) => ({ ...f, garmentType: type }));
-      clearPatron();
-    },
-    generate: () => {
-      if (request.isOk()) run(request.value);
-    },
+    ...sessionActions(session, run, clearPatron),
   };
   const state: PatternStudioState = {
     form,
     errors: request.isErr() ? request.error : {},
     status: statusOf(patron.pending || body.status === 'fitting', result),
     ...{ layout, mannequin: body.mannequin, mannequinStatus: body.status },
-    ...{ display, dressing, showGarment },
+    ...{ display, dressing, showGarment, dirty, runs: session.runs },
     problem: result?.problem,
     versionNumber: result?.version?.number,
     designId: result?.version?.designId,
