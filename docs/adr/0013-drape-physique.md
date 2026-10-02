@@ -197,3 +197,98 @@ vêtements ne sont pas encore tenus : jupe cercle et pantalon finissent en `seam
 `body-penetration`, le corsage à manches converge mais avec une aisance négative. Il leur faut un maintien
 (ceinture, épaules), un pantalon posé jambe par jambe et des réglages par type de vêtement (tâche 1.19e2) ; ces
 problèmes typés sont rendus tels quels, jamais masqués.
+
+**Maintien des vêtements sur l'avatar (1.19e2, 02/10/2026, décision de l'orchestrateur sur proposition de
+l'architecte).** Constats, mesurés sur le moteur 0.5.0 construit (brouillon, mesures fictives des références,
+popeline, essais hors du dépôt) :
+
+- **La mesure de pénétration est aveugle au-delà de 10 mm.** `maxPenetration` ne regarde que la portée de la grille
+  de collision (épaisseur + 2 mm + 8 mm) et tire le signe de la normale de la face la plus proche, faux près d'une
+  arête concave. Le corsage à manches, rendu comme un succès par 1.19e, a des sommets 60 mm dans le corps ; le
+  pantalon 57 mm (cuisse) ; la jupe cercle 57 mm.
+- **Jupe cercle : départ faux.** La hauteur sur le corps est l'ordonnée du patron, or la taille d'une jupe cercle est
+  un arc (ses bouts 104 mm au-dessus de l'ancre). Le tour fini d'un tube (`widths.ts`) somme l'étendue en x des pièces
+  à une hauteur : à hauteur de ceinture, l'étendue de la jupe (≈ 1 500 mm) élargit la ceinture, dont les coutures de
+  côté partent à 971 mm l'une de l'autre (898 mm en sommant les intervalles intérieurs) ; la ceinture finit 470 mm
+  sous la taille.
+- **Corsage : la couture d'épaule traverse le corps.** Devant et dos montent droits, les coutures d'épaule partent à
+  257 mm ; en se fermant elles tirent le haut des pièces à travers l'épaule et la base du cou (−54 mm). Couture sous
+  gravité nulle : même résultat (ce n'est pas la chute). Bras à 9° : le bras touche le flanc, 27 sommets repoussés de
+  20 mm au départ ; à 30° : 4 sommets, 9 mm.
+- **Corsage à manches : les manches glissent** de 130 mm le long du bras et entraînent le devant (−185 mm).
+- **Pantalon : pièces tournées autour de la jambe.** L'ancre (coin taille-montant) va au milieu de la face de la coupe
+  de la jambe : entrejambe haute écartée de 203 mm au départ, côté haut de 109 mm, fermé à 2,6 mm seulement.
+- **Épingles fixes** (sommets du haut immobiles à leur position de départ, essayées) : les coutures ne se ferment plus
+  (257 mm sur le corsage, 971 mm sur la jupe cercle à la fin).
+
+Décision :
+
+- **Pénétration et aisance mesurées par un test de parité** (1.19e2a, avant le reste). Un sommet est dedans si un
+  rayon de direction fixe, légèrement inclinée sur les axes, croise le corps fermé un nombre impair de fois (grille 2D
+  des triangles projetés, ordre fixe, `+ − × ÷` et `Math.sqrt` seulement) ; sa profondeur est sa distance à la
+  surface. `PENETRATION_TOLERANCE_MM` (3) s'applique à cette mesure, sans limite de portée, et `vertexEase` prend
+  son signe du même test. La collision de la boucle ne change pas.
+- **Maintien : tenue XPBD sur un axe, pendant la mise en forme seulement.** Une tenue est une contrainte scalaire
+  `C = a·x − t` (sommet, axe unitaire `a`, position visée `t` en mm le long de l'axe), raide comme une couture finie
+  (`SEWING_FINAL_RATIO` fois la souplesse moyenne d'une arête), résolue après les coutures. Elle tient la hauteur et
+  laisse libre le plan horizontal : la ceinture se resserre sur le corps sans glisser, les épaules se ferment
+  au-dessus de l'épaule. Active pendant la couture, puis relâchée en `holdReleaseSteps` pas (souplesse divisée par
+  r, r de 1 à 0 linéaire), puis absente : l'état final est purement physique (une taille trop large descend, et
+  l'aisance le montre). L'arrêt au repos ne compte qu'après le relâchement. Cible = position de départ le long de
+  l'axe (« tenu là où il est posé »). Vêtements tenus : bords `role: waistline` des pièces `torso` et `leg` (axe
+  vertical) ; coutures d'épaule (axe vertical) ; haut de manche (axe du bras). Une couture d'épaule est une couture
+  entre une pièce `torso` `facing: front` et une `facing: back` dont tous les points ont une hauteur reportée (hauteur
+  du repère + y − y de l'ancre) d'au moins `shoulder` − 30 mm ; un haut de manche, les bords d'une pièce `arm` dont une
+  extrémité est le point d'ancrage (à 0,5 mm près). Aucun changement de contrat : `waistline` existe ; un rôle
+  `shoulder` ajouté à l'énumération fermée casserait les consommateurs stricts.
+- **Mise en place par la ligne d'ancrage** (pièces `torso` et `leg`). La ligne d'ancrage est la chaîne des bords du
+  contour qui passe par le point du contour le plus proche de l'ancre, prolongée de chaque côté tant que l'angle au
+  raccord reste sous 45°, qui enjambe une pince (deux bords de la pièce cousus l'un à l'autre : reprise au point
+  d'ouverture opposé) et jamais un bord `fold`. Un sommet est repéré par (s, d) : abscisse de son projeté sur la
+  ligne depuis l'ancre, distance signée à la ligne (vers le bas positif). Hauteur sur le corps = hauteur du repère −
+  d ; abscisse sur la courbe = s × k(d), k(d) = longueur de l'isoligne d de la pièce (marche sur ses triangles à plat)
+  / longueur de sa ligne d'ancrage ; le tour fini d'un tube à une hauteur est la somme des longueurs d'isoligne des
+  pièces à cette hauteur. Ligne droite : (s, −d) = (x, y) depuis l'ancre, la jupe droite part comme en 0.5.0. Jupe
+  cercle : cône déroulé, ceinture à la taille.
+- **Pantalon jambe par jambe** (tube de chaque jambe, devant et dos ensemble). Sous `crotch`, le milieu de l'isoligne
+  de la pièce va au point extrême avant ou arrière de la coupe de la jambe (et non plus l'ancre) ; au-dessus de
+  `crotch` + 50 mm, le bout de l'isoligne côté milieu du corps (bord cousu à une pièce de l'autre côté : montant,
+  fourche) va au milieu devant ou dos de la demi-coupe du bassin ; entre les deux, l'abscisse de départ est
+  interpolée linéairement. Écarté : coudre d'abord chaque jambe puis la fourche (les coutures de fourche se ferment
+  déjà : les échecs viennent du départ).
+- **Corsage et manches : repli sur l'épaule.** Au-dessus de `shoulder` − 40 mm, la partie d'une pièce `torso` est
+  couchée le long du profil sagittal du corps (coupe par le plan x = x du sommet, sans les bras, enveloppe convexe
+  décalée de `clearanceMm`), depuis la face regardée, de l'excédent de hauteur : les épaules partent au-dessus de
+  l'épaule et se ferment sans traverser le corps. Manches : posées le long de l'axe du bras comme aujourd'hui, haut
+  de manche tenu sur cet axe. **Angle des bras** : le moteur ne change jamais l'avatar demandé ; les essais et
+  critères des corsages se font à `armAngleDeg` 30, et le studio demande un drapé avec 30° et l'affiche avec les
+  options du drapé (tâche front à part). À 9°, un corsage rend un succès conforme ou un problème typé, jamais un faux
+  succès. À revoir si 9° tient les critères après 1.19e2c.
+- **Réglages par qualité, pas par type de vêtement** (un tableau par type masquerait les défauts et grandirait avec
+  chaque modèle) : `DRAPE_SETTINGS` garde pas de 1/60 s, 10 sous-pas, couture 30 / 45 pas, itérations 4 / 6,
+  gravité de couture 0,1, et ajoute `holdReleaseSteps` 30 / 45 ; `maxSteps` passe à 400 en brouillon (600 en
+  standard, `MAX_STEPS_LIMIT` 1 000 inchangé). Écartés : gravité nulle pendant la couture (sans effet mesuré),
+  tenue permanente (masquerait un vêtement trop large).
+- **Critères** (brouillon, mesures fictives des références, popeline ; un test chacun ; corsages à 30°) : pour les
+  cinq vêtements, `ok`, `converged` en 400 pas au plus, pénétration (parité) ≤ 3 mm, écart de couture ≤ 2 mm,
+  `ease.minMm` ≥ −3 mm − épaisseur. Jupe droite : critères de 1.19e inchangés (aisance médiane au bassin 0 à
+  25 mm). Taille finale (médiane des sommets `waistline`) entre `waist` − 40 et `waist` + 10 mm pour les jupes (jupe
+  cercle : bas de ceinture), `waist` − 60 et `waist` + 10 pour le pantalon. Jupe cercle : coutures à moins de 120 mm
+  au départ (aujourd'hui 227 à 971) ; rayon horizontal médian de l'ourlet au moins 1,5 fois celui de la hanche (le
+  volume ne s'effondre pas). Pantalon : côté et entrejambe à moins de 120 mm au départ ; à la fin, sommets des pièces
+  gauches à x > −10 mm et droites à x < 10 mm sous `crotch` (pas de jambe croisée). Corsage : coutures d'épaule à
+  moins de 80 mm au départ ; points d'épaule finaux entre `shoulder` − 20 et `neck` + 20 mm ; bas à `waist` ± 40 mm.
+  Manches : haut de manche final à moins de 40 mm de l'épaule le long de l'axe. Seuils mesurés une fois : les changer
+  demande une ligne ici.
+- **Budget** : temps CPU relatif (`costRatio`) en brouillon ≤ 20 par vêtement, ≤ 30 pour la jupe cercle (le plus
+  gros) ; mesuré aujourd'hui de 1,1 à 9 s par vêtement. Absolu : 15 s en brouillon, 60 s en standard (borne de
+  l'architecture 5.4), standard mesuré à la main à chaque `ENGINE_VERSION` et noté dans la page du composant. Les
+  tenues coûtent peu (quelques centaines contre 7 000 arêtes). Un drapé par vêtement et par fichier de test, partagé
+  par ses critères ; déterminisme vérifié sur la jupe droite seulement.
+- **Problème `invalid-input`** (patron refusé par le maillage) : publié comme `/problems/drape-internal`, `designs`
+  validant la demande en amont ; contrat inchangé.
+- **Découpage, dans cet ordre, une tâche à la fois dans `engines/drape`** (mêmes fichiers ; `ENGINE_VERSION`
+  mineure à chaque) : 1.19e2a (mesure de pénétration, tenues dans le cœur, ligne d'ancrage, ceinture et jupe cercle ;
+  en deux demandes de fusion si plus de 400 lignes), 1.19e2b (pantalon jambe par jambe), 1.19e2c (repli sur
+  l'épaule, coutures d'épaule et manches tenues, corsages à 30°). Interface partagée : `ClothMesh.holds` et
+  `SimulationSettings.holdReleaseSteps` sont des ajouts facultatifs.
