@@ -1,10 +1,11 @@
 import type { GarmentMesh } from '../mesh/garment-mesh.js';
 import type { Instance } from './instances.js';
+import type { PieceField } from './piece-field.js';
 
 // Tour fini d'un vêtement à une hauteur : somme des largeurs des exemplaires du même tube (tronc, ou une jambe, ou
 // un bras). Sert à élargir la courbe d'enroulement d'une pièce évasée (jupe cercle) pour que les exemplaires
-// tiennent côte à côte sans se chevaucher au départ. La largeur d'un exemplaire à une hauteur est l'étendue en x de
-// son contour à cette hauteur (les pinces comptent : c'est un majorant).
+// tiennent côte à côte sans se chevaucher au départ. Tronc et jambes : la largeur d'un exemplaire est la longueur de
+// son isoligne (`PieceField`, pinces et creux exclus). Bras : l'étendue en x de son contour à la hauteur.
 
 /** Un tube : le tronc pour toutes les pièces du tronc, sinon la zone et le côté. */
 export function tubeKey(inst: Instance): string {
@@ -49,14 +50,44 @@ function widthAt(c: Contour, y: number): number {
   return hi >= lo ? hi - lo : 0;
 }
 
-/** Hauteur du sommet de coordonnée de patron `y` (mm depuis le sol, ou le long de l'axe pour un bras). */
-export const worldHeight = (inst: Instance, y: number): number =>
-  inst.heightMm + (y - inst.anchorV);
+/** Tour fini (mm) du tube de `inst` à la hauteur `inst.heightMm + up` (up : mm au-dessus du niveau d'ancrage). */
+export type CircumferenceAt = (inst: Instance, up: number) => number;
 
-/** Tour fini (mm) du tube de `inst` à la hauteur de pièce `y` de `inst`. */
-export type CircumferenceAt = (inst: Instance, y: number) => number;
+/** Écart de part et d'autre de la hauteur où se mesure le tour d'une pièce à isolignes, mm. */
+const SIDE_MM = 1;
 
-export function circumferences(mesh: GarmentMesh, instances: readonly Instance[]): CircumferenceAt {
+/**
+ * Tour fini du tube à la hauteur `height`. Pièces à isolignes : somme des longueurs des isolignes ; à la jonction
+ * de deux pièces superposées bout à bout (jupe et ceinture) chacune compte à son bord, d'où le maximum entre juste
+ * au-dessus et juste au-dessous (un bord libre garde ainsi sa pleine longueur).
+ */
+function tubeTotal(
+  members: readonly { inst: Instance; contour: Contour }[],
+  height: number,
+  fields: ReadonlyMap<Instance, PieceField>,
+): number {
+  let above = 0;
+  let below = 0;
+  for (const t of members) {
+    const up = height - t.inst.heightMm;
+    const field = fields.get(t.inst);
+    if (field) {
+      above += field.fullLength(-(up + SIDE_MM));
+      below += field.fullLength(-(up - SIDE_MM));
+    } else {
+      const w = widthAt(t.contour, t.inst.anchorV + up);
+      above += w;
+      below += w;
+    }
+  }
+  return Math.max(above, below);
+}
+
+export function circumferences(
+  mesh: GarmentMesh,
+  instances: readonly Instance[],
+  fields: ReadonlyMap<Instance, PieceField>,
+): CircumferenceAt {
   const tubes = new Map<string, { inst: Instance; contour: Contour }[]>();
   for (const inst of instances) {
     const list = tubes.get(tubeKey(inst)) ?? [];
@@ -64,15 +95,12 @@ export function circumferences(mesh: GarmentMesh, instances: readonly Instance[]
     tubes.set(tubeKey(inst), list);
   }
   const memo = new Map<string, number>();
-  return (inst, y) => {
-    const height = worldHeight(inst, y);
+  return (inst, up) => {
+    const height = inst.heightMm + up;
     const key = `${tubeKey(inst)}|${Math.round(height)}`;
     const known = memo.get(key);
     if (known !== undefined) return known;
-    let total = 0;
-    for (const t of tubes.get(tubeKey(inst)) ?? []) {
-      total += widthAt(t.contour, t.inst.anchorV + (Math.round(height) - t.inst.heightMm));
-    }
+    const total = tubeTotal(tubes.get(tubeKey(inst)) ?? [], Math.round(height), fields);
     memo.set(key, total);
     return total;
   };

@@ -60,7 +60,7 @@ export const completedFor = (job: DrapeJob, cacheKey: string): DrapeCompleted =>
     ease: { minMm: 1, medianMm: 20, maxMm: 80, tightAreaMm2: 0 },
     maxStrainPercent: 1,
     fabricEstimated: false,
-    engineVersion: '0.6.0',
+    engineVersion: '0.7.0',
     vertexCount: 10,
     simulatedSteps: 5,
     converged: true,

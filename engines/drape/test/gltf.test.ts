@@ -48,7 +48,7 @@ describe('glTF binaire du drapé', () => {
   let glb: Uint8Array;
   beforeAll(async () => {
     await loadAvatarEngine();
-    const result = drapeGarment(jobOf(fixture('straight-skirt')), { maxSteps: 12 });
+    const result = drapeGarment(jobOf(fixture('straight-skirt')), { maxSteps: 100 });
     if (!result.ok) throw new Error(result.problem.type);
     out = result;
     glb = buildGlb(out);

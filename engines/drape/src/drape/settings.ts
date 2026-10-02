@@ -2,7 +2,7 @@ import type { SimulationSettings } from '../core/types.js';
 import type { MeshQuality } from '../mesh/limits.js';
 
 /**
- * Réglages de la simulation selon la qualité (ADR 0013). Durée simulée : `maxSteps` / 60 s (5 s en brouillon,
+ * Réglages de la simulation selon la qualité (ADR 0013). Durée simulée : `maxSteps` / 60 s (6,7 s en brouillon,
  * 10 s en standard). Le temps de calcul est borné indirectement par `maxSteps` × `substeps` × nombre de sommets
  * (au plus 30 000) ; l'arrêt au repos (vitesse sous 1 mm/s pendant 10 pas) le raccourcit presque toujours.
  */
@@ -11,8 +11,9 @@ export const DRAPE_SETTINGS: Readonly<Record<MeshQuality, SimulationSettings>> =
     stepS: 1 / 60,
     substeps: 10,
     sewingSteps: 30,
-    maxSteps: 300,
+    maxSteps: 400,
     iterations: 4,
+    holdReleaseSteps: 30,
     restSpeedMmPerS: 1,
   },
   standard: {
@@ -21,6 +22,7 @@ export const DRAPE_SETTINGS: Readonly<Record<MeshQuality, SimulationSettings>> =
     sewingSteps: 45,
     maxSteps: 600,
     iterations: 6,
+    holdReleaseSteps: 45,
     restSpeedMmPerS: 1,
   },
 };

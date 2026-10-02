@@ -73,7 +73,7 @@ describe('événements', () => {
   let out: DrapeSuccess;
   beforeAll(async () => {
     await loadAvatarEngine();
-    const result = drapeGarment(job, { maxSteps: 12 });
+    const result = drapeGarment(job, { maxSteps: 100 });
     if (!result.ok) throw new Error(result.problem.type);
     out = result;
   });

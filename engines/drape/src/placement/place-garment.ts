@@ -1,4 +1,4 @@
-import type { GarmentSpec } from '@atelier/contracts-ts';
+import type { GarmentSpec, Panel } from '@atelier/contracts-ts';
 import type { GarmentMesh } from '../mesh/garment-mesh.js';
 import { makeFrame, type Frame } from './frames.js';
 import { pointAt } from './hull.js';
@@ -6,6 +6,7 @@ import { instancesOf, type Instance } from './instances.js';
 import { LEVEL_STEP_MM, createLevelStack, type LevelStack } from './levels.js';
 import { createSectioner, type BodySectioner } from './section.js';
 import { PlacementError, type AvatarShape } from './types.js';
+import { pieceField, type PieceField } from './piece-field.js';
 import { circumferences, type CircumferenceAt } from './widths.js';
 
 export { assertPlacements } from './instances.js';
@@ -25,6 +26,8 @@ interface Context {
   sectioner: BodySectioner;
   stacks: Map<string, { frame: Frame; stack: LevelStack }>;
   circumference: CircumferenceAt;
+  /** Repérage par la ligne d'ancrage des exemplaires du tronc et des jambes (les bras gardent l'ordonnée du patron). */
+  fields: ReadonlyMap<Instance, PieceField>;
   out: Float64Array;
 }
 
@@ -51,25 +54,54 @@ function levelIndex(d: number): number {
   return d >= 0 ? k : -k;
 }
 
+/** Hauteur au-dessus de l'ancrage et abscisse du sommet v, par la ligne d'ancrage ou, pour un bras, le patron. */
+function coordinates(ctx: Context, inst: Instance, v: number): { up: number; s: number } {
+  const field = ctx.fields.get(inst);
+  if (field) {
+    const local = v - inst.piece.vertexStart;
+    const d = field.d[local] as number;
+    return { up: -d, s: field.abscissa(field.s[local] as number, d) };
+  }
+  const flat = ctx.mesh.cloth.flatMm;
+  return {
+    up: (flat[2 * v + 1] as number) - inst.anchorV,
+    s: (flat[2 * v] as number) - inst.piece.shiftXMm - inst.anchorU,
+  };
+}
+
 function placeInstance(ctx: Context, inst: Instance): void {
   const { frame, stack } = stackOf(ctx, inst);
-  const { vertexStart, vertexCount, shiftXMm } = inst.piece;
+  const { vertexStart, vertexCount } = inst.piece;
   for (let v = vertexStart; v < vertexStart + vertexCount; v++) {
-    const y = ctx.mesh.cloth.flatMm[2 * v + 1] as number;
-    const d = y - inst.anchorV;
-    const level = stack.curveAt(levelIndex(d));
-    const total = ctx.circumference(inst, y);
+    const { up, s } = coordinates(ctx, inst, v);
+    const level = stack.curveAt(levelIndex(up));
+    const total = ctx.circumference(inst, up);
     const lambda = Math.max(1, (total * FLARE_MARGIN) / level.curve.length);
-    const s = (ctx.mesh.cloth.flatMm[2 * v] as number) - shiftXMm - inst.anchorU;
     const q = pointAt(level.curve, level.startArc + s / lambda);
     const a = level.centre[0] + lambda * (q[0] - level.centre[0]);
     const b = level.centre[1] + lambda * (q[1] - level.centre[1]);
-    const o = frame.origin(d);
+    const o = frame.origin(up);
     for (let k = 0; k < 3; k++) {
       ctx.out[3 * v + k] =
         (o[k] as number) + a * (frame.e1[k] as number) + b * (frame.e2[k] as number);
     }
   }
+}
+
+/** Repérage des exemplaires du tronc et des jambes par leur ligne d'ancrage. */
+function fieldsOf(
+  mesh: GarmentMesh,
+  spec: GarmentSpec,
+  instances: readonly Instance[],
+): Map<Instance, PieceField> {
+  const panels = new Map<string, Panel>(spec.panels.map((p) => [p.id, p]));
+  const fields = new Map<Instance, PieceField>();
+  for (const inst of instances) {
+    if (inst.zone === 'arm') continue;
+    const field = pieceField(mesh, inst.piece, panels.get(inst.panelId) as Panel, spec.seams);
+    if (field) fields.set(inst, field);
+  }
+  return fields;
 }
 
 /**
@@ -83,12 +115,14 @@ export function placeGarment(
   avatar: AvatarShape,
 ): Float64Array {
   const instances = instancesOf(mesh, spec, avatar);
+  const fields = fieldsOf(mesh, spec, instances);
   const ctx: Context = {
     mesh,
     avatar,
     sectioner: createSectioner(avatar.body),
     stacks: new Map(),
-    circumference: circumferences(mesh, instances),
+    circumference: circumferences(mesh, instances, fields),
+    fields,
     out: new Float64Array(mesh.cloth.positionsMm.length),
   };
   for (const inst of instances) {

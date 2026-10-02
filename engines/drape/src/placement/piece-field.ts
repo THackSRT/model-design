@@ -1,0 +1,172 @@
+import type { Panel, Seam } from '@atelier/contracts-ts';
+import type { GarmentMesh, GarmentPiece } from '../mesh/garment-mesh.js';
+import { anchorLine, projectOnLine, type AnchorLine } from './anchor-line.js';
+
+// Repérage (s, d) des sommets d'un exemplaire de pièce par rapport à sa ligne d'ancrage, et longueurs de ses
+// isolignes d (ADR 0013) : la longueur totale d'une isoligne donne le tour fini d'un tube à une hauteur ; la part de
+// l'isoligne qui se projette sur la ligne d'ancrage même (hors prolongements en droite) donne le facteur d'échelle
+// k(d) = longueur / longueur de la ligne, qui transforme l'abscisse s en abscisse sur la courbe d'enroulement.
+
+/** Pas des isolignes échantillonnées, mm. */
+const ISO_STEP_MM = 5;
+/** Tolérance sur l'étendue de la ligne (arrondis des abscisses des bouts), mm. */
+const RANGE_TOLERANCE = 1e-3;
+/** Tolérance sur le bord de la pièce en d, mm. */
+const EDGE_TOLERANCE = 1e-3;
+
+// Lecture sans vérification d'indice : les tableaux typés sont dimensionnés par construction.
+const f = (a: Float64Array, i: number): number => a[i] as number;
+
+export interface PieceField {
+  line: AnchorLine;
+  /** Par sommet de l'exemplaire (indice local) : abscisse et distance signée (positive vers le bas). */
+  s: Float64Array;
+  d: Float64Array;
+  /** Longueur totale de l'isoligne d (mm), 0 hors de la pièce. */
+  fullLength(d: number): number;
+  /** k(d) : longueur de la part de l'isoligne qui se projette sur la ligne, sur la longueur de la ligne. */
+  scale(d: number): number;
+  /** Abscisse sur la courbe d'enroulement du point (s, d) : s × k(d) dans l'étendue de la ligne, s au-delà. */
+  abscissa(s: number, d: number): number;
+}
+
+/** Longueurs des isolignes aux niveaux `first + i` pas : totale, et part dans l'étendue de la ligne. */
+interface Samples {
+  first: number;
+  /** Étendue de d dans la pièce : hors de cette étendue il n'y a pas d'isoligne. */
+  dMin: number;
+  dMax: number;
+  full: Float64Array;
+  inside: Float64Array;
+}
+
+/** Valeur interpolée au niveau d ; 0 hors de la pièce, bornée aux niveaux échantillonnés au bord. */
+function interpolate(values: Float64Array, samples: Samples, d: number): number {
+  if (d < samples.dMin - EDGE_TOLERANCE || d > samples.dMax + EDGE_TOLERANCE) return 0;
+  const lowest = Math.ceil(samples.dMin / ISO_STEP_MM - 1e-9) - samples.first;
+  const highest = Math.max(lowest, Math.floor(samples.dMax / ISO_STEP_MM + 1e-9) - samples.first);
+  const x = Math.max(lowest, Math.min(highest, d / ISO_STEP_MM - samples.first));
+  const i = Math.min(Math.floor(x), values.length - 1);
+  const a = f(values, i);
+  const b = i + 1 < values.length ? f(values, i + 1) : a;
+  return a + (b - a) * (x - i);
+}
+
+interface Corner {
+  x: number;
+  y: number;
+  s: number;
+  d: number;
+}
+
+/** Point de l'arête p→q où d vaut c. */
+function cross(p: Corner, q: Corner, c: number): Corner {
+  const span = q.d - p.d;
+  const t = span === 0 ? 0 : (c - p.d) / span;
+  return { x: p.x + t * (q.x - p.x), y: p.y + t * (q.y - p.y), s: p.s + t * (q.s - p.s), d: c };
+}
+
+function addIsoline(samples: Samples, k: number, corners: Corner[], range: [number, number]): void {
+  const [a, b, c] = corners as [Corner, Corner, Corner];
+  const level = k * ISO_STEP_MM;
+  if (c.d === a.d) return;
+  const p = cross(a, c, level);
+  const q = level < b.d ? cross(a, b, level) : cross(b, c, level);
+  const length = Math.sqrt((p.x - q.x) ** 2 + (p.y - q.y) ** 2);
+  const i = k - samples.first;
+  samples.full[i] = f(samples.full, i) + length;
+  samples.inside[i] = f(samples.inside, i) + length * insideFraction(p.s, q.s, range);
+}
+
+/** Part (0 à 1) du segment de s = a à s = b dont l'abscisse est dans l'étendue de la ligne. */
+function insideFraction(a: number, b: number, range: [number, number]): number {
+  const lo = range[0] - RANGE_TOLERANCE;
+  const hi = range[1] + RANGE_TOLERANCE;
+  const span = b - a;
+  if (Math.abs(span) < 1e-9) return a >= lo && a <= hi ? 1 : 0;
+  const [t0, t1] = [(lo - a) / span, (hi - a) / span];
+  return Math.max(0, Math.min(1, Math.max(t0, t1)) - Math.max(0, Math.min(t0, t1)));
+}
+
+/** Les trois coins du triangle t, par d croissant. */
+function cornersOf(
+  mesh: GarmentMesh,
+  piece: GarmentPiece,
+  coords: { s: Float64Array; d: Float64Array },
+  t: number,
+): Corner[] {
+  const corners = [0, 1, 2].map((j) => {
+    const v = mesh.cloth.triangles[3 * t + j] as number;
+    const local = v - piece.vertexStart;
+    return {
+      x: f(mesh.cloth.flatMm, 2 * v),
+      y: f(mesh.cloth.flatMm, 2 * v + 1),
+      s: f(coords.s, local),
+      d: f(coords.d, local),
+    };
+  });
+  return corners.sort((p, q) => p.d - q.d);
+}
+
+function sampleIsolines(
+  mesh: GarmentMesh,
+  piece: GarmentPiece,
+  coords: { s: Float64Array; d: Float64Array },
+  range: [number, number],
+): Samples {
+  const lo = coords.d.reduce((m, v) => Math.min(m, v), Infinity);
+  const hi = coords.d.reduce((m, v) => Math.max(m, v), -Infinity);
+  const first = Math.floor(lo / ISO_STEP_MM);
+  const size = Math.max(1, Math.ceil(hi / ISO_STEP_MM) - first + 2);
+  const samples: Samples = {
+    first,
+    dMin: lo,
+    dMax: hi,
+    full: new Float64Array(size),
+    inside: new Float64Array(size),
+  };
+  for (let t = piece.triangleStart; t < piece.triangleStart + piece.triangleCount; t++) {
+    const corners = cornersOf(mesh, piece, coords, t);
+    const from = Math.ceil((corners[0] as Corner).d / ISO_STEP_MM);
+    const to = Math.floor((corners[2] as Corner).d / ISO_STEP_MM);
+    for (let k = from; k <= to; k++) addIsoline(samples, k, corners, range);
+  }
+  return samples;
+}
+
+/** Repère de l'exemplaire, ou `undefined` si sa ligne d'ancrage n'existe pas (contour vide). */
+export function pieceField(
+  mesh: GarmentMesh,
+  piece: GarmentPiece,
+  panel: Panel,
+  seams: readonly Seam[],
+): PieceField | undefined {
+  const line = anchorLine(mesh, piece, panel, seams);
+  if (!line || line.length <= 0) return undefined;
+  const s = new Float64Array(piece.vertexCount);
+  const d = new Float64Array(piece.vertexCount);
+  const out = new Float64Array(2);
+  for (let i = 0; i < piece.vertexCount; i++) {
+    const g = piece.vertexStart + i;
+    projectOnLine(line, f(mesh.cloth.flatMm, 2 * g), f(mesh.cloth.flatMm, 2 * g + 1), out);
+    s[i] = f(out, 0);
+    d[i] = f(out, 1);
+  }
+  const range = line.range;
+  const samples = sampleIsolines(mesh, piece, { s, d }, range);
+  const scale = (dd: number): number => {
+    const k = interpolate(samples.inside, samples, dd) / (range[1] - range[0]);
+    return k > 0 ? k : 1;
+  };
+  return {
+    line,
+    s,
+    d,
+    fullLength: (dd) => interpolate(samples.full, samples, dd),
+    scale,
+    abscissa(sv, dd) {
+      const inside = Math.max(range[0], Math.min(range[1], sv));
+      return inside * scale(dd) + (sv - inside);
+    },
+  };
+}

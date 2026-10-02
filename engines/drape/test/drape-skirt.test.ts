@@ -67,8 +67,8 @@ describe('drapé de la jupe droite en brouillon sur l’avatar', () => {
   });
 
   it('respecte le nombre de pas maximal demandé', () => {
-    const short = success(drapeGarment(jobOf(spec), { maxSteps: 12 }));
-    expect(short.result.simulatedSteps).toBe(12);
+    const short = success(drapeGarment(jobOf(spec), { maxSteps: 100 }));
+    expect(short.result.simulatedSteps).toBe(100);
     expect(short.result.converged).toBe(false);
   });
 
@@ -87,7 +87,7 @@ describe('drapé de la jupe droite en brouillon sur l’avatar', () => {
             frictionCoefficient: 0.35,
           },
         }),
-        { maxSteps: 5 },
+        { maxSteps: 100 },
       ),
     );
     expect(all.result.fabricEstimated).toBe(false);

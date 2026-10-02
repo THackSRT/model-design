@@ -4,6 +4,7 @@ import { isFabricEstimated, resolveFabric } from '../core/fabric.js';
 import { simulate } from '../core/simulate.js';
 import type { ClothMesh, SimulationResult } from '../core/types.js';
 import { meshGarment, type GarmentMesh } from '../mesh/garment-mesh.js';
+import { garmentHolds } from '../placement/holds.js';
 import { keepClearOfBody } from '../placement/clearance.js';
 import { assertPlacements, placeGarment } from '../placement/place-garment.js';
 import type { AvatarShape } from '../placement/types.js';
@@ -101,7 +102,8 @@ function run(job: DrapeJob, options: DrapeOptions): DrapeOutcome {
   const clearance = keepClearOfBody(start, avatar.body);
   const settings = { ...DRAPE_SETTINGS[job.quality] };
   settings.maxSteps = clamp(options.maxSteps ?? settings.maxSteps, 0, MAX_STEPS_LIMIT);
-  const cloth: ClothMesh = { ...mesh.cloth, positionsMm: start };
+  const holds = garmentHolds(mesh, job.spec, avatar, start);
+  const cloth: ClothMesh = { ...mesh.cloth, positionsMm: start, ...(holds ? { holds } : {}) };
   const sim = simulate(cloth, avatar.body, resolveFabric(job.fabric), settings);
   const problem = problemAfter(sim);
   if (problem) return { ok: false, problem };
