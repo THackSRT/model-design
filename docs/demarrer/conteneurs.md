@@ -59,7 +59,7 @@ Le service `designs` lit les modèles glTF des drapés dans le stockage S3 avec 
 | `S3_BUCKET`            | `drapes` (défaut)             | Nom du seau              |
 | `S3_TIMEOUT_MS`        | `5000` (défaut)               | Délai avant abandon (ms) |
 
-Sans point d'accès ni identifiants, le service démarre, journalise `s3-disabled` et répond 502 au téléchargement d'un modèle. La pile locale (`pnpm stack:up`) ne fournit pas encore ces valeurs ni le seau : ce sera fait avec le travailleur du drapé (1.19f).
+Sans point d'accès ni identifiants, le service démarre, journalise `s3-disabled` et répond 502 au téléchargement d'un modèle. La pile locale (`pnpm stack:up`) fournit ces valeurs (identité de développement de `platform/s3/s3-config.json`, point d'accès `http://s3:8333`) et crée le seau `drapes` au démarrage (service `s3-init`).
 
 ## Derrière un proxy d'entreprise
 

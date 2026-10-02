@@ -39,7 +39,7 @@ pnpm nx run @atelier/studio:dev                                              # s
 ```
 
 Sans `DATABASE_URL`, le service garde ses données en mémoire. Avec PostgreSQL (`pnpm dev:infra`), copier
-`.env.example` et lancer le service avec `DATABASE_URL` et `MIGRATE_ON_START=true`.
+`.env.example` et lancer le service avec `DATABASE_URL` (rôle de service) et, pour migrer au démarrage, `MIGRATE_ON_START=true` avec `MIGRATION_DATABASE_URL` (propriétaire des tables).
 
 ## Lancer toute la pile dans Docker
 

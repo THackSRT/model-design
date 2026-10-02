@@ -9,6 +9,13 @@ x-engine: &engine
   profiles: [app]
   restart: unless-stopped
 
+# Identité S3 de développement (la même que platform/s3/s3-config.json), commune à drape et designs.
+x-s3-env: &s3-env
+  S3_ENDPOINT: http://s3:8333
+  S3_ACCESS_KEY_ID: atelier-dev-key
+  S3_SECRET_ACCESS_KEY: atelier-dev-secret
+  S3_BUCKET: drapes
+
 services:
   postgres:
     image: postgres:17
@@ -18,7 +25,7 @@ services:
       POSTGRES_DB: designs
       # Mot de passe de développement du rôle de service `designs_app` (créé par le script d'initialisation).
       DESIGNS_APP_PASSWORD: designs-app-dev
-    ports: ['5432:5432']
+    ports: ['127.0.0.1:5432:5432']
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./postgres/init-designs-app.sh:/docker-entrypoint-initdb.d/init-designs-app.sh:ro
@@ -30,37 +37,56 @@ services:
   nats:
     image: nats:2.11
     command: ['--jetstream', '--store_dir', '/data', '--http_port', '8222']
-    ports: ['4222:4222', '8222:8222']
+    ports: ['127.0.0.1:4222:4222', '127.0.0.1:8222:8222']
     volumes: [nats:/data]
 
   valkey:
     image: valkey/valkey:8
-    ports: ['6379:6379']
+    ports: ['127.0.0.1:6379:6379']
 
   # Stockage compatible S3 (SeaweedFS, Apache 2.0) : MinIO ne publie plus d'images depuis octobre 2025.
   s3:
     image: chrislusf/seaweedfs:3.97
-    command: ['server', '-dir=/data', '-s3', '-s3.port=8333']
-    ports: ['8333:8333']
-    volumes: [s3:/data]
+    # Identité de développement fixe, déclarée dans s3/s3-config.json (jamais dans le code).
+    command:
+      ['server', '-dir=/data', '-s3', '-s3.port=8333', '-s3.config=/etc/seaweedfs/s3-config.json']
+    ports: ['127.0.0.1:8333:8333']
+    volumes:
+      - s3:/data
+      - ./s3/s3-config.json:/etc/seaweedfs/s3-config.json:ro
+
+  # Création idempotente du seau `drapes` (même image que s3, sans nouvelle image).
+  s3-init:
+    image: chrislusf/seaweedfs:3.97
+    restart: 'no'
+    entrypoint: ['/bin/sh', '/init-bucket.sh']
+    volumes: [./s3/init-bucket.sh:/init-bucket.sh:ro]
+    depends_on: [s3]
 
   patterning:
     <<: *engine
     build: { context: .., dockerfile: engines/patterning/Dockerfile, secrets: [ca] }
     image: atelier/patterning:local
-    ports: ['3201:8000']
+    ports: ['127.0.0.1:3201:8000']
 
   manufacturing:
     <<: *engine
     build: { context: .., dockerfile: engines/manufacturing/Dockerfile, secrets: [ca] }
     image: atelier/manufacturing:local
-    ports: ['3202:8000']
+    ports: ['127.0.0.1:3202:8000']
 
   drape:
     <<: *engine
     build: { context: .., dockerfile: engines/drape/Dockerfile, secrets: [ca] }
     image: atelier/drape:local
-    ports: ['3203:8000']
+    ports: ['127.0.0.1:3203:8000']
+    stop_grace_period: 40s
+    environment:
+      <<: *s3-env
+      NATS_URL: nats://nats:4222
+    depends_on:
+      nats: { condition: service_started }
+      s3-init: { condition: service_completed_successfully }
 
   designs:
     profiles: [app]
@@ -75,20 +101,22 @@ services:
       PATTERNING_URL: http://patterning:8000
       MANUFACTURING_URL: http://manufacturing:8000
       MANUFACTURING_TIMEOUT_MS: '2000'
+      <<: *s3-env
       NATS_URL: nats://nats:4222
-    ports: ['3101:3101']
+    ports: ['127.0.0.1:3101:3101']
     depends_on:
       postgres: { condition: service_healthy }
       patterning: { condition: service_healthy }
       manufacturing: { condition: service_healthy }
       nats: { condition: service_started }
+      s3-init: { condition: service_completed_successfully }
 
   studio:
     profiles: [app]
     restart: unless-stopped
     build: { context: .., dockerfile: apps/studio/Dockerfile, secrets: [ca] }
     image: atelier/studio:local
-    ports: ['8080:8080']
+    ports: ['127.0.0.1:8080:8080']
     depends_on: [designs]
 
   # Documentation MkDocs (construite dans l'image) : http://localhost:8000
@@ -97,7 +125,7 @@ services:
     restart: unless-stopped
     build: { context: .., dockerfile: platform/docs.Dockerfile, secrets: [ca] }
     image: atelier/docs:local
-    ports: ['8000:80']
+    ports: ['127.0.0.1:8000:80']
 
 # Certificat d'autorité facultatif pour construire derrière un proxy d'entreprise :
 #   ATELIER_BUILD_CA=/chemin/ca.crt pnpm stack:up

@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "atelier-dev",
+      "credentials": [{ "accessKey": "atelier-dev-key", "secretKey": "atelier-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}
