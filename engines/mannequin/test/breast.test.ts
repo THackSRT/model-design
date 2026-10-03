@@ -37,7 +37,8 @@ describe('poitrine féminine (cibles breast/)', () => {
     const fb = fit(bare, MEASURES, FEMME);
     const a = fa.measured;
     const b = fb.measured;
-    const waistY = (m: MhModel, pos: Float32Array): number => circumference(m, pos, 'waist', 1).center[1];
+    const waistY = (m: MhModel, pos: Float32Array): number =>
+      circumference(m, pos, 'waist', 1).center[1];
     expect(Math.abs(waistY(model, fa.pos) - waistY(bare, fb.pos))).toBeLessThan(0.1);
     for (const k of ['chest', 'waist', 'hip'] as const) {
       expect(Math.abs((a[k] as number) - MEASURES[k])).toBeLessThan(0.3);
