@@ -139,6 +139,7 @@ nav:
       - 0015 Banc d'essai des tissus: adr/0015-banc-d-essai-des-tissus.md
       - 0016 Storybook et captures comparées: adr/0016-storybook-et-captures.md
       - 0017 Tests de bout en bout: adr/0017-tests-de-bout-en-bout.md
+      - 0018 Bras à l'horizontale: adr/0018-bras-a-l-horizontale.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md
