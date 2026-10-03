@@ -5,6 +5,7 @@ Source : https://github.com/makehumancommunity/makehuman (dossier makehuman/data
   - targets/macrodetails/*.target    morphologie : sexe × âge (jeune/âgé) × musculature × corpulence, origine
   - targets/measure/*.target         mensurations (cou, poitrine, taille, bassin, bras, cuisse…)
   - targets/stomach, buttocks, hip   silhouette (ventre, fessier, bassin)
+  - targets/breast/female-*          poitrine féminine : gros bonnet et fermeté, par âge, musculature, corpulence
   - rigs/default.mhskel + default_weights.mhw   articulations et poids du bras (pour baisser les bras)
 
 Sortie : assets/makehuman.mhz (données binaires compressées en gzip ; extension neutre pour que les
@@ -27,6 +28,8 @@ GROUPS = {"body", "helper-l-eye", "helper-r-eye"}
 JOINTS = ["upperarm01", "lowerarm01", "wrist"]          # tête d'os : épaule, coude, poignet
 ARM_CHAIN = ["upperarm01", "upperarm02", "lowerarm01", "lowerarm02", "wrist"] + \
     [f"metacarpal{i}" for i in range(1, 5)] + [f"finger{i}-{j}" for i in range(1, 6) for j in range(1, 4)]
+# Cibles de poitrine retenues : bonnet maximal (fermeté moyenne) et fermeté maximale (bonnet moyen)
+BREAST_VARIANTS = ("maxcup-averagefirmness", "averagecup-maxfirmness")
 Q = 1e-3              # quantification des décalages : 0,001 cm (0,01 mm)
 
 
@@ -76,6 +79,11 @@ def target_list(data):
         for pat in pats:
             for f in sorted((T / sub).glob(pat + ".target")):
                 names.append(f"{sub}/{f.stem}")
+    for a in ("young", "old"):
+        for m in ("minmuscle", "averagemuscle", "maxmuscle"):
+            for w in ("minweight", "averageweight", "maxweight"):
+                for cf in BREAST_VARIANTS:
+                    names.append(f"breast/female-{a}-{m}-{w}-{cf}")
     return names
 
 

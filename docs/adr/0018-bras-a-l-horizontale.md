@@ -72,3 +72,8 @@ Mesures en brouillon, mesures fictives des références, popeline, bras à 90° 
 - **Cible `test-standard` à 90°** : toujours rouge pour les mêmes trois vêtements. Jupe cercle : bas de ceinture
   −54,1 mm (−54), rayon d'ourlet 1,36 fois la hanche (1,36) ; corsage : bas à 51,1 mm de `waist` (42, donc pire) ;
   corsage à manches : `body-penetration`. Jupe droite et pantalon tiennent.
+- **Poitrine féminine (1.51b)** : 36 cibles MakeHuman `breast/` (.mhz +1,2 %), bonnet 0,2 et fermeté 0,5 pour la
+  femme par défaut ; le bonnet est plafonné par le plan de mesure de la sous-poitrine (écart poitrine - sous-poitrine
+  108 mm ; 59 mm à 0,6). Couplage par l'ajustement global : le bonnet change la corpulence retenue, d'où un léger effet
+  sur le pantalon. Les deux gardes de non-régression du départ sont recalées : corsage 80 → 95 mm (89,8 mm mesurés),
+  pantalon 95 → 100 mm (95,27 mm) ; empreintes godets recalées. Critères du résultat final inchangés (départ ≤ 120 mm).

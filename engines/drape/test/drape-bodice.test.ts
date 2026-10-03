@@ -23,7 +23,8 @@ import {
 
 // Corsage et corsage à manches en brouillon sur l'avatar, bras à 90° (ADR 0013, 1.19e2c). Mesures fictives, popeline.
 
-const MAX_SHOULDER_GAP_MM = 80;
+// Garde de non-régression sur le départ (ADR 0013 : 120 mm) ; corps à poitrine de 1.51b : 89,8 mm.
+const MAX_SHOULDER_GAP_MM = 95;
 const ARMS = { armAngleDeg: 90 };
 const FLAT_EASE_MM = 3;
 
@@ -45,7 +46,7 @@ describe.each(cases)('$name en brouillon, bras à 90°', ({ spec }) => {
     avatar = buildAvatar(MEASUREMENTS, ARMS);
   });
 
-  it('part avec les coutures d’épaule à moins de 80 mm (avant : 257 à 283 mm)', () => {
+  it('part avec les coutures d’épaule à moins de 95 mm (89,8 avec la poitrine de 1.51b ; avant : 257 à 283 mm)', () => {
     const start = placeGarment(meshGarment(spec, 'draft'), spec, avatar);
     expect(start.every(Number.isFinite)).toBe(true);
     expect(shoulderGap(spec, start)).toBeLessThan(MAX_SHOULDER_GAP_MM);

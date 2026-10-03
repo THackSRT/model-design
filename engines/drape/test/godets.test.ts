@@ -103,11 +103,11 @@ describe('réglage fin et départs', () => {
     expect(settingsFor('standard', 1.2)).toEqual(DRAPE_SETTINGS.standard);
   });
 
-  // Empreintes des positions de départ mesurées avant les godets (0.9.0), avatar par défaut.
+  // Empreintes des positions de départ sans godets, avatar par défaut ; recalées pour la poitrine de 1.51b.
   it('laisse identiques au bit près les départs des vêtements sans godets', () => {
     const hashes: Record<string, string> = {
-      'straight-skirt': 'dbd65ce2406c5e4c',
-      trousers: 'ece33e55f598baa4',
+      'straight-skirt': '49ea7a9a6935248d',
+      trousers: '6f907143d5f1a5be',
     };
     const plain = buildAvatar(MEASUREMENTS, {});
     for (const [name, expected] of Object.entries(hashes)) {
