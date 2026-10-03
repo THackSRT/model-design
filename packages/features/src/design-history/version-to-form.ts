@@ -10,12 +10,19 @@ import {
   initialForm,
   type MeasurementKey,
   measurementKeys,
+  optionalMeasurementKeys,
   type StudioForm,
 } from '../pattern-studio/form.js';
+import { finishedFromParams } from '../pattern-studio/garment-measures.js';
 
 /** Toutes les mesures du formulaire (les quatre communes et celles des tracés particuliers). */
 const FORM_MEASUREMENTS: readonly MeasurementKey[] = [
-  ...new Set([...measurementKeys('trousers'), ...measurementKeys('bodice')]),
+  ...new Set([
+    ...measurementKeys('trousers'),
+    ...measurementKeys('bodice'),
+    ...optionalMeasurementKeys('trousers'),
+    ...optionalMeasurementKeys('bodice'),
+  ]),
 ];
 
 /** Valeurs du contrat (mm, ratio) vers la saisie : cm pour une longueur, tel quel sinon. Champ absent : absent. */
@@ -32,7 +39,8 @@ function paramsToInput(fields: GarmentField[], params: Record<string, unknown>):
 /**
  * Formulaire du studio qui redonne une version : mesures (mm vers cm), type et paramètres. Ce qui n'était
  * pas dans la version reste absent (jamais complété par un défaut : la reprise est fidèle). La saisie des
- * autres types vient de `base` et n'est pas perdue.
+ * autres types vient de `base` et n'est pas perdue. Toutes les mesures finies sont `manual` : rien ne se recalcule
+ * tout seul sur un modèle enregistré.
  */
 export function versionToForm(
   version: Pick<DesignVersion, 'measurements' | 'garment'>,
@@ -47,7 +55,7 @@ export function versionToForm(
   }
   const params = garment.params as unknown as Record<string, unknown>;
   const sleeve = garment.type === 'bodice' ? garment.params.sleeve : undefined;
-  return {
+  const form: StudioForm = {
     ...base,
     sex: measurements.sex,
     garmentType: garment.type,
@@ -61,4 +69,5 @@ export function versionToForm(
       ? paramsToInput(sleeveFields(), sleeve as unknown as Record<string, unknown>)
       : base.sleeveCm,
   };
+  return { ...form, finished: finishedFromParams(form) };
 }

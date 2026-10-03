@@ -17,6 +17,12 @@ import {
   isDraftedGarmentType,
   type ParamValues,
 } from './garment-fields.js';
+import {
+  type FinishedByType,
+  initialFinished,
+  liftFinishedErrors,
+  syncFinished,
+} from './garment-measures.js';
 
 /** Saisie de l'écran, en centimètres (l'unité des tailleurs) ; convertie en mm pour le contrat. */
 export interface StudioForm {
@@ -28,6 +34,8 @@ export interface StudioForm {
   /** Corsage : manches facultatives (case cochée) et leur saisie, gardée même décochée. */
   withSleeve: boolean;
   sleeveCm: ParamValues;
+  /** Mesures finies du vêtement (cm) de chaque type, avec leur origine (calculée ou saisie). */
+  finished: FinishedByType;
 }
 
 export type MeasurementKey =
@@ -37,7 +45,9 @@ export type MeasurementKey =
   | 'hipGirthMm'
   | 'crotchHeightMm'
   | 'bustGirthMm'
-  | 'backWaistLengthMm';
+  | 'backWaistLengthMm'
+  | 'waistHeightMm'
+  | 'armLengthMm';
 export const MEASUREMENT_KEYS: MeasurementKey[] = [
   'statureMm',
   'chestGirthMm',
@@ -55,17 +65,31 @@ export function measurementKeys(type: GarmentType): MeasurementKey[] {
   return [...MEASUREMENT_KEYS, ...(EXTRA_MEASUREMENTS[type] ?? [])];
 }
 
+const OPTIONAL_MEASUREMENTS: Partial<Record<GarmentType, MeasurementKey[]>> = {
+  'straight-skirt': ['waistHeightMm'],
+  'circle-skirt': ['waistHeightMm'],
+  trousers: ['waistHeightMm'],
+  bodice: ['armLengthMm'],
+};
+
+/** Mesures facultatives du corps : elles affinent les longueurs proposées et sont envoyées si saisies. */
+export function optionalMeasurementKeys(type: GarmentType): MeasurementKey[] {
+  return OPTIONAL_MEASUREMENTS[type] ?? [];
+}
+
 /** Erreur de saisie : un code et ses paramètres (mm), traduits par l'application. */
 export type FieldError =
   | { code: 'required' }
   | { code: 'unavailable' }
   | { code: 'range'; minMm: number; maxMm: number }
+  /** Mesure finie hors de corps + aisance (minMm à maxMm) : trop serrée, ou trop ample. */
+  | { code: 'easeRange'; minMm: number; maxMm: number }
   | { code: 'zeroOrRange'; minMm: number; maxMm: number }
   | { code: 'ratioRange'; min: number; max: number };
 /** Indexée par nom de paramètre ou de mesure du contrat. */
 export type FieldErrors = Partial<Record<string, FieldError>>;
 
-export const initialForm: StudioForm = {
+const baseForm: StudioForm = {
   sex: 'female',
   garmentType: 'straight-skirt',
   measurementsCm: {
@@ -80,7 +104,11 @@ export const initialForm: StudioForm = {
   paramsByType: Object.fromEntries(DRAFTED_GARMENT_TYPES.map((t) => [t, initialParams(t)])),
   withSleeve: false,
   sleeveCm: initialSleeve(),
+  finished: initialFinished(),
 };
+
+/** Formulaire de départ : les mesures finies sont proposées depuis le corps (`auto`). */
+export const initialForm: StudioForm = syncFinished(baseForm);
 
 type Bounds = { minimum: number; maximum: number };
 const measurementBounds = (key: MeasurementKey): Bounds => measurementSetJsonSchema.properties[key];
@@ -127,6 +155,13 @@ function checkMeasurements(form: StudioForm, errors: FieldErrors): Record<string
     if (problem) errors[key] = problem;
     else if (mm !== undefined) measurements[key] = mm;
   }
+  for (const key of optionalMeasurementKeys(form.garmentType)) {
+    const mm = toMm(form.measurementsCm[key]);
+    if (mm === undefined) continue;
+    const problem = checkMm(mm, measurementBounds(key));
+    if (problem) errors[key] = problem;
+    else measurements[key] = mm;
+  }
   return measurements;
 }
 
@@ -166,7 +201,8 @@ export function toVersionRequest(
   const errors: FieldErrors = {};
   const measurements = checkMeasurements(form, errors);
   const params = checkParams(form, type, errors);
-  if (Object.keys(errors).length > 0) return err(errors);
+  const lifted = liftFinishedErrors(type, errors);
+  if (Object.keys(lifted).length > 0) return err(lifted);
   return ok({
     // params est bâti champ par champ depuis les schémas du contrat : le service revalide.
     measurements: { sex: form.sex, ...measurements } as MeasurementSet,

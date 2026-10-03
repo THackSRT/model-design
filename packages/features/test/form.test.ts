@@ -32,7 +32,7 @@ describe('saisie de l’atelier', () => {
       measurements,
       garment: {
         type: 'straight-skirt',
-        params: { lengthMm: 600, waistEaseMm: 10, hipEaseMm: 40, hemFlareMm: 0 },
+        params: { lengthMm: 553, waistEaseMm: 10, hipEaseMm: 40, hemFlareMm: 0 },
       },
     };
     const request = toVersionRequest(initialForm);
@@ -48,7 +48,7 @@ describe('saisie de l’atelier', () => {
       measurements,
       garment: {
         type: 'circle-skirt',
-        params: { lengthMm: 600, waistEaseMm: 10, circleFraction: 0.5, waistbandWidthMm: 0 },
+        params: { lengthMm: 553, waistEaseMm: 10, circleFraction: 0.5, waistbandWidthMm: 0 },
       },
     };
     const request = toVersionRequest(form);
@@ -61,7 +61,7 @@ describe('saisie de l’atelier', () => {
       measurements: { ...measurements, crotchHeightMm: 780 },
       garment: {
         type: 'trousers',
-        params: { lengthMm: 1000, waistEaseMm: 10, hipEaseMm: 50 },
+        params: { lengthMm: 959, waistEaseMm: 10, hipEaseMm: 50 },
       },
     };
     expect(request.isOk() && request.value).toEqual(expected);
@@ -154,7 +154,7 @@ describe('corsage', () => {
     const request = toVersionRequest({ ...bodice, withSleeve: true });
     const garment = request.isOk() ? request.value.garment : undefined;
     expect(garment?.type === 'bodice' && garment.params.sleeve).toEqual({
-      lengthMm: 600,
+      lengthMm: 545,
       capEaseMm: 15,
     });
   });

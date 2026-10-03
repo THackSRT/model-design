@@ -4,6 +4,17 @@ import type { ApiProblem } from '../api/designs-client.js';
 import type { GarmentType } from '@atelier/contracts-ts';
 import { isDraftedGarmentType } from './garment-fields.js';
 import {
+  type FinishedField,
+  type FinishedKey,
+  finishedFields,
+  syncFinished,
+  withFinished,
+  withMeasurement,
+  withParam,
+  withRecalculated,
+  withSleeveParam,
+} from './garment-measures.js';
+import {
   type FieldErrors,
   initialForm,
   type MeasurementKey,
@@ -28,6 +39,8 @@ export type StudioStatus = 'idle' | 'working' | 'ready' | 'failed';
 export interface PatternStudioState {
   form: StudioForm;
   errors: FieldErrors;
+  /** Mesures finies du vêtement du type choisi : valeur, origine (`auto` ou `manual`) et erreur. */
+  finished: FinishedField[];
   status: StudioStatus;
   layout?: PanelsLayout;
   mannequin?: FittedMannequin;
@@ -51,7 +64,12 @@ export interface PatternStudioState {
 
 export interface PatternStudioActions {
   setSex(sex: StudioForm['sex']): void;
+  /** Mesure du corps : les mesures finies `auto` suivent, les `manual` gardent leur valeur. */
   setMeasurement(key: MeasurementKey, cm: number | undefined): void;
+  /** Saisie d'une mesure finie du vêtement (cm) : le champ passe à `manual`. */
+  setFinished(key: FinishedKey, cm: number | undefined): void;
+  /** Remet une mesure finie (ou toutes celles du type) à `auto`, à la valeur calculée du corps. */
+  recalculateFinished(key?: FinishedKey): void;
   setGarmentType(type: GarmentType): void;
   /** Saisie d'un paramètre du type choisi : cm pour une longueur, nombre sans unité sinon. */
   setParam(param: string, value: number | undefined): void;
@@ -74,19 +92,12 @@ type FormActions = Omit<
 function formActions(setForm: Dispatch<SetStateAction<StudioForm>>): FormActions {
   return {
     setSex: (sex) => setForm((f) => ({ ...f, sex })),
-    setMeasurement: (key, cm) =>
-      setForm((f) => ({ ...f, measurementsCm: { ...f.measurementsCm, [key]: cm } })),
-    setParam: (param, value) =>
-      setForm((f) => ({
-        ...f,
-        paramsByType: {
-          ...f.paramsByType,
-          [f.garmentType]: { ...f.paramsByType[f.garmentType], [param]: value },
-        },
-      })),
+    setMeasurement: (key, cm) => setForm((f) => withMeasurement(f, key, cm)),
+    setFinished: (key, cm) => setForm((f) => withFinished(f, key, cm)),
+    recalculateFinished: (key) => setForm((f) => withRecalculated(f, key)),
+    setParam: (param, value) => setForm((f) => withParam(f, param, value)),
     setWithSleeve: (withSleeve) => setForm((f) => ({ ...f, withSleeve })),
-    setSleeveParam: (param, value) =>
-      setForm((f) => ({ ...f, sleeveCm: { ...f.sleeveCm, [param]: value } })),
+    setSleeveParam: (param, value) => setForm((f) => withSleeveParam(f, param, value)),
   };
 }
 
@@ -139,7 +150,7 @@ function sessionActions(
   return {
     setGarmentType: (type) => {
       if (type === form.garmentType || !isDraftedGarmentType(type)) return;
-      setForm((f) => ({ ...f, garmentType: type }));
+      setForm((f) => syncFinished({ ...f, garmentType: type }));
       clearPatron();
     },
     generate: () => {
@@ -176,9 +187,11 @@ export function usePatternStudio(deps: PatternStudioDeps): {
     setShowGarment,
     ...sessionActions(session, run, clearPatron),
   };
+  const errors = request.isErr() ? request.error : {};
   const state: PatternStudioState = {
     form,
-    errors: request.isErr() ? request.error : {},
+    errors,
+    finished: finishedFields(form, errors),
     status: statusOf(patron.pending || body.status === 'fitting', result),
     ...{ layout, mannequin: body.mannequin, mannequinStatus: body.status },
     ...{ display, dressing, showGarment, dirty, runs: session.runs },
