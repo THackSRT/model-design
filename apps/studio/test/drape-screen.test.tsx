@@ -98,7 +98,8 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 const user = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-const drapeButton = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Draper le vêtement' });
+const drapeButton = () =>
+  screen.getByRole<HTMLButtonElement>('button', { name: 'Draper le vêtement' });
 const lastDraped = () => mocked.view.mock.lastCall?.[0]?.draped as { layers: unknown } | undefined;
 
 async function calculated() {

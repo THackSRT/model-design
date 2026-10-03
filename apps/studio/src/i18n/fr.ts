@@ -196,7 +196,8 @@ export const fr = {
   'drape.bodyFitting': 'Ajustement du mannequin aux bras abaissés…',
   'drape.bodyFailed': 'Le mannequin n’a pas pu être ajusté pour le drapé.',
   'drape.unreadable': 'Le vêtement drapé n’a pas pu être lu.',
-  'drape.problem.placement-missing': 'Le patron ne peut pas être placé : une pièce n’a pas de position.',
+  'drape.problem.placement-missing':
+    'Le patron ne peut pas être placé : une pièce n’a pas de position.',
   'drape.problem.placement-failed': 'Le placement des pièces autour du corps a échoué.',
   'drape.problem.seam-not-closed': 'Une couture n’a pas pu être fermée.',
   'drape.problem.body-penetration': 'Le tissu traverse le corps : le vêtement est trop juste.',
