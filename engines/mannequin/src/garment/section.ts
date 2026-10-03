@@ -16,9 +16,14 @@ export interface SectionPart {
   center: Vec2;
 }
 
+/** Filtre de points de coupe : vrai pour un point (x, y, z) à écarter (bras). */
+export type DropPoint = (x: number, y: number, z: number) => boolean;
+
 export interface BodySectioner {
   /** Composantes de la coupe à la hauteur donnée (cm), de la plus grande à la plus petite. */
   at(heightCm: number): SectionPart[];
+  /** Comme `at`, en écartant les points de coupe que `drop` désigne ; `dropped` : combien ont été écartés. */
+  cut(heightCm: number, drop?: DropPoint): { parts: SectionPart[]; dropped: number };
 }
 
 const WELD_CM = 1e-3;
@@ -85,9 +90,10 @@ interface Crossings {
 }
 
 /** Regroupe les points de coupe reliés par un triangle ; une classe = une composante. */
-function toParts(c: Crossings): SectionPart[] {
+function toParts(c: Crossings, keep: (p: Vec2) => boolean = () => true): SectionPart[] {
   const groups = new Map<number, Vec2[]>();
   c.points.forEach((p, i) => {
+    if (!keep(p)) return;
     const r = find(c.parent, i);
     const list = groups.get(r);
     if (list) list.push(p);
@@ -113,40 +119,56 @@ function binTriangles(pos: Float32Array, index: ArrayLike<number>): number[][] {
   return bins;
 }
 
+/** Maillage soudé et classé par tranches, prêt à être coupé. */
+interface Mesh {
+  flat: Float32Array;
+  ids: Uint32Array;
+  bins: number[][];
+  index: ArrayLike<number>;
+}
+
+/** Points de coupe à la hauteur h et classes d'équivalence entre eux (un triangle relie ses deux points). */
+function crossings(m: Mesh, h: number): Crossings {
+  const c: Crossings = { points: [], parent: [] };
+  const byEdge = new Map<number, number>();
+  const y = (v: number): number => at(m.flat, 3 * v + 1);
+  const crossing = (i: number, j: number): number => {
+    const [a, b] = at(m.ids, i) < at(m.ids, j) ? [i, j] : [j, i];
+    const key = at(m.ids, a) * m.ids.length + at(m.ids, b);
+    const known = byEdge.get(key);
+    if (known !== undefined) return known;
+    const f = (h - y(a)) / (y(b) - y(a));
+    const lerp = (q: number): number =>
+      at(m.flat, 3 * a + q) + (at(m.flat, 3 * b + q) - at(m.flat, 3 * a + q)) * f;
+    c.points.push([lerp(0), lerp(2)]);
+    c.parent.push(c.points.length - 1);
+    byEdge.set(key, c.points.length - 1);
+    return c.points.length - 1;
+  };
+  for (const t of m.bins[Math.floor(h / BIN_CM)] ?? []) {
+    const tri = [0, 1, 2].map((q) => at(m.index, t + q));
+    const above = tri.map((v) => y(v) > h);
+    const hits: number[] = [];
+    for (let e = 0; e < 3; e++) {
+      if (above[e] !== above[(e + 1) % 3]) hits.push(crossing(at(tri, e), at(tri, (e + 1) % 3)));
+    }
+    if (hits.length < 2) continue;
+    c.parent[find(c.parent, at(hits, 1))] = find(c.parent, at(hits, 0));
+  }
+  return c;
+}
+
 export function createSectioner(pos: ArrayLike<number>, index: ArrayLike<number>): BodySectioner {
   const flat = Float32Array.from(pos);
-  const ids = weld(flat);
-  const bins = binTriangles(flat, index);
-  const y = (v: number): number => at(flat, 3 * v + 1);
-  return {
-    at(h) {
-      const c: Crossings = { points: [], parent: [] };
-      const byEdge = new Map<number, number>();
-      const crossing = (i: number, j: number): number => {
-        const [a, b] = at(ids, i) < at(ids, j) ? [i, j] : [j, i];
-        const key = at(ids, a) * ids.length + at(ids, b);
-        const known = byEdge.get(key);
-        if (known !== undefined) return known;
-        const f = (h - y(a)) / (y(b) - y(a));
-        const lerp = (q: number): number =>
-          at(flat, 3 * a + q) + (at(flat, 3 * b + q) - at(flat, 3 * a + q)) * f;
-        c.points.push([lerp(0), lerp(2)]);
-        c.parent.push(c.points.length - 1);
-        byEdge.set(key, c.points.length - 1);
-        return c.points.length - 1;
-      };
-      for (const t of bins[Math.floor(h / BIN_CM)] ?? []) {
-        const tri = [0, 1, 2].map((q) => at(index, t + q));
-        const above = tri.map((v) => y(v) > h);
-        const hits: number[] = [];
-        for (let e = 0; e < 3; e++) {
-          if (above[e] !== above[(e + 1) % 3])
-            hits.push(crossing(at(tri, e), at(tri, (e + 1) % 3)));
-        }
-        if (hits.length < 2) continue;
-        c.parent[find(c.parent, at(hits, 1))] = find(c.parent, at(hits, 0));
-      }
-      return toParts(c);
+  const mesh: Mesh = { flat, ids: weld(flat), bins: binTriangles(flat, index), index };
+  const sectioner: BodySectioner = {
+    at: (h) => sectioner.cut(h).parts,
+    cut(h, drop) {
+      const c = crossings(mesh, h);
+      if (!drop) return { parts: toParts(c), dropped: 0 };
+      const dropped = c.points.filter((p) => drop(p[0], h, p[1])).length;
+      return { parts: toParts(c, (p) => !drop(p[0], h, p[1])), dropped };
     },
   };
+  return sectioner;
 }

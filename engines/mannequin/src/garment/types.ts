@@ -26,4 +26,9 @@ export interface DressOptions {
   rings?: number;
   /** Nombre de sommets par anneau (défaut 72, minimum 12). */
   segments?: number;
+  /**
+   * Longueur des manches le long de l'axe du bras, en mm, de l'épaule à l'ourlet. Défaut : celle du patron
+   * (de l'ourlet à la couture de dessous de bras). Sans effet si le patron n'a pas de manche.
+   */
+  sleeveLengthMm?: number;
 }

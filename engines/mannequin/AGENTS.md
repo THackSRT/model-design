@@ -47,9 +47,16 @@ Tourne à l'identique dans le navigateur et dans Node.
   - `plans.ts` : correspondance patron/corps par type (taille ↔ `waist`, entrejambe ↔ `crotch`, haut du dos du
     corsage ↔ `neck`) ; un tube par jupe ou corsage, tronc + une jambe par côté pour le pantalon ;
   - `mesh.ts` : anneaux → triangles et normales ; `dress.ts` : orchestration et zones.
-  - Limites : manches non habillées ; ceinture de la jupe cercle ignorée ; au-dessus de l'aisselle du corsage le tour
+  - `arms.ts` (1.50e1) : bras levés (axe à 45° et plus de la verticale, `DressableBody.armsMm`, présent dans
+    `FittedMannequin`) : `sect.cut` écarte des coupes du corsage les points de bras (au-delà du pivot et à moins
+    de 12 cm de l'axe épaule-poignet, ou au-delà du poignet), le tour reste comparé sous l'aisselle seulement
+    (première coupe à 12 points de bras) ; bras le long du corps : chemin d'avant, inchangé au bit près. Manches (bras levés seulement) :
+    si le patron en a (pièce `sleeve*`) et `armsMm` est fourni, un tube par bras de `sleeveLengthMm` (défaut :
+    ourlet à la couture de dessous de bras), rayon = tour du patron / 2π, remplacé par le rayon du bras (+ 0,5 mm)
+    là où il est plus large ; centre suivant le bras coudé tranche par tranche. Sans zone « trop juste ».
+  - Limites : ceinture de la jupe cercle ignorée ; au-dessus de l'aisselle du corsage le tour
     n'est pas comparable (emmanchures, encolure) : jamais signalé trop juste ; pince de poitrine : tour lu au
     maximum sur ±30 mm.
-  - Tests : `test/garment-units.test.ts`, `test/garment-dress.test.ts` (patrons dans `test/fixtures`, copies des
+  - Tests : `test/garment-units.test.ts`, `test/garment-dress.test.ts`, `test/garment-arms-raised.test.ts` (90°, manches ; patrons dans `test/fixtures`, copies des
     références du patronage, mesures fictives).
 - Commandes : `pnpm nx run @atelier/mannequin:test|lint|typecheck|build`.
