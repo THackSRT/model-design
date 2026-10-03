@@ -64,6 +64,12 @@ export function problemMessage(type: string): string {
   return hasMessage(key) ? t(key as CoreMessageKey) : t('problem.default');
 }
 
+/** Message d'un drapé en échec : un par type connu du contrat, un message générique sinon. */
+export function drapeProblemMessage(type: string | undefined): string {
+  const key = `drape.problem.${type?.replace('/problems/drape-', '') ?? ''}`;
+  return t(hasMessage(key) ? (key as CoreMessageKey) : 'drape.problem.default');
+}
+
 /** Unité dans laquelle le champ est saisi (et donc dans laquelle ses bornes s'affichent). */
 export type FieldUnit = 'cm' | 'mm';
 

@@ -7,9 +7,10 @@ import {
 import { NumberField, Panel } from '@atelier/ui-web';
 import { fieldErrorMessage, t } from '../../i18n/t.js';
 import { CutPiecesPanel, type CutPiecesPanelProps } from './cut-pieces-panel.js';
+import { DrapePanel, type DrapePanelProps } from './drape-panel.js';
 import { HistoryPanel, type HistoryPanelProps } from './history-panel.js';
 import { GarmentPanel } from './garment-panel.js';
-import { MannequinPanel } from './mannequin-panel.js';
+import { type DrapedProps, MannequinPanel } from './mannequin-panel.js';
 
 export interface PatternStudioViewProps {
   state: PatternStudioState;
@@ -18,6 +19,10 @@ export interface PatternStudioViewProps {
   cutPieces?: CutPiecesPanelProps;
   /** Historique des versions du modèle de la session ; absent : pas de panneau. */
   history?: HistoryPanelProps;
+  /** Drapé de la version enregistrée ; absent : pas de panneau. */
+  drape?: DrapePanelProps;
+  /** Vêtement drapé montré sur le mannequin à la place de l'habillage géométrique. */
+  draped?: DrapedProps;
 }
 
 const FIELD_UNIT = 'cm' as const; // les champs du formulaire se saisissent en cm
@@ -91,6 +96,7 @@ export function PatternStudioView(props: PatternStudioViewProps) {
       <PatternPanel state={props.state} />
       {props.cutPieces && <CutPiecesPanel {...props.cutPieces} />}
       {props.history && <HistoryPanel {...props.history} />}
+      {props.drape && <DrapePanel {...props.drape} />}
       <MannequinPanel {...props} />
     </main>
   );

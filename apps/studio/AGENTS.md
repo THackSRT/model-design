@@ -50,3 +50,8 @@ Rôle : deux onglets (`app-tabs.tsx`). **Patron** : mesures, choix du vêtement 
   depuis l'envoi. Un délai dépassé ne rejette que l'essai en cours (Worker recréé, la file continue).
 - Import d'un rapport avec des modifications non exportées : `FabricBenchScreen` demande confirmation (prop `confirm`,
   `window.confirm` par défaut) ; refus = rien ne change.
+- Drapé (1.49c) : `drape-panel.tsx` (tissu parmi `drape-fabrics.ts`, liste écrite ici pour garder le moteur de drapé hors de l'entrée ;
+  un test la compare à `PRESET_NAMES`) branché sur `useDrape` par `screen.tsx` (`useDrapeOf`). La version n'est offerte que si la saisie n'a pas changé
+  depuis le calcul ; sinon le drapé affiché est retiré. `use-draped-body.ts` ajuste un corps à 30° (mesures de la version) pendant l'affichage ;
+  `draped-view.tsx` (lazy, avec three.js) lit le GLB (`readDrapedGlb`) : jamais d'import statique de `@atelier/viewer3d`. Clés `drape.*`,
+  message par `problemType` via `drapeProblemMessage`.
