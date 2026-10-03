@@ -1,4 +1,9 @@
-import { initialForm, type PatternStudioActions, type PatternStudioState } from '@atelier/features';
+import {
+  finishedFields,
+  initialForm,
+  type PatternStudioActions,
+  type PatternStudioState,
+} from '@atelier/features';
 import type { FittedMannequin } from '@atelier/mannequin';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -59,9 +64,12 @@ const actions: PatternStudioActions = {
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
   applyForm: vi.fn(),
+  setFinished: vi.fn(),
+  recalculateFinished: vi.fn(),
 };
 const state: PatternStudioState = {
   form: initialForm,
+  finished: finishedFields(initialForm, {}),
   errors: {},
   status: 'ready',
   mannequinStatus: 'ready',

@@ -1,4 +1,4 @@
-import type { GarmentSpec } from '@atelier/contracts-ts';
+import type { GarmentRequest, GarmentSpec } from '@atelier/contracts-ts';
 import type { TightZone } from '@atelier/mannequin';
 import { useEffect, useState } from 'react';
 import { type DressingState, initialDressingState, type MannequinFitter } from './fitter.js';
@@ -7,6 +7,13 @@ import { type DressingState, initialDressingState, type MannequinFitter } from '
 export interface DressingInput {
   spec: GarmentSpec;
   garmentType: string;
+  /** Longueur de manche finie, en mm (mesure « longueur de manche » du corsage à manches). */
+  sleeveLengthMm?: number;
+}
+
+/** Longueur de manche finie de la demande du vêtement ; absente sans manches ou hors corsage. */
+export function sleeveLengthOf(garment: GarmentRequest): number | undefined {
+  return garment.type === 'bodice' ? garment.params.sleeve?.lengthMm : undefined;
 }
 
 /** Zones trop justes en mm entiers : les écarts et hauteurs sont les seuls chiffres montrés. */
@@ -37,15 +44,21 @@ export function useDressing(
     }
     let current = true;
     setState({ status: 'working' });
-    fitter.dress(input.spec, input.garmentType).then(
-      (garment) =>
-        current &&
-        setState({
-          status: 'ready',
-          garment: { ...garment, tightZones: roundZones(garment.tightZones) },
-        }),
-      () => current && setState({ status: 'failed' }),
-    );
+    fitter
+      .dress(
+        input.spec,
+        input.garmentType,
+        ...(input.sleeveLengthMm === undefined ? [] : [{ sleeveLengthMm: input.sleeveLengthMm }]),
+      )
+      .then(
+        (garment) =>
+          current &&
+          setState({
+            status: 'ready',
+            garment: { ...garment, tightZones: roundZones(garment.tightZones) },
+          }),
+        () => current && setState({ status: 'failed' }),
+      );
     return () => {
       current = false;
     };

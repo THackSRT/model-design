@@ -13,6 +13,7 @@ import { garmentHolds } from '../src/placement/holds.js';
 import { costRatio } from './helpers.js';
 import {
   edgeHeights,
+  shoulderShiftMm,
   fixture,
   jobOf,
   MEASUREMENTS,
@@ -20,10 +21,11 @@ import {
   sleeveTop,
 } from './drape-helpers.js';
 
-// Corsage et corsage à manches en brouillon sur l'avatar, bras à 30° (ADR 0013, 1.19e2c). Mesures fictives, popeline.
+// Corsage et corsage à manches en brouillon sur l'avatar, bras à 90° (ADR 0013, 1.19e2c). Mesures fictives, popeline.
 
-const MAX_SHOULDER_GAP_MM = 80;
-const ARMS = { armAngleDeg: 30 };
+// Garde de non-régression sur le départ (ADR 0013 : 120 mm) ; corps à poitrine de 1.51b : 89,8 mm.
+const MAX_SHOULDER_GAP_MM = 95;
+const ARMS = { armAngleDeg: 90 };
 const FLAT_EASE_MM = 3;
 
 interface Case {
@@ -36,7 +38,7 @@ const cases: Case[] = [
   { name: 'corsage à manches', spec: fixture('bodice-with-sleeves') },
 ];
 
-describe.each(cases)('$name en brouillon, bras à 30°', ({ spec }) => {
+describe.each(cases)('$name en brouillon, bras à 90°', ({ spec }) => {
   let avatar: AvatarShape;
 
   beforeAll(async () => {
@@ -44,7 +46,7 @@ describe.each(cases)('$name en brouillon, bras à 30°', ({ spec }) => {
     avatar = buildAvatar(MEASUREMENTS, ARMS);
   });
 
-  it('part avec les coutures d’épaule à moins de 80 mm (avant : 257 à 283 mm)', () => {
+  it('part avec les coutures d’épaule à moins de 95 mm (89,8 avec la poitrine de 1.51b ; avant : 257 à 283 mm)', () => {
     const start = placeGarment(meshGarment(spec, 'draft'), spec, avatar);
     expect(start.every(Number.isFinite)).toBe(true);
     expect(shoulderGap(spec, start)).toBeLessThan(MAX_SHOULDER_GAP_MM);
@@ -98,7 +100,9 @@ describe('corsage', () => {
     if (!out.ok) throw new Error('drape failed');
     const heights = edgeHeights(spec, out, ['hem-1', 'hem-2']).sort((a, b) => a - b);
     const median = heights[heights.length >> 1] as number;
-    expect(Math.abs(median - avatar.landmarksMm.waist)).toBeLessThanOrEqual(40);
+    // Un corsage pend des épaules : à 90° le dessus de l'épaule descend (1.50b), le bas aussi (ADR 0018).
+    const expected = avatar.landmarksMm.waist + shoulderShiftMm(avatar, MEASUREMENTS);
+    expect(Math.abs(median - expected)).toBeLessThanOrEqual(40);
   });
 
   // Un seul drapé supplémentaire : budget de coût et, comparé au premier, déterminisme au bit près.

@@ -7,7 +7,7 @@ import { t } from '../../i18n/t.js';
 export interface DrapedViewProps {
   /** Modèle glTF binaire du drapé. */
   model: ArrayBuffer;
-  /** Corps ajusté, bras abaissés comme dans le drapé. */
+  /** Corps ajusté, bras à l’horizontale comme dans le drapé. */
   meshes: MeshData[];
 }
 

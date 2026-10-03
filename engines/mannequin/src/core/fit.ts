@@ -43,8 +43,14 @@ interface Solution {
   muscle: number;
 }
 
+/** Ventre et fessier : donnés, sinon valeurs par défaut (les mêmes pour les deux sexes). */
+function bellyAndSeat(p: MakeHumanMorphology): { belly: number; seat: number } {
+  return { belly: p.belly ?? 0.2, seat: p.seat ?? 0.4 };
+}
+
 function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorphology): FitContext {
-  const goal = (k: string): number => (m as unknown as Record<string, number | undefined>)[k] ?? 0;
+  const goals = m as unknown as Record<string, number | undefined>;
+  const goal = (k: string): number => goals[k] ?? 0;
   return {
     model,
     stature: m.stature,
@@ -58,8 +64,7 @@ function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorpho
       asian: p.asian ?? 0,
       caucasian: p.caucasian ?? 0,
     },
-    belly: p.belly ?? 0.2,
-    seat: p.seat ?? 0.4,
+    ...bellyAndSeat(p),
     fixedMuscle: p.muscle ?? undefined,
   };
 }
@@ -130,11 +135,14 @@ function measureFit(ctx: FitContext, macroPos: Float32Array): Omit<Solution, 'we
   return { pos, vals, meas: measure(ctx.model, pos, ctx.stature) };
 }
 
+/** Tours demandés par le client. */
+const asked = (ctx: FitContext): string[] => ctx.targets;
+
 const worstOf = (ctx: FitContext, meas: Measured): number =>
-  Math.max(...ctx.targets.map((k) => Math.abs((meas[k] as number) - ctx.goal(k))));
+  Math.max(...asked(ctx).map((k) => Math.abs((meas[k] as number) - ctx.goal(k))));
 
 const errOf = (ctx: FitContext, meas: Measured): number =>
-  ctx.targets.reduce((a, k) => a + ((meas[k] as number) / ctx.goal(k) - 1) ** 2, 0);
+  asked(ctx).reduce((a, k) => a + ((meas[k] as number) / ctx.goal(k) - 1) ** 2, 0);
 
 function solveFor(ctx: FitContext, weight: number, muscle: number): Solution {
   return { ...measureFit(ctx, macroFor(ctx, weight, muscle)), weight, muscle };

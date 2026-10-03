@@ -67,19 +67,38 @@ const sideOf = (id: string): FlatPanel['side'] => {
 /** Pièces du corps du vêtement : manches et ceintures sont à part. */
 const isBody = (p: Panel): boolean => !/^(sleeve|waistband)/.test(p.id);
 
+const flatten = (p: Panel, copies: number): FlatPanel => {
+  const polygon = polygonOf(p.edges);
+  const ys = polygon.map((q) => q[1]);
+  return {
+    id: p.id,
+    polygon,
+    yMin: Math.min(...ys),
+    yMax: Math.max(...ys),
+    copies,
+    side: sideOf(p.id),
+  };
+};
+
 export function flatPanels(spec: GarmentSpec): FlatPanel[] {
-  return spec.panels.filter(isBody).map((p) => {
-    const polygon = polygonOf(p.edges);
-    const ys = polygon.map((q) => q[1]);
-    return {
-      id: p.id,
-      polygon,
-      yMin: Math.min(...ys),
-      yMax: Math.max(...ys),
-      copies: (p.cutOnFold ? 2 : 1) * p.quantity,
-      side: sideOf(p.id),
-    };
-  });
+  return spec.panels.filter(isBody).map((p) => flatten(p, (p.cutOnFold ? 2 : 1) * p.quantity));
+}
+
+/** Cotes d'une manche lues sur le patron (une pièce par bras, tour = largeur à plat). */
+export interface SleeveProfile {
+  /** Pièce de la manche, copies = 1 : `girthAt` donne le tour d'une manche. */
+  panel: FlatPanel;
+  /** Longueur de l'ourlet à la naissance de l'emmanchure (couture de dessous de bras), mm. */
+  lengthMm: number;
+}
+
+export function sleeveProfile(spec: GarmentSpec): SleeveProfile | undefined {
+  const raw = spec.panels.find((p) => /^sleeve/.test(p.id));
+  if (!raw) return undefined;
+  const panel = flatten(raw, 1);
+  const under = raw.edges.filter((e) => /^underarm/.test(e.id));
+  const top = under.length ? Math.max(...under.flatMap((e) => [e.from[1], e.to[1]])) : panel.yMax;
+  return { panel, lengthMm: top - panel.yMin };
 }
 
 /** Longueur du contour à la hauteur y : somme des segments à l'intérieur (balayage pair-impair). */

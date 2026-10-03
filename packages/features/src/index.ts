@@ -69,11 +69,33 @@ export {
   initialForm,
   MEASUREMENT_KEYS,
   measurementKeys,
+  optionalMeasurementKeys,
   type MeasurementKey,
   type StudioForm,
   toVersionRequest,
 } from './pattern-studio/form.js';
 export {
+  type FieldState,
+  type FinishedByType,
+  type FinishedField,
+  type FinishedKey,
+  finishedFields,
+  finishedKeys,
+  finishedErrorKey,
+  withFinished,
+  withMeasurement,
+  withParam,
+  withRecalculated,
+} from './pattern-studio/garment-measures.js';
+export {
+  ANKLE_HEIGHT_RATIO,
+  ARM_LENGTH_RATIO,
+  defaultLengthMm,
+  KNEE_HEIGHT_RATIO,
+  WAIST_HEIGHT_RATIO,
+} from './pattern-studio/garment-defaults.js';
+export {
+  AVATAR_ARM_ANGLE_DEG,
   type DressingState,
   initialDressingState,
   initialMannequinState,
@@ -155,7 +177,6 @@ export {
   useFabricBench,
 } from './fabric-bench/use-fabric-bench.js';
 export {
-  DRAPE_ARM_ANGLE_DEG,
   DRAPE_POLL_MS,
   type DrapeActions,
   type DrapeDeps,

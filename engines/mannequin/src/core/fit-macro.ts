@@ -4,7 +4,7 @@
  */
 import { bounds } from './geometry.js';
 import { circumference } from './measure.js';
-import { applyPair, macro } from './morph.js';
+import { addBreast, applyPair, macro } from './morph.js';
 import type { MacroParams, MhModel } from './types.js';
 
 /** Données de l'ajustement, communes à toutes ses étapes. */
@@ -33,11 +33,23 @@ export interface MacroChoice {
 
 const GRID_MUSCLE = [0, 0.25, 0.5, 0.75, 1];
 const GRID_WEIGHT = [0, 0.2, 0.4, 0.5, 0.6, 0.8, 1];
+/**
+ * Poitrine de la femme par défaut : part du bonnet maximal et de la fermeté maximale de MakeHuman (0 à 1).
+ * Posée avant la paire `chest` : le tour de poitrine demandé reste respecté par l'ajustement. Le bonnet est
+ * borné par le mètre ruban : au-delà de 0,2, le plan de la sous-poitrine coupe le bas du sein et l'écart
+ * poitrine - sous-poitrine mesuré tombe sous 100 mm (0,6 : 59 mm ; sans cible : 134 mm). La fermeté
+ * ne change presque pas les mesures (moins de 1 mm d'écart).
+ */
+export const BREAST_CUP = 0.2;
+export const BREAST_FIRMNESS = 0.5;
+
 const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 
 /** Corps de base pour une corpulence et une musculature, avec ventre et fessier. */
 export function macroFor(ctx: FitContext, weight: number, muscle: number): Float32Array {
-  const pos = macro(ctx.model, { ...ctx.base, weight, muscle });
+  const params = { ...ctx.base, weight, muscle };
+  const pos = macro(ctx.model, params);
+  addBreast(ctx.model, pos, params, { cup: BREAST_CUP, firmness: BREAST_FIRMNESS });
   applyPair(ctx.model, pos, 'belly', (ctx.belly - 0.2) * 1.2);
   applyPair(ctx.model, pos, 'seat', (ctx.seat - 0.4) * 1.2);
   return pos;

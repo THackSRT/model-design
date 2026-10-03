@@ -17,6 +17,7 @@ import {
 import {
   bandBottom,
   edgeHeights,
+  shoulderShiftMm,
   fixture,
   hemVertices,
   jobOf,
@@ -61,14 +62,13 @@ export interface Measured {
 /** Borne du temps réel d'un drapé, s : 15 en brouillon, 60 en standard (architecture 5.4, ADR 0013). */
 export const TIME_LIMIT_S: Record<MeshQuality, number> = { draft: 15, standard: 60 };
 
-const ARMS_30 = { armAngleDeg: 30 };
+const ARMS_90 = { armAngleDeg: 90 };
 const SKIRT_LENGTH_MM = 650;
 const HIP_RADIUS_MM = MEASUREMENTS.hipGirthMm / (2 * Math.PI);
 const STRAIGHT_HIP_MM = 826;
 const FLAT_EASE_MM = 3;
 
-const armsOf = (name: GarmentName): { armAngleDeg?: number } =>
-  name === 'circle-skirt' || name.startsWith('bodice') ? ARMS_30 : {};
+const armsOf = (): { armAngleDeg?: number } => ARMS_90;
 
 const max = (id: string, value: number, limit: number): Criterion => ({
   id,
@@ -187,7 +187,11 @@ function bodice(spec: GarmentSpec, out: DrapeOutcome, avatar: AvatarShape, q: Me
     ...criteria,
     min('épaule la plus basse − shoulder (mm)', Math.min(...shoulders) - lm.shoulder, -20),
     max('épaule la plus haute − neck (mm)', Math.max(...shoulders) - lm.neck, 20),
-    max('|bas − waist| (mm)', Math.abs(hem - lm.waist), 40),
+    max(
+      '|bas − (waist + Δépaule)| (mm)',
+      Math.abs(hem - lm.waist - shoulderShiftMm(avatar, MEASUREMENTS)),
+      40,
+    ),
   ];
 }
 
@@ -200,7 +204,7 @@ function sleeves(spec: GarmentSpec, out: DrapeOutcome, avatar: AvatarShape, q: M
 export async function measureGarment(name: GarmentName, quality: MeshQuality): Promise<Measured> {
   await loadAvatarEngine();
   const spec = fixture(name);
-  const arms = armsOf(name);
+  const arms = armsOf();
   const avatar = buildAvatar(MEASUREMENTS, arms);
   const t0 = performance.now();
   const out = drapeGarment(jobOf(spec, { avatar: arms, quality }));

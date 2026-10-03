@@ -7,6 +7,8 @@ import {
   type GarmentField,
 } from '@atelier/features';
 import { Button, Message, NumberField, Panel } from '@atelier/ui-web';
+import { FinishedFields } from './finished-fields.js';
+import { isReplacedParam, isReplacedSleeveParam } from './finished-format.js';
 import { fieldErrorMessage, garmentName, paramLabel, problemMessage, t } from '../../i18n/t.js';
 import type { PatternStudioViewProps } from './view.js';
 
@@ -59,16 +61,18 @@ function ParamField({ field, label, value, error, onChange }: ParamFieldProps) {
 function TypeFields({ state, actions }: PatternStudioViewProps) {
   const type = state.form.garmentType;
   if (!isDraftedGarmentType(type)) return null;
-  return garmentFields(type).map((field) => (
-    <ParamField
-      key={`${type}.${field.param}`}
-      field={field}
-      label={paramLabel(type, field.param)}
-      value={state.form.paramsByType[type]?.[field.param]}
-      error={state.errors[field.param]}
-      onChange={(value) => actions.setParam(field.param, value)}
-    />
-  ));
+  return garmentFields(type)
+    .filter((field) => !isReplacedParam(field.param))
+    .map((field) => (
+      <ParamField
+        key={`${type}.${field.param}`}
+        field={field}
+        label={paramLabel(type, field.param)}
+        value={state.form.paramsByType[type]?.[field.param]}
+        error={state.errors[field.param]}
+        onChange={(value) => actions.setParam(field.param, value)}
+      />
+    ));
 }
 
 /** Corsage : manches facultatives, champs de `$defs.SleeveParams`. */
@@ -85,16 +89,18 @@ function SleeveFields({ state, actions }: PatternStudioViewProps) {
         />
       </label>
       {state.form.withSleeve &&
-        sleeveFields().map((field) => (
-          <ParamField
-            key={`sleeve.${field.param}`}
-            field={field}
-            label={paramLabel('sleeve', field.param)}
-            value={state.form.sleeveCm[field.param]}
-            error={state.errors[`sleeve.${field.param}`]}
-            onChange={(value) => actions.setSleeveParam(field.param, value)}
-          />
-        ))}
+        sleeveFields()
+          .filter((field) => !isReplacedSleeveParam(field.param))
+          .map((field) => (
+            <ParamField
+              key={`sleeve.${field.param}`}
+              field={field}
+              label={paramLabel('sleeve', field.param)}
+              value={state.form.sleeveCm[field.param]}
+              error={state.errors[`sleeve.${field.param}`]}
+              onChange={(value) => actions.setSleeveParam(field.param, value)}
+            />
+          ))}
     </>
   );
 }
@@ -112,6 +118,7 @@ export function GarmentPanel(props: PatternStudioViewProps) {
   return (
     <Panel title={t('garment.title')}>
       <GarmentSelect {...props} />
+      <FinishedFields {...props} />
       <TypeFields {...props} />
       <SleeveFields {...props} />
       <Button emphasis="high" disabled={state.status === 'working'} onClick={actions.generate}>

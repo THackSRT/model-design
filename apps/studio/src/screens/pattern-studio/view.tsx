@@ -1,5 +1,6 @@
 import {
   measurementKeys,
+  optionalMeasurementKeys,
   type FieldError,
   type PatternStudioActions,
   type PatternStudioState,
@@ -41,7 +42,10 @@ function MeasurementsPanel({ state, actions }: PatternStudioViewProps) {
           <option value="male">{t('measurements.sex.male')}</option>
         </select>
       </label>
-      {measurementKeys(state.form.garmentType).map((key) => (
+      {[
+        ...measurementKeys(state.form.garmentType),
+        ...optionalMeasurementKeys(state.form.garmentType),
+      ].map((key) => (
         <NumberField
           key={key}
           label={t(`measurements.${key}`)}

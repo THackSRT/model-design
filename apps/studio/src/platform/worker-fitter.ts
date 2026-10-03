@@ -1,5 +1,4 @@
 import type { MannequinFitter } from '@atelier/features';
-import type { FittedMannequin } from '@atelier/mannequin';
 import type { WorkerRequest, WorkerResponse } from './fit-protocol.js';
 
 /** Ce dont l'adaptateur a besoin d'un Worker (permet de le tester sans navigateur). */
@@ -17,17 +16,7 @@ export interface WorkerFitterOptions {
 
 export const DEFAULT_FIT_TIMEOUT_MS = 30_000;
 
-/** Ajusteur du studio : le port, plus un ajustement de consultation qui ne touche pas au corps habillé. */
-export interface StudioFitter extends MannequinFitter {
-  /** Corps pour l'affichage seul (ex. drapé) : ni habillé par `dress`, ni rejoué après la mort du worker. */
-  fitForView(
-    measurements: Parameters<MannequinFitter['fit']>[0],
-    options?: Parameters<MannequinFitter['fit']>[1],
-  ): Promise<FittedMannequin>;
-}
-
 interface Waiting {
-  keeps?: boolean;
   resolve: (response: WorkerResponse) => void;
   reject: (error: Error) => void;
 }
@@ -47,7 +36,7 @@ class WorkerSession {
     this.worker.addEventListener('message', (event) => {
       const entry = this.waiting.get(event.data.id);
       this.waiting.delete(event.data.id);
-      if (entry?.keeps && event.data.ok && 'mannequin' in event.data) this.fitted = true;
+      if (event.data.ok && 'mannequin' in event.data) this.fitted = true;
       entry?.resolve(event.data);
     });
     this.worker.addEventListener('error', (event) =>
@@ -61,10 +50,7 @@ class WorkerSession {
   }
 
   send(request: WorkerRequest, waiting: Waiting): void {
-    this.waiting.set(request.id, {
-      ...waiting,
-      keeps: !('measurements' in request) || request.keep !== false,
-    });
+    this.waiting.set(request.id, waiting);
     this.worker.postMessage(request);
   }
 
@@ -158,7 +144,7 @@ class WorkerCaller {
 export function createWorkerFitter(
   createWorker: () => WorkerLike,
   { timeoutMs = DEFAULT_FIT_TIMEOUT_MS }: WorkerFitterOptions = {},
-): StudioFitter {
+): MannequinFitter {
   const caller = new WorkerCaller(createWorker, timeoutMs);
   const fitBody = async (build: Build) => {
     const response = await caller.call(build);
@@ -170,8 +156,6 @@ export function createWorkerFitter(
       caller.lastFit = (id) => ({ id, measurements, options });
       return fitBody(caller.lastFit);
     },
-    fitForView: (measurements, options) =>
-      fitBody((id) => ({ id, measurements, options, keep: false })),
     async dress(spec, garmentType, options) {
       const response = await caller.call(
         (id) => ({ kind: 'dress', id, spec, garment: { type: garmentType }, options }),

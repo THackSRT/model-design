@@ -25,7 +25,7 @@ class AvatarOptions(BaseModel):
     )
     armAngleDeg: float | None = Field(
         9,
-        description="Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.",
+        description="Écart du bras à la verticale, en degrés (0 : le long du corps ; 90 : à l'horizontale, pose en T). Défaut : 9 (ADR 0018).",
         ge=0.0,
-        le=45.0,
+        le=90.0,
     )

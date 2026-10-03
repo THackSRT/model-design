@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { DrapeJob, GarmentSpec, MeasurementSet } from '@atelier/contracts-ts';
 import { meshGarment, type MeshQuality } from '../src/index.js';
-import type { AvatarShape, DrapeOutcome } from '../src/node.js';
+import { buildAvatar, type AvatarShape, type DrapeOutcome } from '../src/node.js';
 
 // Aides des tests de drapé sur l'avatar. Mesures fictives (jamais réelles) : celles des références du patronage.
 
@@ -167,4 +167,27 @@ export function sleeveTop(out: DrapeOutcome, avatar: AvatarShape): number {
     }
   }
   return top;
+}
+
+/** Angle des bras de la pose de référence des critères du corsage (ADR 0013 : 30°). */
+const REFERENCE_ARM_ANGLE_DEG = 30;
+
+/** Hauteur du dessus de l'épaule : sommet du corps dans une bande de 12 mm autour de l'x de l'articulation gauche. */
+function shoulderTopMm(avatar: AvatarShape): number {
+  const joint = avatar.arms.left.shoulderMm[0];
+  const p = avatar.body.positionsMm;
+  let top = -Infinity;
+  for (let i = 0; i < p.length; i += 3) {
+    if (Math.abs((p[i] as number) - joint) < 6) top = Math.max(top, p[i + 1] as number);
+  }
+  return top;
+}
+
+/**
+ * Déplacement vertical du dessus de l'épaule de l'avatar, par rapport à la pose de référence à 30° (nul à 30°).
+ * Un corsage pend des épaules : son bas se compte depuis l'épaule, donc `waist + shoulderShiftMm` (ADR 0018).
+ */
+export function shoulderShiftMm(avatar: AvatarShape, measurements: MeasurementSet): number {
+  const reference = buildAvatar(measurements, { armAngleDeg: REFERENCE_ARM_ANGLE_DEG });
+  return shoulderTopMm(avatar) - shoulderTopMm(reference);
 }

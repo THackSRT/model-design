@@ -19,8 +19,13 @@ export function boundsOf(positions: Float32Array[]): Bounds {
   return { min, max };
 }
 
-/** Distance de caméra pour voir toute la hauteur de la boîte avec un champ vertical donné (degrés). */
-export function cameraDistance(bounds: Bounds, fovDeg: number, margin = 1.15): number {
+/**
+ * Distance de caméra pour voir toute la boîte (hauteur et, bras écartés, largeur) avec un champ vertical
+ * donné (degrés) et le rapport largeur/hauteur de la vue.
+ */
+export function cameraDistance(bounds: Bounds, fovDeg: number, margin = 1.15, aspect = 1): number {
   const height = bounds.max[1] - bounds.min[1];
-  return ((height / 2) * margin) / Math.tan((fovDeg * Math.PI) / 360);
+  const width = bounds.max[0] - bounds.min[0];
+  const extent = Math.max(height, width / Math.max(aspect, 0.01));
+  return ((extent / 2) * margin) / Math.tan((fovDeg * Math.PI) / 360);
 }

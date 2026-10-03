@@ -8,6 +8,7 @@ import type { MhData, Region } from './types.js';
 export const REGION_KEYS = [
   'neck',
   'chest',
+  'underbust',
   'waist',
   'hip',
   'bicep',

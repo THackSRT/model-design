@@ -270,3 +270,12 @@ body {
 .studio-table tr[data-change='removed'] th {
   color: var(--color-accent);
 }
+
+.studio-finished {
+  display: grid;
+  gap: var(--space-1);
+}
+.studio-finished-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}

@@ -132,8 +132,9 @@ describe('pantalon : départ symétrique gauche / droite', () => {
     }
   });
 
-  it('le plus grand écart au départ n’excède pas 95 mm (114,4 avant 0.11.0)', () => {
-    expect(Math.max(...gaps.values())).toBeLessThanOrEqual(95);
+  // Garde de non-régression (ADR 0013 : 120 mm) ; 95,27 mm avec la poitrine de 1.51b.
+  it('le plus grand écart au départ n’excède pas 100 mm (95,27 avec la poitrine ; 114,4 avant 0.11.0)', () => {
+    expect(Math.max(...gaps.values())).toBeLessThanOrEqual(100);
   });
 });
 

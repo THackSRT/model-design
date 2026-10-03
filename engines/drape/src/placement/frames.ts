@@ -22,22 +22,41 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[0] * b[1] - a[1] * b[0],
 ];
 
-/** Axe d'un bras plus incliné que cela sur l'horizontale : pas de manche à poser (angle minimal de 0,3 en sinus). */
+/**
+ * Pente (sinus sur l'horizontale) en deçà de laquelle le niveau d'ancrage ne se lit plus par la hauteur : le point
+ * d'ancrage reste proche de l'épaule (bras à l'horizontale, ADR 0018). Un axe qui pointe vers le haut refuse la pose.
+ */
 const MIN_AXIS_SLOPE = 0.3;
+/** Tolérance sur un axe horizontal au bruit de calcul près. */
+const LEVEL_TOLERANCE = 0.05;
+
+/**
+ * Direction e1 du repère de manche, perpendiculaire à l'axe : la projection de +x tant que le bras pend, puis
+ * up × z quand il approche de l'horizontale (même convention pour les deux bras, sans test du côté).
+ * Bras gauche (+x vers l'extérieur) : face extérieure, puis le dessus à 90°. Bras droit : +x est la face
+ * intérieure (vers le corps) bras pendant, puis −y, le dessous, à 90°.
+ */
+function outward(up: Vec3): Vec3 {
+  const wx = dot([1, 0, 0], up);
+  const len = Math.sqrt(1 - wx * wx);
+  if (len > 0.5) return [(1 - wx * up[0]) / len, (0 - wx * up[1]) / len, (0 - wx * up[2]) / len];
+  // Bras proche de l'horizontale : e1 = up × z (continue avec la formule précédente), puis normalisée.
+  const c = cross(up, [0, 0, 1]);
+  const n = Math.sqrt(dot(c, c));
+  return [c[0] / n, c[1] / n, c[2] / n];
+}
 
 function armFrame(side: Side, arm: AvatarArm, heightMm: number): Frame {
   const up: Vec3 = [-arm.axis[0], -arm.axis[1], -arm.axis[2]];
-  if (up[1] < MIN_AXIS_SLOPE)
-    throw new PlacementError('placement-failed', undefined, 'arm axis is not vertical enough');
-  const t = (heightMm - arm.shoulderMm[1]) / up[1];
+  if (up[1] < -LEVEL_TOLERANCE)
+    throw new PlacementError('placement-failed', undefined, 'arm axis points above the horizontal');
+  const t = (heightMm - arm.shoulderMm[1]) / Math.max(up[1], MIN_AXIS_SLOPE);
   const origin0: Vec3 = [
     arm.shoulderMm[0] + up[0] * t,
     arm.shoulderMm[1] + up[1] * t,
     arm.shoulderMm[2] + up[2] * t,
   ];
-  const wx = dot([1, 0, 0], up);
-  const len = Math.sqrt(1 - wx * wx);
-  const e1: Vec3 = [(1 - wx * up[0]) / len, (0 - wx * up[1]) / len, (0 - wx * up[2]) / len];
+  const e1 = outward(up);
   const e2 = cross(e1, up);
   return {
     zone: 'arm',

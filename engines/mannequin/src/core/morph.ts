@@ -62,6 +62,35 @@ export function macro(data: MorphData, p: MacroParams): Float32Array {
   return pos;
 }
 
+/**
+ * Poitrine féminine : cibles MakeHuman `breast/` (locales à la poitrine), interpolées selon l'âge, la
+ * musculature et la corpulence comme les macros. `cup` (0..1) pose le bonnet maximal, `firmness` (0..1) la
+ * fermeté maximale ; les poids sont ceux de la part féminine du corps (rien pour un corps masculin).
+ */
+export function addBreast(
+  data: MorphData,
+  pos: Float32Array,
+  p: MacroParams,
+  shape: { cup: number; firmness: number },
+): void {
+  const female = 1 - p.gender;
+  if (!female) return;
+  const young = youngShare(p.age);
+  const age = { young, old: 1 - young };
+  const muscle = tri(p.muscle);
+  const weight = tri(p.weight);
+  for (const a of AGES) {
+    MUSCLES.forEach((m, mi) => {
+      WEIGHTS.forEach((w, wi) => {
+        const share = female * age[a] * (muscle[mi] as number) * (weight[wi] as number);
+        const base = `breast/female-${a}-${m}-${w}`;
+        addTarget(data, pos, `${base}-maxcup-averagefirmness`, share * shape.cup);
+        addTarget(data, pos, `${base}-averagecup-maxfirmness`, share * shape.firmness);
+      });
+    });
+  }
+}
+
 /** Cibles de mensuration : clé de zone → préfixe de la paire `-incr` / `-decr`. */
 export const PAIRS: Record<string, string> = {
   neck: 'measure/measure-neck-circ',

@@ -30,9 +30,10 @@ export const avatarOptionsJsonSchema = {
     },
     armAngleDeg: {
       type: 'number',
-      description: "Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.",
+      description:
+        "Écart du bras à la verticale, en degrés (0 : le long du corps ; 90 : à l'horizontale, pose en T). Défaut : 9 (ADR 0018).",
       minimum: 0,
-      maximum: 45,
+      maximum: 90,
       default: 9,
     },
   },

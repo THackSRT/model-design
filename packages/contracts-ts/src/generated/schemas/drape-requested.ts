@@ -242,7 +242,7 @@ export interface AvatarOptions {
     caucasian: number;
   };
   /**
-   * Bras abaissés depuis l'horizontale, en degrés. Défaut : 9.
+   * Écart du bras à la verticale, en degrés (0 : le long du corps ; 90 : à l'horizontale, pose en T). Défaut : 9 (ADR 0018).
    */
   armAngleDeg?: number;
 }

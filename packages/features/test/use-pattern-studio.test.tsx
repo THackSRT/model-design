@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { initialForm } from '../src/pattern-studio/form.js';
 import { usePatternStudio } from '../src/pattern-studio/use-pattern-studio.js';
-import type { MannequinFitter } from '../src/pattern-studio/fitter.js';
+import { AVATAR_ARM_ANGLE_DEG, type MannequinFitter } from '../src/pattern-studio/fitter.js';
 import { designName, fakeDesigns, fakeMannequin, fittedBody, garmentMesh } from './fakes.js';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
@@ -176,6 +176,39 @@ describe('choix du type de vêtement', () => {
     });
     await waitFor(() => expect(result.current.state.status).toBe('ready'));
     expect(designs.created).toHaveLength(1);
+  });
+});
+
+describe('avatar à 90° et manche', () => {
+  it('ajuste le corps habillé bras à l’horizontale', async () => {
+    const fit = vi.fn(fakeMannequin().fit);
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), fit }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(result.current.state.mannequinStatus).toBe('ready'));
+    expect(fit.mock.calls[0]?.[1]).toEqual({ armAngleDeg: AVATAR_ARM_ANGLE_DEG });
+    expect(AVATAR_ARM_ANGLE_DEG).toBe(90);
+  });
+
+  it('transmet la longueur de manche finie (mm) à l’habillage d’un corsage à manches', async () => {
+    const dress = vi.fn(fakeMannequin().dress);
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.setGarmentType('bodice'));
+    act(() => result.current.actions.setWithSleeve(true));
+    act(() => result.current.actions.setSleeveParam('lengthMm', 55));
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(dress).toHaveBeenCalledTimes(1));
+    expect(dress.mock.calls[0]?.[2]).toEqual({ sleeveLengthMm: 550 });
+  });
+
+  it('sans manches : aucune option d’habillage', async () => {
+    const dress = vi.fn(fakeMannequin().dress);
+    const deps = { designs: fakeDesigns(), mannequin: { ...fakeMannequin(), dress }, designName };
+    const { result } = renderHook(() => usePatternStudio(deps), { wrapper });
+    act(() => result.current.actions.generate());
+    await waitFor(() => expect(dress).toHaveBeenCalledTimes(1));
+    expect(dress.mock.calls[0]).toHaveLength(2);
   });
 });
 
