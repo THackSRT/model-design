@@ -50,3 +50,25 @@ venir de la pose plutôt que du tracé.
   `measure-underbust-circ` déplace aussi le bas du tronc (entrejambe −10,7 mm, jupe cercle −57 mm sous la taille) ;
   la forme de poitrine passera par des cibles dédiées (1.51b). Le corps par défaut est redevenu identique à celui
   d'avant 1.51 ; aucun seuil du drapé n'a changé.
+
+## Conséquences sur le drapé (1.50c, `ENGINE_VERSION` 0.12.0)
+
+Mesures en brouillon, mesures fictives des références, popeline, bras à 90° (les tests brouillon passent de 30° à 90°).
+
+- **Repère de manche** (`placement/frames.ts`) : l'axe du bras peut être horizontal. Le niveau d'ancrage se lit par la
+  hauteur tant que la pente de l'axe dépasse 0,3, sinon il reste à l'épaule (même résultat à 30° qu'avant, l'ancre
+  étant à la hauteur de l'épaule) ; la face extérieure du bras devient le dessus. Seul un axe qui pointe au-dessus de
+  l'horizontale refuse la pose.
+- **Tiennent leurs critères à 90°** : jupe droite, jupe cercle (bas de ceinture −38,3 mm, départ 92,3 mm, allongement
+  p95 0,241, rayon d'ourlet 1,56 fois la hanche), pantalon (départ 94,3 mm, taille −30,5 mm), pénétration nulle et
+  coutures fermées pour tous.
+- **Bas du corsage** : un corsage pend des épaules, donc le critère « bas à `waist` ± 40 mm » se lit depuis l'épaule :
+  la hauteur attendue est `waist` + Δépaule, Δépaule étant le déplacement vertical du dessus de l'épaule du corps
+  (sommet dans une bande de 12 mm autour de l'articulation) entre la pose demandée et la pose de référence à 30°
+  (nul à 30°, seuls les corsages l'appliquent). À 90° : bas brut à −45,3 mm de `waist`, Δépaule −6,8 mm, bas corrigé
+  à −38,5 mm ; tolérance de ±40 mm inchangée.
+- **Corsage à manches** : `body-penetration` à 90° comme à 30° (pénétration 35,3 mm non convergée à 90°, 27,3 mm à 30°).
+  La manche du patron reste trop étroite pour le bras : 90° ne la résout pas, le diagnostic reste à faire (1.46).
+- **Cible `test-standard` à 90°** : toujours rouge pour les mêmes trois vêtements. Jupe cercle : bas de ceinture
+  −54,1 mm (−54), rayon d'ourlet 1,36 fois la hanche (1,36) ; corsage : bas à 51,1 mm de `waist` (42, donc pire) ;
+  corsage à manches : `body-penetration`. Jupe droite et pantalon tiennent.

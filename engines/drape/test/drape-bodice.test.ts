@@ -13,6 +13,7 @@ import { garmentHolds } from '../src/placement/holds.js';
 import { costRatio } from './helpers.js';
 import {
   edgeHeights,
+  shoulderShiftMm,
   fixture,
   jobOf,
   MEASUREMENTS,
@@ -20,10 +21,10 @@ import {
   sleeveTop,
 } from './drape-helpers.js';
 
-// Corsage et corsage à manches en brouillon sur l'avatar, bras à 30° (ADR 0013, 1.19e2c). Mesures fictives, popeline.
+// Corsage et corsage à manches en brouillon sur l'avatar, bras à 90° (ADR 0013, 1.19e2c). Mesures fictives, popeline.
 
 const MAX_SHOULDER_GAP_MM = 80;
-const ARMS = { armAngleDeg: 30 };
+const ARMS = { armAngleDeg: 90 };
 const FLAT_EASE_MM = 3;
 
 interface Case {
@@ -36,7 +37,7 @@ const cases: Case[] = [
   { name: 'corsage à manches', spec: fixture('bodice-with-sleeves') },
 ];
 
-describe.each(cases)('$name en brouillon, bras à 30°', ({ spec }) => {
+describe.each(cases)('$name en brouillon, bras à 90°', ({ spec }) => {
   let avatar: AvatarShape;
 
   beforeAll(async () => {
@@ -98,7 +99,9 @@ describe('corsage', () => {
     if (!out.ok) throw new Error('drape failed');
     const heights = edgeHeights(spec, out, ['hem-1', 'hem-2']).sort((a, b) => a - b);
     const median = heights[heights.length >> 1] as number;
-    expect(Math.abs(median - avatar.landmarksMm.waist)).toBeLessThanOrEqual(40);
+    // Un corsage pend des épaules : à 90° le dessus de l'épaule descend (1.50b), le bas aussi (ADR 0018).
+    const expected = avatar.landmarksMm.waist + shoulderShiftMm(avatar, MEASUREMENTS);
+    expect(Math.abs(median - expected)).toBeLessThanOrEqual(40);
   });
 
   // Un seul drapé supplémentaire : budget de coût et, comparé au premier, déterminisme au bit près.

@@ -79,7 +79,7 @@ describe('réglage fin et départs', () => {
 
   beforeAll(async () => {
     await loadAvatarEngine();
-    avatar = buildAvatar(MEASUREMENTS, { armAngleDeg: 30 });
+    avatar = buildAvatar(MEASUREMENTS, { armAngleDeg: 90 });
   });
 
   const report = (name: string) => {

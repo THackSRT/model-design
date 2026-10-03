@@ -20,17 +20,17 @@ import {
   startStrainP95,
 } from './drape-helpers.js';
 
-// Jupe cercle en brouillon sur l'avatar, bras à 30° (ADR 0013, 1.19e2a4 : départ en godets, réglage fin, double passe
+// Jupe cercle en brouillon sur l'avatar, bras à 90° (ADR 0013, 1.19e2a4 : départ en godets, réglage fin, double passe
 // de couture). Mesures fictives des références, popeline.
 
 const spec = fixture('circle-skirt');
-const ARMS = { armAngleDeg: 30 };
+const ARMS = { armAngleDeg: 90 };
 const MAX_START_GAP_MM = 120;
 const MAX_START_STRAIN = 0.25;
 const SKIRT_LENGTH_MM = 650;
 const HIP_RADIUS_MM = MEASUREMENTS.hipGirthMm / (2 * Math.PI);
 
-describe('jupe cercle en brouillon sur l’avatar, bras à 30°', () => {
+describe('jupe cercle en brouillon sur l’avatar, bras à 90°', () => {
   let avatar: AvatarShape;
   let out: DrapeOutcome;
   const mesh = meshGarment(spec, 'draft');
