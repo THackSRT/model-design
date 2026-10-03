@@ -46,3 +46,7 @@ venir de la pose plutôt que du tracé.
   manches pendent autrement ; les budgets de pas et les critères de l'ADR 0013 peuvent bouger. Un changement de
   comportement du moteur relève sa `ENGINE_VERSION`.
 - Les mentions de 9° et 30° dans l'ADR 0013 restent vraies pour l'historique ; cette fiche les complète.
+- La sous-poitrine estimée par défaut a été essayée (1.51) puis retirée : la cible MakeHuman
+  `measure-underbust-circ` déplace aussi le bas du tronc (entrejambe −10,7 mm, jupe cercle −57 mm sous la taille) ;
+  la forme de poitrine passera par des cibles dédiées (1.51b). Le corps par défaut est redevenu identique à celui
+  d'avant 1.51 ; aucun seuil du drapé n'a changé.

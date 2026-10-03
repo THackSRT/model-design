@@ -32,15 +32,6 @@ export const FIT_KEYS = [
 /** Zones ajustées par sécante : sous-poitrine d'abord, pour que la poitrine (réglée ensuite) reste exacte. */
 const TARGET_KEYS = ['underbust', ...FIT_KEYS] as const;
 
-/**
- * Écart moyen (cm) entre tour de poitrine et tour sous la poitrine : bonnet moyen (B-C), environ
- * 12,5 cm. Sert à estimer le tour sous-poitrine d'une femme quand il n'est pas donné.
- */
-export const BUST_CUP_GAP_CM = 12.5;
-/** Ventre et fessier par défaut d'une femme (hanches galbées, ventre plat ; proportions du prototype). */
-const FEMALE_BELLY = 0.1;
-const FEMALE_SEAT = 0.8;
-
 /** Tolérance visée (cm) avant d'essayer d'autres musculatures. */
 const TOLERANCE_CM = 0.6;
 const ALT_MUSCLES = [0.75, 1, 0.5, 0.9, 0.25, 0];
@@ -55,23 +46,18 @@ interface Solution {
   muscle: number;
 }
 
-/** Tour sous-poitrine visé : donné, sinon estimé pour une femme à partir de la poitrine. */
-function underbustGoal(m: MakeHumanMeasuresCm, p: MakeHumanMorphology): number {
-  if (m.underbust) return m.underbust;
-  return p.sex === 'femme' && m.chest ? m.chest - BUST_CUP_GAP_CM : 0;
+/** Tour sous-poitrine visé : seulement s'il est donné (pas d'estimation par défaut : elle déplaçait le bas du tronc). */
+function underbustGoal(m: MakeHumanMeasuresCm): number {
+  return m.underbust ?? 0;
 }
 
-/** Ventre et fessier : donnés, sinon valeurs par défaut selon le sexe. */
+/** Ventre et fessier : donnés, sinon valeurs par défaut (les mêmes pour les deux sexes). */
 function bellyAndSeat(p: MakeHumanMorphology): { belly: number; seat: number } {
-  const woman = p.sex === 'femme';
-  return {
-    belly: p.belly ?? (woman ? FEMALE_BELLY : 0.2),
-    seat: p.seat ?? (woman ? FEMALE_SEAT : 0.4),
-  };
+  return { belly: p.belly ?? 0.2, seat: p.seat ?? 0.4 };
 }
 
 function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorphology): FitContext {
-  const goals = { ...m, underbust: underbustGoal(m, p) } as Record<string, number | undefined>;
+  const goals = { ...m, underbust: underbustGoal(m) } as Record<string, number | undefined>;
   const goal = (k: string): number => goals[k] ?? 0;
   return {
     model,
