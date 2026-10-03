@@ -362,8 +362,8 @@ Décision :
     jupe froissée ;
   - nouveau, **départ** : au 95ᵉ centile, l'allongement des arêtes au départ (en valeur absolue) est d'au plus 25 %
     (essai : 21 %, aujourd'hui 222 %), et les coutures restent à moins de 120 mm.
-  Les vêtements sans godets gardent un départ identique au bit près, ce qui se vérifie sur la jupe droite et le
-  pantalon.
+    Les vêtements sans godets gardent un départ identique au bit près, ce qui se vérifie sur la jupe droite et le
+    pantalon.
 - **Écartés** :
   - réglages par type de vêtement (principe de « Maintien » maintenu) ;
   - sous-pas plus nombreux pour tous les vêtements : le pantalon ne converge plus ou sort de son budget, et la jupe
