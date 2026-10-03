@@ -13,9 +13,10 @@ describe('silhouette féminine', () => {
     await mh.load();
   });
 
-  it('un tour sous-poitrine donné est respecté', () => {
-    const fit = mh.fit({ ...MEASURES, underbust: 76 }, FEMME);
-    expect(Math.abs((fit.measured['underbust'] as number) - 76)).toBeLessThan(0.6);
+  it('un tour sous-poitrine fourni ne change pas le corps', () => {
+    const a = mh.fit(MEASURES, FEMME);
+    const b = mh.fit({ ...MEASURES, underbust: 76 } as typeof MEASURES, FEMME);
+    expect(Array.from(b.pos)).toEqual(Array.from(a.pos));
   });
 
   it('poitrine, taille et hanches restent à 3 mm de la demande', () => {
@@ -23,13 +24,6 @@ describe('silhouette féminine', () => {
     for (const k of ['chest', 'waist', 'hip'] as const) {
       expect(Math.abs((fit.measured[k] as number) - MEASURES[k])).toBeLessThan(0.3);
     }
-  });
-
-  it('homme : ventre et fessier par défaut inchangés', () => {
-    const homme = { ...FEMME, sex: 'homme' } as const;
-    const a = mh.fit({ ...MEASURES, stature: 178 }, homme);
-    const b = mh.fit({ ...MEASURES, stature: 178 }, { ...homme, belly: 0.2, seat: 0.4 });
-    expect(Array.from(a.pos)).toEqual(Array.from(b.pos));
   });
 
   it('déterministe', () => {

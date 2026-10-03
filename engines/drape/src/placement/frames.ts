@@ -30,7 +30,12 @@ const MIN_AXIS_SLOPE = 0.3;
 /** Tolérance sur un axe horizontal au bruit de calcul près. */
 const LEVEL_TOLERANCE = 0.05;
 
-/** Direction de la face extérieure du bras, perpendiculaire à l'axe : celle de x tant que le bras pend, puis le dessus. */
+/**
+ * Direction e1 du repère de manche, perpendiculaire à l'axe : la projection de +x tant que le bras pend, puis
+ * up × z quand il approche de l'horizontale (même convention pour les deux bras, sans test du côté).
+ * Bras gauche (+x vers l'extérieur) : face extérieure, puis le dessus à 90°. Bras droit : +x est la face
+ * intérieure (vers le corps) bras pendant, puis −y, le dessous, à 90°.
+ */
 function outward(up: Vec3): Vec3 {
   const wx = dot([1, 0, 0], up);
   const len = Math.sqrt(1 - wx * wx);

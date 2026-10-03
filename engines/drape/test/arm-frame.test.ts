@@ -40,6 +40,19 @@ describe('repère de manche', () => {
     }
   });
 
+  it('bras droit (axe en −x) : e1 vaut +x pendant, −y à 90°, de façon continue', () => {
+    const mirror = (a: [number, number, number]): [number, number, number] => [-a[0], a[1], a[2]];
+    let previous = makeFrame('arm', 'right', avatarWith(mirror(angle(9))), 1300).e1;
+    expect(previous[0]).toBeGreaterThan(0.9);
+    for (const deg of [30, 60, 80, 90]) {
+      const { e1, up } = makeFrame('arm', 'right', avatarWith(mirror(angle(deg))), 1300);
+      expect(e1[0] * up[0] + e1[1] * up[1] + e1[2] * up[2]).toBeCloseTo(0, 9);
+      expect(e1[0] * previous[0] + e1[1] * previous[1] + e1[2] * previous[2]).toBeGreaterThan(0.8);
+      previous = e1;
+    }
+    expect(previous[1]).toBeCloseTo(-1, 6);
+  });
+
   it('refuse un bras qui pointe au-dessus de l’horizontale', () => {
     expect(() => makeFrame('arm', 'left', avatarWith([0.9, 0.4, 0]), 1300)).toThrow(PlacementError);
   });
