@@ -292,3 +292,96 @@ Décision :
   en deux demandes de fusion si plus de 400 lignes), 1.19e2b (pantalon jambe par jambe), 1.19e2c (repli sur
   l'épaule, coutures d'épaule et manches tenues, corsages à 30°). Interface partagée : `ClothMesh.holds` et
   `SimulationSettings.holdReleaseSteps` sont des ajouts facultatifs.
+
+**Jupe cercle : départ en godets, double passe de couture, petits pas pour un tube très évasé (1.19e2a3,
+03/10/2026, décision de l'orchestrateur sur proposition de l'architecte).** Constats, mesurés sur des copies
+construites du moteur (0.7.0, et 0.8.0 pour le pantalon) hors du dépôt : brouillon, mesures fictives des références,
+popeline.
+
+- **Le départ de la jupe cercle n'est pas isométrique.** La pièce est posée en cône (hauteur = repère − d, courbe
+  agrandie de λ jusqu'au tour fini) : chaque rayon du patron part allongé d'environ √2, et l'arrondi des niveaux joint
+  à l'agrandissement déchire le maillage. Allongement des arêtes au départ : médiane +24 %, 95ᵉ centile +222 %,
+  extrêmes −100 % et +550 % (jupe droite : médiane 0, 95ᵉ centile ≤ 11 %). La couture referme un maillage froissé.
+- **Aucun réglage ne rattrape ce départ.** Avec 30 sous-pas (essai de 1.19e2a2 : convergé, coutures à 1,1 mm), ou avec
+  60 sous-pas, 1 itération et une double passe de couture (convergé, coutures à 0,01 mm, pénétration nulle, ceinture
+  à −9 mm), l'ourlet finit à 230 à 280 mm sous la taille pour une jupe de 650 mm, avec un rayon de 1,07 à 1,15 fois
+  celui de la hanche : la jupe est remontée en accordéon. Sans le critère d'ourlet, ce serait un faux succès.
+- **Avec un départ quasi isométrique** (jupe pendante, godets déjà formés, essai propre à la jupe cercle), la jupe
+  pend à sa longueur (ourlet à −736 mm) sans pénétration à 30°, mais la ceinture porte alors tout le poids de la
+  jupe (≈ 210 g sur 650 mm) : à 10 sous-pas × 4 itérations, elle descend à −88 mm, s'allonge de 12 % (haut) à 25 %
+  (bas) et les coutures restent ouvertes de 11 mm. La position de la ceinture suit à peu près sous-pas² × itérations
+  (il en faut ≈ 2 400 pour tenir −40 mm), le coût suit sous-pas × itérations : 20 × 6 donne −41 mm, 30 × 4 −33 mm,
+  50 × 1 −38 mm et 60 × 1 −27 mm.
+- **L'écart de couture restant est un artefact de l'ordre de résolution.** Il tient au raccord des quatre pièces
+  (deux de jupe, deux de ceinture) en haut des coutures de côté, soit un cycle de quatre coutures au point le plus
+  chargé. Une seconde passe de coutures dans chaque itération le ramène de 1,7–3,4 mm à 0,01 mm, quel que soit le
+  réglage. Sur le pantalon (0.8.0) et la jupe droite, elle ne change aucun critère (pantalon : 132 pas, coutures 0,
+  taille −30 mm ; coûts 9,9 et 6,0).
+- **Un réglage global plus fin casse le pantalon.** À 50 × 1, il ne converge plus en 400 pas ; à 60 × 1, il
+  converge (130 pas) mais coûte 21,5, au-delà de son seuil de 20.
+- **Mesures du coût (`costRatio`)**, départ en godets, 30°, double passe : 50 × 1 donne 24,6 à 25,1 (critères
+  tenus : 193 pas, coutures 0,02 mm, pénétration 0, ceinture −37,6 mm, ourlet 1,54 fois la hanche) ; 60 × 1 donne
+  26 à 41, dispersé (209 pas, −27,3 mm, 1,62) ; 40 × 2 donne 30,7 (−33,7 mm, 1,73). Jupe cercle actuelle, en
+  échec : 23,6. En standard (9 756 sommets), 60 × 1 prend 158 s et ne converge pas en 600 pas.
+- **Bras.** À 9°, l'avant-bras traverse le volume de la jupe, au départ actuel (13 mm) comme au départ en godets
+  (15,8 mm) ; à 30°, la pénétration est nulle.
+
+Décision :
+
+- **Départ en godets pour les tubes `torso` évasés** (à la place de l'agrandissement λ de `place-garment.ts`). Il
+  s'applique sous l'ancre, aux niveaux où le tour fini dépasse la courbe du corps décalée de plus de 5 %. La courbe
+  du niveau garde sa taille (enveloppe cumulée, jamais agrandie) ; l'excédent de longueur est plissé en ondes
+  radiales vers l'extérieur, de profil `16u²(1 − u)²` sur chaque godet. Chaque pièce porte un nombre entier de godets,
+  un par 150 mm de sa part de courbe au niveau le plus large, au moins un, avec un creux à chacun de ses bouts, là où
+  sont les coutures. L'amplitude de chaque niveau est trouvée par dichotomie bornée (40 tours), pour que la longueur
+  de la courbe ondulée égale le tour fini. L'abscisse d'un sommet se prend le long de la courbe ondulée, d'où une
+  isoligne posée à sa longueur. Sa hauteur est repère − ∫ √(1 − (dr/dd)²) dd, r étant la distance moyenne du niveau
+  au centre : la pente radiale est retirée. La position est interpolée entre deux niveaux, au lieu de l'arrondi au
+  niveau. Le tout reste en `+ − × ÷` et `Math.sqrt`, en ordre fixe, sans trigonométrie. Les jambes et les bras ne
+  changent pas ; la jupe droite non plus (son tour fini ne dépasse pas la courbe).
+- **Double passe de couture**, pour tous les vêtements : `solveStitches` est appelé deux fois de suite à chaque
+  itération, avant les tenues. Le coût est négligeable, car les couples de couture sont environ 30 fois moins
+  nombreux que les arêtes.
+- **Petits pas pour un tube très évasé.** Si le départ a plissé un niveau d'au moins 1,5 fois (tour fini / courbe),
+  la simulation prend 50 sous-pas et 1 itération (Macklin et al. 2019) ; le reste des réglages de la qualité ne
+  change pas. Le critère est une propriété mesurée de la mise en place, pas un type de vêtement : c'est le tissu
+  suspendu sans appui sur le corps qui charge la ceinture et demande un solveur plus précis. La jupe droite, le
+  pantalon et les corsages n'y entrent pas, leurs réglages et leurs critères ne bougent pas. Passer à 60 × 1 est
+  permis seulement si 50 × 1 ne tient pas un critère avec le départ réel ; le budget de la jupe cercle passe alors à
+  40, avec une ligne ici. `DRAPE_SETTINGS` garde ses deux qualités et y ajoute le réglage fin (`flare`).
+- **Bras** : les critères de la jupe cercle se mesurent à `armAngleDeg` 30, comme pour les corsages (le studio
+  demande le drapé à 30°). À 9°, le résultat est un succès conforme ou un problème typé, jamais un faux succès. Le
+  moteur ne change pas l'avatar demandé.
+- **Critères de la jupe cercle** (brouillon, 30° ; un test chacun) : ceux de l'ADR (`ok`, convergé en 400 pas au plus,
+  pénétration ≤ 3 mm, coutures ≤ 2 mm, bas de ceinture entre `waist` − 40 et `waist` + 10 mm, rayon de l'ourlet ≥ 1,5
+  fois celui de la hanche, `costRatio` ≤ 30), précisés et complétés :
+  - le rayon de l'ourlet est la médiane des distances horizontales des sommets des bords `hem` à leur centroïde (x,
+    z), celui de la hanche vaut `hipGirthMm` / 2π ;
+  - nouveau, **chute de l'ourlet** : la hauteur médiane des sommets `hem` est au plus le bas de ceinture − 0,8 ×
+    la longueur à plat de la jupe (taille → ourlet, 650 mm). Mesuré : 0,86 à 0,89 avec un bon départ, 0,41 pour la
+    jupe froissée ;
+  - nouveau, **départ** : au 95ᵉ centile, l'allongement des arêtes au départ (en valeur absolue) est d'au plus 25 %
+    (essai : 21 %, aujourd'hui 222 %), et les coutures restent à moins de 120 mm.
+  Les vêtements sans godets gardent un départ identique au bit près, ce qui se vérifie sur la jupe droite et le
+  pantalon.
+- **Écartés** :
+  - réglages par type de vêtement (principe de « Maintien » maintenu) ;
+  - sous-pas plus nombreux pour tous les vêtements : le pantalon ne converge plus ou sort de son budget, et la jupe
+    droite coûte 2 à 3 fois plus pour un résultat identique ;
+  - plus d'itérations seulement : 4 → 8 laisse la ceinture à −67 mm, quand doubler les sous-pas, pour le même coût,
+    la met à −47 mm ;
+  - ceinture plus raide (droit fil, entoilage) : un tissu dix fois plus raide donne le même résultat (−89 mm). La
+    souplesse XPBD d'une arête est déjà environ 2 000 fois plus petite que l'inverse de la masse d'un sommet : seule
+    la convergence compte ;
+  - limite d'allongement de la ceinture, contrainte globale sur la longueur d'une chaîne : la collision, résolue
+    après, ré-élargit l'anneau, et la ceinture finit à −68 mm ;
+  - tenue de ceinture gardée en fin de drapé : elle masquerait une taille trop large (décision « Maintien ») ;
+  - appui par frottement : le frottement existe déjà, c'est l'anneau trop souple qui descend ;
+  - multigrille : juste en principe, mais une tâche à part, à reconsidérer pour le standard ;
+  - départ en disque horizontal (isométrique) : les bras le traversent à 9° comme à 30° ;
+  - panneaux plans : les coutures de côté se ferment à travers les bras.
+- **Standard** : le réglage fin s'applique aussi, mais la jupe cercle y dépasse la borne de 60 s (158 s mesurés à
+  60 × 1). C'est une limite connue, à noter dans la page du composant. Une tâche de performance s'ouvre
+  (multigrille, ou maillage plus grossier pour la partie suspendue) ; en attendant, le studio demande le brouillon.
+- **Découpage** : une tâche dans `engines/drape` (1.19e2a3), après la fusion de 1.19e2c, car les fichiers et
+  `ENGINE_VERSION` sont les mêmes ; version mineure suivante.
