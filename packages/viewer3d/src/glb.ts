@@ -2,6 +2,11 @@
 // pièce, une primitive par maillage, données serrées (sans entrelacement ni accesseur creux). Choisi plutôt que
 // GLTFLoader : synchrone, sans décodage d'image ni DOM (donc testable sous jsdom), pas de renommage des attributs
 // personnalisés (`_EASE_MM`), et quelques dizaines de lignes de moins dans le chunk de la visionneuse.
+// Les transformations de nœud (translation, rotation, échelle, matrice) sont volontairement ignorées : le moteur
+// de drapé n'en émet pas, les sommets sont déjà dans le repère final.
+// Erreurs : `unsupported` = fonctionnalité valide du format mais non gérée (version, type de composant, creux,
+// entrelacé) ; `malformed` = fichier incohérent (accesseur ou vue hors limites, type d'accesseur faux, comptes
+// qui ne collent pas, index hors sommets).
 
 const MAGIC = 0x46546c67;
 const CHUNK_JSON = 0x4e4f534a;
@@ -9,6 +14,7 @@ const CHUNK_BIN = 0x004e4942;
 const FLOAT = 5126;
 const UNSIGNED_INT = 5125;
 const UNSIGNED_SHORT = 5123;
+const UNSIGNED_BYTE = 5121;
 /** Le GLB est en mètres, la scène en centimètres (comme le mannequin) : même repère, seule l'échelle change. */
 export const METERS_TO_SCENE = 100;
 
@@ -41,6 +47,7 @@ interface Accessor {
   sparse?: unknown;
 }
 interface BufferView {
+  buffer?: number;
   byteOffset?: number;
   byteLength: number;
   byteStride?: number;
@@ -101,51 +108,104 @@ function componentReader(bin: DataView, type: number): (at: number) => number {
   if (type === FLOAT) return (at) => bin.getFloat32(at, true);
   if (type === UNSIGNED_INT) return (at) => bin.getUint32(at, true);
   if (type === UNSIGNED_SHORT) return (at) => bin.getUint16(at, true);
+  if (type === UNSIGNED_BYTE) return (at) => bin.getUint8(at);
   return fail('unsupported', `component type ${type}`);
 }
 
-const offsetOf = (part: { byteOffset?: number }): number => part.byteOffset ?? 0;
+const SIZES: Record<number, number> = {
+  [FLOAT]: 4,
+  [UNSIGNED_INT]: 4,
+  [UNSIGNED_SHORT]: 2,
+  [UNSIGNED_BYTE]: 1,
+};
 
-/** Position, nombre de valeurs et taille d'une valeur d'un accesseur serré (ni creux ni entrelacé). */
-function locate(json: GltfJson, index: number) {
+/** Ce qu'on attend d'un accesseur : son type glTF et les types de composant acceptés. */
+interface Expect {
+  type: string;
+  components: number[];
+  label: string;
+}
+const VEC3: Expect = { type: 'VEC3', components: [FLOAT], label: 'POSITION' };
+const NORMAL: Expect = { ...VEC3, label: 'NORMAL' };
+const SCALAR_FLOAT: Expect = { type: 'SCALAR', components: [FLOAT], label: '_EASE_MM' };
+const SCALAR_INDEX: Expect = {
+  type: 'SCALAR',
+  components: [UNSIGNED_BYTE, UNSIGNED_SHORT, UNSIGNED_INT],
+  label: 'indices',
+};
+
+const offsetOf = (part: { byteOffset?: number }): number => part.byteOffset ?? 0;
+const isCount = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 0;
+
+/** Vue contrôlée : dans le buffer 0 (le chunk BIN), de longueur valide. Rend son début et sa fin. */
+function checkView(view: BufferView, bin: DataView, index: number): { from: number; to: number } {
+  if ((view.buffer ?? 0) !== 0 || !isCount(view.byteLength) || !isCount(offsetOf(view)))
+    fail('malformed', `bad buffer view of accessor ${index}`);
+  if (view.byteStride) fail('unsupported', 'sparse or interleaved data');
+  const from = offsetOf(view);
+  if (from + view.byteLength > bin.byteLength)
+    fail('malformed', `buffer view of accessor ${index} overruns the buffer`);
+  return { from, to: from + view.byteLength };
+}
+
+function checkAccessor(accessor: Accessor, expected: Expect, index: number): void {
+  if (!isCount(accessor.count) || accessor.type !== expected.type)
+    fail('malformed', `bad accessor ${index}`);
+  if (accessor.sparse) fail('unsupported', 'sparse or interleaved data');
+  if (!expected.components.includes(accessor.componentType))
+    fail('unsupported', `accessor ${index}: component type ${accessor.componentType}`);
+}
+
+/** Accesseur et vue contrôlés : serrés (ni creux ni entrelacés), dans leur vue, dans le chunk BIN. */
+function locate(json: GltfJson, bin: DataView, index: number, expected: Expect) {
   const accessor = json.accessors?.[index] ?? fail('malformed', `missing accessor ${index}`);
   const bufferView = json.bufferViews?.[accessor.bufferView];
-  const width = COMPONENTS[accessor.type];
-  if (!bufferView || !width) return fail('malformed', `bad accessor ${index}`);
-  if (accessor.sparse || bufferView.byteStride) fail('unsupported', 'sparse or interleaved data');
-  return {
-    componentType: accessor.componentType,
-    start: offsetOf(bufferView) + offsetOf(accessor),
-    total: accessor.count * width,
-    size: accessor.componentType === UNSIGNED_SHORT ? 2 : 4,
-  };
+  if (!bufferView) return fail('malformed', `bad accessor ${index}`);
+  checkAccessor(accessor, expected, index);
+  const { from, to } = checkView(bufferView, bin, index);
+  const size = SIZES[accessor.componentType] ?? 4;
+  const total = accessor.count * (COMPONENTS[accessor.type] ?? 1);
+  const start = from + offsetOf(accessor);
+  if (start + total * size > to) fail('malformed', `accessor ${index} overruns its buffer view`);
+  return { componentType: accessor.componentType, start, total, size };
 }
 
 /** Valeurs d'un accesseur, lues en petit-boutiste (aucune contrainte d'alignement). */
-function readAccessor(json: GltfJson, bin: DataView, index: number): number[] {
-  const { componentType, start, total, size } = locate(json, index);
-  if (start + total * size > bin.byteLength)
-    fail('malformed', `accessor ${index} overruns the buffer`);
+function readAccessor(json: GltfJson, bin: DataView, index: number, expected: Expect): number[] {
+  const { componentType, start, total, size } = locate(json, bin, index, expected);
   const read = componentReader(bin, componentType);
   return Array.from({ length: total }, (_, i) => read(start + i * size));
+}
+
+/** Attribut facultatif : absent → vide ; présent → de la longueur attendue, sinon `malformed`. */
+function optional(
+  [json, bin]: [GltfJson, DataView],
+  attribute: number | undefined,
+  expected: Expect,
+  length: number,
+): number[] {
+  if (attribute === undefined) return [];
+  const values = readAccessor(json, bin, attribute, expected);
+  if (values.length !== length) fail('malformed', `${expected.label} does not match POSITION`);
+  return values;
 }
 
 function layerOf(name: string, primitive: Primitive, json: GltfJson, bin: DataView): DrapedLayer {
   const { POSITION: position, NORMAL: normal, _EASE_MM: ease } = primitive.attributes;
   if (position === undefined || primitive.indices === undefined)
     fail('malformed', `${name}: no geometry`);
-  const positions = readAccessor(json, bin, position as number).map((v) => v * METERS_TO_SCENE);
-  const count = positions.length / 3;
-  const index = readAccessor(json, bin, primitive.indices as number);
+  const raw = readAccessor(json, bin, position as number, VEC3);
+  const count = raw.length / 3;
+  const index = readAccessor(json, bin, primitive.indices as number, SCALAR_INDEX);
+  if (index.length % 3 !== 0) fail('malformed', `${name}: index count is not a multiple of 3`);
   if (index.some((i) => i >= count)) fail('malformed', `${name}: index out of range`);
-  const easeMm = ease === undefined ? [] : readAccessor(json, bin, ease);
+  const source: [GltfJson, DataView] = [json, bin];
+  const normals = optional(source, normal, NORMAL, raw.length);
+  const easeMm = optional(source, ease, SCALAR_FLOAT, count);
   return {
     name,
-    positions: Float32Array.from(positions),
-    normals:
-      normal === undefined
-        ? new Float32Array(0)
-        : Float32Array.from(readAccessor(json, bin, normal)),
+    positions: Float32Array.from(raw, (v) => v * METERS_TO_SCENE),
+    normals: Float32Array.from(normals),
     index: Uint32Array.from(index),
     tight: Array.from({ length: count }, (_, v) => (easeMm[v] ?? 0) < 0),
   };

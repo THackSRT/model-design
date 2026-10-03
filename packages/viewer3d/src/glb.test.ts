@@ -8,7 +8,9 @@ interface Piece {
 }
 
 /** GLB minimal comme celui du moteur de drapé : mètres, un nœud par pièce, attributs POSITION, NORMAL, _EASE_MM. */
-function buildGlb(pieces: Piece[]): ArrayBuffer {
+type Json = { accessors: Record<string, unknown>[]; bufferViews: Record<string, unknown>[] };
+
+function buildGlb(pieces: Piece[], tweak?: (json: Json) => void): ArrayBuffer {
   const chunks: ArrayBuffer[] = [];
   const views: object[] = [];
   const accessors: object[] = [];
@@ -54,6 +56,7 @@ function buildGlb(pieces: Piece[]): ArrayBuffer {
     bufferViews: views,
     buffers: [{ byteLength: bin.length }],
   };
+  tweak?.(json as unknown as Json);
   return container(new TextEncoder().encode(JSON.stringify(json).padEnd(4096, ' ')), bin);
 }
 
@@ -116,5 +119,74 @@ describe('readDrapedGlb', () => {
   it('rend no-primitive pour un modèle sans maillage', () => {
     const result = readDrapedGlb(buildGlb([]));
     expect(!result.ok && result.error.code).toBe('no-primitive');
+  });
+
+  describe('refuse un GLB incohérent par une erreur typée', () => {
+    const piece = [{ name: 'a', positionsM: TRIANGLE }];
+    const withEase = [{ name: 'a', positionsM: TRIANGLE, easeMm: [1, 2, 3] }];
+    // Accesseurs d'une pièce : 0 POSITION, 1 NORMAL, 2 indices (3 sans _EASE_MM) ; avec _EASE_MM : 2 _EASE_MM, 3 indices.
+    const codeOf = (pieces: Piece[], tweak: (json: Json) => void) => {
+      const result = readDrapedGlb(buildGlb(pieces, tweak));
+      return result.ok ? 'ok' : result.error.code;
+    };
+    const accessor = (json: Json, i: number) => json.accessors[i] as Record<string, unknown>;
+    const view = (json: Json, i: number) => json.bufferViews[i] as Record<string, unknown>;
+
+    it('accesseur qui déborde de sa vue : malformed', () => {
+      expect(codeOf(piece, (j) => (accessor(j, 0).count = 100))).toBe('malformed');
+    });
+
+    it('vue qui déborde du chunk BIN : malformed', () => {
+      expect(codeOf(piece, (j) => (view(j, 1).byteLength = 1_000_000))).toBe('malformed');
+      expect(codeOf(piece, (j) => (view(j, 0).byteOffset = 1_000_000))).toBe('malformed');
+    });
+
+    it('buffer autre que 0 ou byteLength invalide : malformed', () => {
+      expect(codeOf(piece, (j) => (view(j, 0).buffer = 1))).toBe('malformed');
+      expect(codeOf(piece, (j) => (view(j, 0).byteLength = -4))).toBe('malformed');
+    });
+
+    it('index hors limites (>= nombre de sommets) : malformed', () => {
+      const glb = buildGlb(piece);
+      const bin = new DataView(glb, glb.byteLength - 12);
+      bin.setUint32(8, 3, true);
+      const result = readDrapedGlb(glb);
+      expect(!result.ok && result.error.code).toBe('malformed');
+    });
+
+    it("nombre d'indices non multiple de 3 : malformed", () => {
+      expect(codeOf(piece, (j) => (accessor(j, 2).count = 2))).toBe('malformed');
+    });
+
+    it('type de composant non géré : unsupported', () => {
+      expect(codeOf(piece, (j) => (accessor(j, 0).componentType = 5120))).toBe('unsupported');
+      expect(codeOf(piece, (j) => (accessor(j, 1).componentType = 5123))).toBe('unsupported');
+      expect(codeOf(piece, (j) => (accessor(j, 2).componentType = 5126))).toBe('unsupported');
+      expect(codeOf(withEase, (j) => (accessor(j, 2).componentType = 5125))).toBe('unsupported');
+    });
+
+    it("type d'accesseur faux : malformed", () => {
+      expect(codeOf(piece, (j) => (accessor(j, 0).type = 'VEC2'))).toBe('malformed');
+      expect(codeOf(piece, (j) => (accessor(j, 1).type = 'SCALAR'))).toBe('malformed');
+      expect(codeOf(piece, (j) => (accessor(j, 2).type = 'VEC3'))).toBe('malformed');
+      expect(codeOf(withEase, (j) => (accessor(j, 2).type = 'VEC3'))).toBe('malformed');
+    });
+
+    it('NORMAL ou _EASE_MM de mauvaise longueur : malformed', () => {
+      expect(codeOf(piece, (j) => (accessor(j, 1).count = 2))).toBe('malformed');
+      expect(codeOf(withEase, (j) => (accessor(j, 2).count = 2))).toBe('malformed');
+    });
+
+    it('count invalide (négatif, fractionnaire, absent) : malformed', () => {
+      expect(codeOf(piece, (j) => (accessor(j, 0).count = -3))).toBe('malformed');
+      expect(codeOf(piece, (j) => (accessor(j, 0).count = 1.5))).toBe('malformed');
+      expect(codeOf(piece, (j) => delete accessor(j, 0).count)).toBe('malformed');
+    });
+
+    it('chunk BIN tronqué : malformed', () => {
+      const glb = buildGlb(piece);
+      const result = readDrapedGlb(glb.slice(0, glb.byteLength - 10));
+      expect(!result.ok && result.error.code).toBe('malformed');
+    });
   });
 });
