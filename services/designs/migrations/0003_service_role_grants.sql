@@ -1,3 +1,5 @@
+-- ATTENTION : ALTER DEFAULT PRIVILEGES vaut pour les tables créées par le rôle qui migre. Ce rôle (le propriétaire)
+-- ne doit jamais changer : sinon les nouvelles tables seraient sans droits pour designs_app (échec sûr, mais à l'exécution).
 -- Droits du rôle de service `designs_app` (tâche 1.44) : le service ne possède aucune table, ne crée rien et
 -- reste soumis à la sécurité par lignes. Le rôle est créé hors migration (platform/postgres/init-designs-app.sh,
 -- mot de passe propre à l'environnement) ; sans lui cette migration ne fait rien. Rejouable : les GRANT sont idempotents.
