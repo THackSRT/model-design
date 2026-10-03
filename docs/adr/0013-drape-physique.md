@@ -395,3 +395,22 @@ signal, pas un réglage à reprendre. Écarts de mise en place acceptés : l'abs
 (`PieceField.t`, σ + d × virage cumulé) pour que l'isoligne ne s'effondre pas aux coins de la chaîne d'ancrage, et
 les pièces sont toujours ramenées à la courbe du corps (étirement au départ jusqu'à 28 %, contrôlé par le critère
 d'allongement des arêtes) au lieu de n'être « jamais agrandies ».
+
+**Lot 5 (03/10/2026, décisions de l'orchestrateur).**
+
+- **Départ symétrique du pantalon (1.48, 0.11.0).** `PieceField.span` lit l'étendue de l'isoligne au plus à
+  `dMax − ISO_STEP_MM` : dans le dernier pas, l'ourlet oblique ne laisse que quelques triangles, différents d'une
+  pièce à sa pièce miroir, et le milieu de `lowMode` se décalait de 12 à 20 mm d'une jambe à l'autre. `tSpan` ne
+  change pas. Critères ajoutés au pantalon : les coutures miroirs ont, au départ, des écarts qui diffèrent d'au plus
+  10 mm d'une jambe à l'autre, et le plus grand écart au départ est d'au plus 95 mm (94,3 mesurés, 114,4 avant).
+- **Le standard est mesuré par une cible, plus à la main.** `pnpm nx run @atelier/drape:test-standard`
+  (`*.standard.test.ts`, une config vitest à part, un fichier à la fois) drape les cinq vêtements de référence à 30°.
+  Elle reste hors de `pnpm check` et du hook, et on la lance à chaque `ENGINE_VERSION`. Ses critères sont ceux du
+  brouillon, avec deux différences : la convergence est permise jusqu'à 600 pas, le temps réel est borné à 60 s, et
+  il n'y a pas de `costRatio`. À 0.11.0, elle est rouge, ce qui est un constat et non un défaut. Jupe droite et
+  pantalon tiennent tous leurs critères (10 et 18 s). La jupe cercle échoue : bas de ceinture à −54 mm, rayon de
+  l'ourlet à 1,36 fois la hanche, 55 s. Le corsage échoue (bas à 42 mm de `waist`), et le corsage à manches aussi
+  (`body-penetration`, comme en brouillon).
+- **Le studio reste en brouillon** (bras à 30°). On ne proposera pas le standard tant que cette cible est rouge.
+- En brouillon, la jupe cercle a été mesurée à 16,5 s sous charge, au-delà des 15 s de la ligne « Budget ». Aucun
+  test ne vérifie cette borne absolue en brouillon : `costRatio` la remplace.

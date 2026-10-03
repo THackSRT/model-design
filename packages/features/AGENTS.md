@@ -49,6 +49,11 @@ rend un JSON stable. `fabric-bench/schema-check.ts` est un validateur minimal de
 un registre local de six schémas (`SCHEMA_REGISTRY` ; un `$ref` hors registre lève une `Error`) (pas d'Ajv : CSP stricte) ; un mot-clé hors du sous-ensemble lève une `Error`, et le test de
 couverture parcourt les schémas `fabric-*`. Un nouveau mot-clé dans ces schémas demande de l'ajouter à `CHECKS`.
 
+Drapé 3D (1.49) : `DesignsClient.requestDrape(designId, versionNumber, body: DrapeRequest)`,
+`getDrape(designId, versionNumber, drapeId)` et `getDrapeModel(designId, versionNumber, drapeId)` (ArrayBuffer) ; modèle de vue `useDrape(deps, ref?, fabric?)`
+(`drape/use-drape.ts`) : demande en brouillon, bras à 30°, interrogation toutes les 2 s (`DRAPE_POLL_MS`), modèle GLB lu
+en ArrayBuffer une fois le drapé terminé.
+
 Banc d'essai des tissus : `useFabricBench(deps)` (`fabric-bench/use-fabric-bench.ts`) rend `{ state, actions }`, une
 revue (`PresetBenchState`) par préréglage de `@atelier/drape`. Les champs de saisie et leurs bornes sont lus dans
 `fabricBenchMeasurements` (`measurement-fields.ts`, `BENCH_TESTS`), les bornes de `Fabric` dans `fabricJsonSchema`

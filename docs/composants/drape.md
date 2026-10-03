@@ -211,7 +211,10 @@ La mise en place rend aussi le rapport maximal tour fini / courbe (`placeGarment
 départ : allongement 5,5 % (médiane) et 24 % (95e centile), coutures à 92 mm ; drapé `ok`, convergé en 244 pas, pénétration 0, écart de couture 0,02 mm, bas de
 ceinture à waist − 38 mm (limite −40), rayon d'ourlet 1,56 fois celui de la hanche (limite 1,5), ourlet à 0,93 fois la longueur sous la ceinture (limite 0,8) ; `costRatio` 25 au repos, 29 sous charge (limite 40, ADR 0013) ; mise en place 0,4 s. Les marges sur la ceinture et
 l'ourlet sont minces (60 sous-pas × 1 est permis par l'ADR si elles cèdent, avec un budget de 40). À 9° : `body-penetration` (l'avant-bras traverse la jupe ; 14 s).
-Qualité standard (9 756 sommets, 30°) : 51 s, convergé en 300 pas, pénétration 0, écart 0,11 mm, sous la borne de 60 s mais près d'elle (mesurée à la main, non testée).
+Cible test-standard (1.47, `pnpm nx run @atelier/drape:test-standard`, maillage 15 mm, cinq vêtements de référence à 30°) :
+convergence jusqu'à 600 pas, temps réel borné à 60 s, critères du brouillon (pas de `costRatio`), hors `pnpm check` et hook. À 0.11.0 :
+jupe droite et pantalon vert (10 et 18 s) ; jupe cercle rouge (55 s, bas de ceinture −54 mm, rayon ourlet 1,36 fois hanche) ;
+corsage rouge (bas 42 mm de `waist`) ; corsage à manches rouge (`body-penetration`).
 Départs de la jupe droite, du pantalon et des corsages inchangés au bit près (test `godets.test.ts`). Tests : `drape-circle-skirt.test.ts`, `godets.test.ts`.
 
 **Pantalon jambe par jambe (0.8.0, `leg-align.ts`)** : les pièces `leg` (devant et dos, dessinées vues de dehors : l'abscisse croît dans le
@@ -221,7 +224,12 @@ l'isoligne de la pièce (`PieceField.span(d)`, étendue en s interpolée entre n
 l'isoligne côté milieu du corps (s fort pour le devant de la jambe droite et le dos de la jambe gauche, s faible sinon) va à
 `midlineArc` de la demi-coupe du bassin, le facteur λ se calculant sur l'arc extérieur entre milieu devant et milieu dos ; entre
 les deux, le point est interpolé linéairement (poids de 0 à 1 sur 50 mm). Le tour fini est celui du tube de chaque jambe (`widths.ts`).
-Mesuré (brouillon, mesures fictives, popeline, avatar par défaut) : coutures à 114 mm au plus au départ (239 mm avant ; entrejambe
+
+Départ symétrique (0.11.0) : `PieceField.span` lit l'étendue de l'isoligne au plus à `dMax − 5 mm` (ourlet oblique, maillages miroirs
+différents, `lowMode` en `leg-align.ts` décalé de 12 à 20 mm d'une jambe à l'autre ; avant : coutures à 114 mm d'écart maximal,
+après : ≤ 10 mm d'écart au départ, maximum 94,3 mm).
+
+Mesuré en brouillon (0.8.0, mesures fictives, popeline, avatar par défaut) : coutures à 114 mm au plus au départ (239 mm avant ; entrejambe
 et fourche à 52 mm au plus, le plus grand écart est la couture de côté au niveau du pied, `hem` à 0), `ok`, convergé en 135 pas,
 pénétration 0 mm, écart de couture 0,004 mm, ceinture à waist − 30 mm, jambes sans croisement (x signé minimal −0,7 mm), aisance
 minimale ≈ 2 mm, allongement maximal 28 %, `costRatio` 8,5 à 9. Test : `drape-trousers.test.ts`.

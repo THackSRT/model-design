@@ -9,6 +9,10 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Studio : panneau Drapé dans l'onglet Patron (1.49) : sept préréglages de tissu (popeline par défaut),
+  demande en brouillon avec bras à 30°, interrogation toutes les 2 s, affichage du drapé 3D sur l'avatar
+  (GLB lu par un lecteur minimal, zones à aisance négative teintées), bascule « Montrer le drapé » ; ajustement « de consultation »
+  (`fitForView`) qui ne remplace pas le corps de l'habillage ; paquet d'entrée +2,32 kB gzip.
 - Banc d'essai des tissus (ADR 0015, 1.39) : contrats (`fabric-physics`, `fabric-bench-measurements`,
   `fabric-derived-values`, `fabric-preset-review`, `fabric-validation-report`) et langage commun ; moteur :
   essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement, tolérances, écarts), essai de drapé
@@ -124,6 +128,12 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Modifié
 
+- Moteur drapé : qualité standard en cible de test à part (1.47, `pnpm nx run @atelier/drape:test-standard`) :
+  maillage 15 mm, cinq vêtements, convergence jusqu'à 600 pas, temps réel borné à 60 s, critères du brouillon,
+  hors `pnpm check` et hook ; jupe droite et pantalon vert, jupe cercle/corsage/corsage à manches rouge.
+- Moteur drapé : pantalon départ symétrique (1.48, ENGINE_VERSION 0.11.0) : `PieceField.span` lit l'étendue
+  de l'isoligne au plus à `dMax − 5 mm` (ourlet oblique, maillages miroirs), coutures miroirs ≤ 10 mm d'écart au
+  départ, maximum ≤ 95 mm.
 - Orchestration Claude Code (1.45, amendement de l'ADR 0007) : `relecteur` sur Sonnet (Opus pour les lots
   sensibles) ; découpage dans la session principale ; vérification, relecture et documentation une fois par
   lot ; commit local par tâche ; fichier d'état `.claude/lot-en-cours.md` et skill `/reprendre` après une

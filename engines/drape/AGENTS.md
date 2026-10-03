@@ -37,6 +37,8 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
   soudure des sommets UV (`weld.ts`).
 - `src/placement/` : pur comme `src/core`. Coupe du corps (`section.ts`), enveloppe convexe (`hull.ts`), niveaux
   autour de l'ancrage (`levels.ts`), placement d'une pièce (`place-garment.ts`), dégagement corps (`clearance.ts`).
+  Pantalon départ symétrique (0.11.0) : `PieceField.span` lit l'étendue au plus à `dMax − 5 mm` (ourlet oblique,
+  maillages miroirs).
 - `src/drape/` : orchestration `drapeGarment(job, { maxSteps? }): DrapeOutcome`. Placements, maillage, avatar,
   placement, dégagement, simulation. Résultat : succès avec `DrapeResultCore` et `metrics`, ou échec avec type et
   panelId.
@@ -79,6 +81,8 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
 - Types : `pnpm nx run @atelier/drape:typecheck`
 - Tests : `pnpm nx run @atelier/drape:test` (déterminisme, chute libre, étirement, flexion, collisions, Cusick,
   performance, maillage, avatar, placements, drapé jupe, conversions)
+- Cible test-standard : `pnpm nx run @atelier/drape:test-standard` (hors `pnpm check`, cinq vêtements, qualité
+  standard 15 mm à 30°) ; helpers `test/drape-helpers.ts`, critères `test/garment-criteria.ts`
 - Build : `pnpm nx run @atelier/drape:build`
 - Dev : `pnpm nx run @atelier/drape:dev`
 
