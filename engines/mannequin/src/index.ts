@@ -72,6 +72,7 @@ export function toMakeHumanMeasures(m: MeasurementSet): MakeHumanMeasuresCm {
   const cm: MakeHumanMeasuresCm = {
     stature: mmToCm(m.statureMm),
     chest: mmToCm(m.chestGirthMm),
+    underbust: toCm(m.underBustGirthMm),
     waist: mmToCm(m.waistGirthMm),
     hip: mmToCm(m.hipGirthMm),
     crotch: toCm(m.crotchHeightMm),

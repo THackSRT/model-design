@@ -9,6 +9,8 @@ export type Vec3 = [number, number, number];
 export interface MakeHumanMeasuresCm {
   stature: number;
   chest?: number;
+  /** Tour sous la poitrine (cm), facultatif ; estimé pour une femme s'il manque. */
+  underbust?: number;
   waist?: number;
   hip?: number;
   neck?: number;

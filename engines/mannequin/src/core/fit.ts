@@ -29,6 +29,18 @@ export const FIT_KEYS = [
   'ankle',
 ] as const;
 
+/** Zones ajustées par sécante : sous-poitrine d'abord, pour que la poitrine (réglée ensuite) reste exacte. */
+const TARGET_KEYS = ['underbust', ...FIT_KEYS] as const;
+
+/**
+ * Écart moyen (cm) entre tour de poitrine et tour sous la poitrine : bonnet moyen (B-C), environ
+ * 12,5 cm. Sert à estimer le tour sous-poitrine d'une femme quand il n'est pas donné.
+ */
+export const BUST_CUP_GAP_CM = 12.5;
+/** Ventre et fessier par défaut d'une femme (hanches galbées, ventre plat ; proportions du prototype). */
+const FEMALE_BELLY = 0.1;
+const FEMALE_SEAT = 0.8;
+
 /** Tolérance visée (cm) avant d'essayer d'autres musculatures. */
 const TOLERANCE_CM = 0.6;
 const ALT_MUSCLES = [0.75, 1, 0.5, 0.9, 0.25, 0];
@@ -43,14 +55,30 @@ interface Solution {
   muscle: number;
 }
 
+/** Tour sous-poitrine visé : donné, sinon estimé pour une femme à partir de la poitrine. */
+function underbustGoal(m: MakeHumanMeasuresCm, p: MakeHumanMorphology): number {
+  if (m.underbust) return m.underbust;
+  return p.sex === 'femme' && m.chest ? m.chest - BUST_CUP_GAP_CM : 0;
+}
+
+/** Ventre et fessier : donnés, sinon valeurs par défaut selon le sexe. */
+function bellyAndSeat(p: MakeHumanMorphology): { belly: number; seat: number } {
+  const woman = p.sex === 'femme';
+  return {
+    belly: p.belly ?? (woman ? FEMALE_BELLY : 0.2),
+    seat: p.seat ?? (woman ? FEMALE_SEAT : 0.4),
+  };
+}
+
 function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorphology): FitContext {
-  const goal = (k: string): number => (m as unknown as Record<string, number | undefined>)[k] ?? 0;
+  const goals = { ...m, underbust: underbustGoal(m, p) } as Record<string, number | undefined>;
+  const goal = (k: string): number => goals[k] ?? 0;
   return {
     model,
     stature: m.stature,
     crotch: m.crotch ?? 0,
     goal,
-    targets: FIT_KEYS.filter((k) => goal(k) > 0),
+    targets: TARGET_KEYS.filter((k) => goal(k) > 0),
     base: {
       gender: p.sex === 'femme' ? 0 : 1,
       age: p.age || 30,
@@ -58,8 +86,7 @@ function buildContext(model: MhModel, m: MakeHumanMeasuresCm, p: MakeHumanMorpho
       asian: p.asian ?? 0,
       caucasian: p.caucasian ?? 0,
     },
-    belly: p.belly ?? 0.2,
-    seat: p.seat ?? 0.4,
+    ...bellyAndSeat(p),
     fixedMuscle: p.muscle ?? undefined,
   };
 }
@@ -130,11 +157,14 @@ function measureFit(ctx: FitContext, macroPos: Float32Array): Omit<Solution, 'we
   return { pos, vals, meas: measure(ctx.model, pos, ctx.stature) };
 }
 
+/** Tours demandés par le client (la sous-poitrine, souvent estimée, n'entre pas dans les écarts). */
+const asked = (ctx: FitContext): string[] => ctx.targets.filter((k) => k !== 'underbust');
+
 const worstOf = (ctx: FitContext, meas: Measured): number =>
-  Math.max(...ctx.targets.map((k) => Math.abs((meas[k] as number) - ctx.goal(k))));
+  Math.max(...asked(ctx).map((k) => Math.abs((meas[k] as number) - ctx.goal(k))));
 
 const errOf = (ctx: FitContext, meas: Measured): number =>
-  ctx.targets.reduce((a, k) => a + ((meas[k] as number) / ctx.goal(k) - 1) ** 2, 0);
+  asked(ctx).reduce((a, k) => a + ((meas[k] as number) / ctx.goal(k) - 1) ** 2, 0);
 
 function solveFor(ctx: FitContext, weight: number, muscle: number): Solution {
   return { ...measureFit(ctx, macroFor(ctx, weight, muscle)), weight, muscle };
