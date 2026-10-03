@@ -206,7 +206,7 @@ export const fr = {
   'drape.ready': 'Drapé prêt : le vêtement drapé est montré sur le mannequin.',
   'drape.estimated': 'Les valeurs de ce tissu sont des estimations.',
   'drape.show': 'Montrer le drapé',
-  'drape.bodyFitting': 'Ajustement du mannequin aux bras abaissés…',
+  'drape.bodyFitting': 'Ajustement du mannequin pour le drapé…',
   'drape.bodyFailed': 'Le mannequin n’a pas pu être ajusté pour le drapé.',
   'drape.unreadable': 'Le vêtement drapé n’a pas pu être lu.',
   'drape.problem.placement-missing':

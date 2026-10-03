@@ -82,7 +82,7 @@ export type FieldError =
   | { code: 'required' }
   | { code: 'unavailable' }
   | { code: 'range'; minMm: number; maxMm: number }
-  /** Mesure finie hors de corps + aisance (minMm à maxMm) : trop serrée, ou trop ample. */
+  /** Mesure finie dont l’aisance (mesure moins corps) sort de minMm à maxMm, bornes de l’aisance affichée : trop serrée, ou trop ample. */
   | { code: 'easeRange'; minMm: number; maxMm: number }
   | { code: 'zeroOrRange'; minMm: number; maxMm: number }
   | { code: 'ratioRange'; min: number; max: number };

@@ -51,7 +51,7 @@ couverture parcourt les schémas `fabric-*`. Un nouveau mot-clé dans ces schém
 
 Drapé 3D (1.49) : `DesignsClient.requestDrape(designId, versionNumber, body: DrapeRequest)`,
 `getDrape(designId, versionNumber, drapeId)` et `getDrapeModel(designId, versionNumber, drapeId)` (ArrayBuffer) ; modèle de vue `useDrape(deps, ref?, fabric?)`
-(`drape/use-drape.ts`) : demande en brouillon, bras à 30°, interrogation toutes les 2 s (`DRAPE_POLL_MS`), modèle GLB lu
+(`drape/use-drape.ts`) : demande en brouillon, bras à l’horizontale (90°, `AVATAR_ARM_ANGLE_DEG`), interrogation toutes les 2 s (`DRAPE_POLL_MS`), modèle GLB lu
 en ArrayBuffer une fois le drapé terminé.
 
 Banc d'essai des tissus : `useFabricBench(deps)` (`fabric-bench/use-fabric-bench.ts`) rend `{ state, actions }`, une

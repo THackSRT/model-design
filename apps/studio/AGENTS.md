@@ -53,6 +53,5 @@ Rôle : deux onglets (`app-tabs.tsx`). **Patron** : mesures, choix du vêtement 
 - Drapé (1.49c) : `drape-panel.tsx` (tissu parmi `drape-fabrics.ts`, liste écrite ici pour garder le moteur de drapé hors de l'entrée ;
   un test la compare à `PRESET_NAMES`) branché sur `useDrape` par `screen.tsx` (`useDrapeOf`). La version n'est offerte que si la saisie n'a pas changé
   depuis le calcul ; sinon le drapé affiché est retiré. Le drapé se pose sur le corps de l'habillage, ajusté à `AVATAR_ARM_ANGLE_DEG` (90°) ;
-  `fitForView` (ajustement de consultation, `keep: false`) reste disponible sur le port mais n'est plus utilisé par le studio ;
   `draped-view.tsx` (lazy, avec three.js) lit le GLB (`readDrapedGlb`) : jamais d'import statique de `@atelier/viewer3d`. Clés `drape.*`,
   message par `problemType` via `drapeProblemMessage`.
