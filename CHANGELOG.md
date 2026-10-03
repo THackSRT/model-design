@@ -107,6 +107,13 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   variables `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`, arrêt propre avec `SIGTERM/SIGINT`.
 - Relais générique de l'outbox vers NATS JetStream (`@atelier/service-kit`) : au moins une fois,
   déduplication par `Nats-Msg-Id` (ADR 0008).
+- Moteur drapé : sorties sans E/S (1.19f1) : GLB 2.0 déterministe en mètres, une primitive par exemplaire de
+  pièce, attributs `_EASE_MM` et `_STRAIN` ; clé de cache SHA-256, contenu de `drape.completed` et
+  `drape.failed` ; `invalid-input` publié comme `drape-internal`.
+- Moteur drapé : travailleur NATS (1.19f2) : consommateur durable `drape` sur flux `DRAPE_JOBS`, calcul dans un
+  `worker_thread`, signaux de travail ; écriture du GLB et d'un JSON de résultat sans mesure dans S3, publication
+  de `drape.completed` / `drape.failed` en enveloppe CloudEvents (id UUID v8 déterministe, `Nats-Msg-Id` stable) ;
+  dépendances `@nats-io/jetstream`, `@nats-io/transport-node`, `aws4fetch`.
 - Routes du drapé dans `designs` (1.19g1) : `POST …/versions/{n}/drapes` (202 création + événement
   `drape.requested` par l'outbox ; 200 pour demande identique, idempotent) ; `GET …/drapes/{drapeId}` (statut ;
   `drape-timeout` après 10 min, calculé à la lecture) ; migration 0002_drapes ; flux `DRAPE_JOBS` (24 h).
@@ -127,11 +134,21 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   un plan de coupe de plus de 10 m reste accepté.
 - Service `designs` (1.42) : toutes les requêtes PostgreSQL fixent l'organisation (sécurité au niveau des lignes) ;
   test d'isolation avec un rôle non propriétaire ; service-kit : `StreamDeclaration` gagne `retention` et `maxAgeMs`.
+- Service `designs` (1.44) : rôle sans privilège `designs_app` (sécurité par lignes effective dans la pile) ;
+  migrations exécutées par le propriétaire (variable `MIGRATION_DATABASE_URL`, exigée avec `MIGRATE_ON_START`) ;
+  migration 0003 : `GRANT` des tables au rôle.
 - Moteurs Python (1.43) : une requête hors schéma répond 422 `application/problem+json` `/problems/invalid-request`
   (au plus 20 erreurs avec `path` et `constraint`, jamais la valeur reçue) ; designs la traite comme moteur
   indisponible (502).
 - Moteur drapé (1.19b) : devient TypeScript (`@atelier/drape`, paquet) au lieu de Python (ADR 0013,
   exception à l'ADR 0003) ; squelette Python supprimé ; simulation sur CPU seulement pour l'instant.
+- Moteur drapé : maintien des vêtements lors du drapé (1.19e2a–e2c, ENGINE_VERSION 0.6.0–0.10.0) : test de
+  parité pour pénétration mesurée (0.6.0) ; placement le long de la ligne d'ancrage, ceinture tenue pendant la
+  couture (0.7.0) ; jupe cercle posée en godets, réglage fin seulement pour les jupes évasées, double passe de
+  couture (0.10.0) ; pantalon posé jambe par jambe, convergence et coutures fermées (0.8.0) ; corsage tenu aux
+  épaules, succès à 30° ; corsage à manches reste en body-penetration (manche du patron plus étroite que le bras,
+  tête de manche plus longue que l'emmanchure, voir 1.46) (0.9.0) ; ADR 0013
+  amendée.
 - Moteur patronage (1.19c) : ENGINE_VERSION 0.6.0, ajout de `Panel.placement` (zone, côté, sens, ancrage,
   aisance) pour le drapé ; références golden régénérées (ajout seul, aucune coordonnée changée).
 - Moteur mannequin remplacé par modules TypeScript testés (geometry, morph, measure, fit, render, pose) ;
@@ -142,6 +159,9 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
   traits du visage (yeux, sourcils, nez, bouche) sont effacés, au lieu de la tête ovoïde de vitrine ;
   le visage est aplati (la bouche et le menton ne dépassent plus le plan du front).
 - Stockage objet local : SeaweedFS remplace MinIO, qui ne publie plus d'images depuis octobre 2025.
+- Pile Docker (1.19f3) : S3 de développement (SeaweedFS), seau `drapes` créé au démarrage, variables `S3_*` pour
+  moteur drapé et service `designs`, ports publiés sur 127.0.0.1 ; essai de bout en bout du drapé réussi (202
+  demande, `completed` en ~10 s, modèle GLB téléchargé, demande identique → même drapé).
 - L'intégration continue GitHub devient facultative (lancement manuel).
 - Nx Cloud (offre gratuite) connecté : le cache des tâches est partagé entre les postes.
 - L'installation se lance par `pnpm run setup` (`pnpm setup` seul est une commande de pnpm) et installe aussi
