@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { cameraDistance } from './framing.js';
 import { buildScene, type DrapedGarmentLayer, type GarmentLayer, type MeshData } from './scene.js';
 
 interface MannequinViewBase {
@@ -53,12 +54,19 @@ function mount(
   wear: { garment?: GarmentLayer; draped?: DrapedGarmentLayer },
 ) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  const { scene, camera, pivot, dispose } = buildScene(meshes, color, wear.garment, wear.draped);
+  const { scene, camera, pivot, bounds, dispose } = buildScene(
+    meshes,
+    color,
+    wear.garment,
+    wear.draped,
+  );
   const render = () => renderer.render(scene, camera);
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = canvas;
     renderer.setSize(w, h, false);
     camera.aspect = w / Math.max(h, 1);
+    // Bras écartés : le cadrage suit la largeur quand la vue est étroite.
+    camera.position.z = cameraDistance(bounds, camera.fov, 1.15, camera.aspect);
     camera.updateProjectionMatrix();
     render();
   };

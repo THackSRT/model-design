@@ -123,5 +123,5 @@ export function buildScene(
       (m.material as THREE.Material).dispose();
     }
   };
-  return { scene, camera, pivot, dispose };
+  return { scene, camera, pivot, bounds, dispose };
 }

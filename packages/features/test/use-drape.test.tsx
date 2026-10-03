@@ -3,7 +3,13 @@ import { err, ok } from '@atelier/kernel';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiProblem, DesignsClient } from '../src/api/designs-client.js';
-import { DRAPE_POLL_MS, type DrapeFabric, useDrape } from '../src/drape/use-drape.js';
+import {
+  DRAPE_ARM_ANGLE_DEG,
+  DRAPE_POLL_MS,
+  type DrapeFabric,
+  drapeRequestBody,
+  useDrape,
+} from '../src/drape/use-drape.js';
 
 const fabric: DrapeFabric = { preset: 'linen' };
 const problem: ApiProblem = { type: '/problems/not-found', title: 'x', status: 404 };
@@ -49,6 +55,11 @@ describe('useDrape', () => {
     expect(result.current.state.canRequest).toBe(false);
   });
 
+  it("l'angle partagé est l'horizontale (90°) et la demande l'envoie", () => {
+    expect(DRAPE_ARM_ANGLE_DEG).toBe(90);
+    expect(drapeRequestBody(fabric).avatar).toEqual({ armAngleDeg: DRAPE_ARM_ANGLE_DEG });
+  });
+
   it('demande en brouillon, interroge toutes les 2 s puis lit le modèle', async () => {
     const { deps, designs } = setup();
     const { result } = renderHook(() => useDrape(deps, ref(2), fabric));
@@ -56,7 +67,7 @@ describe('useDrape', () => {
     await start(result);
     expect(designs.requestDrape).toHaveBeenCalledWith('d1', 2, {
       fabric,
-      avatar: { armAngleDeg: 30 },
+      avatar: { armAngleDeg: 90 },
       quality: 'draft',
     });
     expect(result.current.state.status).toBe('pending');

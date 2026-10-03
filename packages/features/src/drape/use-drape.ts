@@ -5,8 +5,8 @@ import type { VersionRef } from '../cut-pieces/use-cut-pieces.js';
 
 /** Intervalle d'interrogation d'un drapé en calcul (contrat : « toutes les 2 s »). */
 export const DRAPE_POLL_MS = 2000;
-/** Bras abaissés du drapé, en degrés (ADR 0013). */
-export const DRAPE_ARM_ANGLE_DEG = 30;
+/** Bras à l'horizontale (pose en T), en degrés depuis la verticale : avatar affiché et drapé (ADR 0018). */
+export const DRAPE_ARM_ANGLE_DEG = 90;
 
 export interface DrapeDeps {
   designs: DesignsClient;

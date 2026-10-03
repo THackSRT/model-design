@@ -123,13 +123,13 @@ describe('panneau Drapé de l’onglet Patron', () => {
     await waitFor(() => expect(drapeButton().disabled).toBe(false));
   });
 
-  it('demande envoyée avec le tissu choisi, en brouillon, bras à 30°', async () => {
+  it('demande envoyée avec le tissu choisi, en brouillon, bras à 90°', async () => {
     const u = await calculated();
     await u.selectOptions(screen.getByLabelText('Tissu'), 'denim');
     await u.click(drapeButton());
     expect(requestDrape).toHaveBeenCalledWith('d1', 1, {
       fabric: { preset: 'denim' },
-      avatar: { armAngleDeg: 30 },
+      avatar: { armAngleDeg: 90 },
       quality: 'draft',
     });
   });
@@ -140,7 +140,7 @@ describe('panneau Drapé de l’onglet Patron', () => {
     expect(requestDrape.mock.calls[0]?.[2].fabric).toEqual({ preset: 'cotton-poplin' });
   });
 
-  it('en cours puis prêt : vêtement drapé passé à la visionneuse, corps à 30°', async () => {
+  it('en cours puis prêt : vêtement drapé passé à la visionneuse, corps à 90°', async () => {
     const u = await calculated();
     await u.click(drapeButton());
     expect(await screen.findByText('Drapé en cours…')).toBeTruthy();
@@ -149,7 +149,7 @@ describe('panneau Drapé de l’onglet Patron', () => {
     await screen.findByText(/Drapé prêt/);
     await waitFor(() => expect(lastDraped()?.layers).toBe(layers));
     expect(mocked.read).toHaveBeenCalledWith(expect.any(ArrayBuffer));
-    expect(mocked.fit.mock.calls.at(-1)?.[1]).toEqual({ armAngleDeg: 30 });
+    expect(mocked.fit.mock.calls.at(-1)?.[1]).toEqual({ armAngleDeg: 90 });
   });
 
   it('préréglage estimé signalé', async () => {
