@@ -187,7 +187,7 @@ export const fr = {
   'drape.fabric.denim': 'Denim',
   'drape.fabric.silk-satin': 'Satin de soie',
   'drape.fabric.jersey': 'Jersey',
-  'drape.hint': 'Le drapé se calcule sur la version enregistrée, bras à 30°, en brouillon.',
+  'drape.hint': 'Le drapé se calcule sur la version enregistrée, bras à {angleDeg}°, en brouillon.',
   'drape.request': 'Draper le vêtement',
   'drape.working': 'Drapé en cours…',
   'drape.ready': 'Drapé prêt : le vêtement drapé est montré sur le mannequin.',

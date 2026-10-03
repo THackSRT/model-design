@@ -21,6 +21,7 @@ vi.mock('@atelier/viewer3d', async (original) => ({
 }));
 vi.mock('../src/platform/mannequin.js', () => ({
   getMannequinFitter: () => ({
+    fitForView: (measurements: unknown, options: unknown) => mocked.fit(measurements, options),
     fit: (measurements: unknown, options: unknown) => mocked.fit(measurements, options),
     dress: () => new Promise(() => undefined),
   }),

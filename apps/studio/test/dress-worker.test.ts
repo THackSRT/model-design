@@ -124,3 +124,103 @@ describe('adaptateur : habillage', () => {
     await expect(pending).resolves.toBe(mesh);
   });
 });
+
+describe('ajustement de consultation (drapé) isolé de l’habillage', () => {
+  const measurements = { sex: 'female' } as never;
+  const bodyOf = (marker: number): FittedMannequin => {
+    const mannequin = fitted();
+    mannequin.body.positions[0] = marker;
+    return mannequin;
+  };
+  const engine = {
+    fit: (_m: unknown, options?: { armAngleDeg?: number }) => bodyOf(options?.armAngleDeg ?? 0),
+  };
+
+  it('protocole : keep=false ne remplace pas le corps gardé', () => {
+    const state: WorkerState = {};
+    handleFitRequest(engine as never, { id: 1, measurements }, state);
+    handleFitRequest(
+      engine as never,
+      { id: 2, measurements, options: { armAngleDeg: 30 }, keep: false },
+      state,
+    );
+    expect(state.last?.body.positions[0]).toBe(0);
+  });
+
+  it('fit par défaut, fit du drapé à 30°, puis dress : habille le corps par défaut', () => {
+    const state: WorkerState = {};
+    handleFitRequest(engine as never, { id: 1, measurements }, state);
+    handleFitRequest(
+      engine as never,
+      { id: 2, measurements, options: { armAngleDeg: 30 }, keep: false },
+      state,
+    );
+    dressMannequin.mockReturnValueOnce(garment());
+    handleDressRequest(state, request);
+    expect(dressMannequin.mock.calls.at(-1)?.[0].body.positions[0]).toBe(0);
+  });
+
+  it('après mort du worker, le rejeu est le dernier fit par défaut, pas celui du drapé', async () => {
+    const workers: Array<{
+      sent: Array<Record<string, unknown>>;
+      listener: (e: unknown) => void;
+      fail: (e: unknown) => void;
+    }> = [];
+    const create = (): WorkerLike => {
+      const w = {
+        sent: [] as Array<Record<string, unknown>>,
+        listener: (() => undefined) as (e: unknown) => void,
+        fail: (() => undefined) as (e: unknown) => void,
+      };
+      workers.push(w);
+      return {
+        postMessage: (m: Record<string, unknown>) => w.sent.push(m),
+        terminate: () => undefined,
+        addEventListener: (type: string, l: (e: unknown) => void) => {
+          if (type === 'message') w.listener = l;
+          if (type === 'error') w.fail = l;
+        },
+      } as unknown as WorkerLike;
+    };
+    const fitter = createWorkerFitter(create);
+    const reply = (worker: number, index: number, payload: object) => {
+      const w = workers[worker];
+      w?.listener({ data: { id: w.sent[index]?.id, ok: true, ...payload } });
+    };
+    const first = fitter.fit(measurements, { age: 40 });
+    reply(0, 0, { mannequin: fitted() });
+    await first;
+    const view = fitter.fitForView(measurements, { armAngleDeg: 30 });
+    expect(workers[0]?.sent[1]).toMatchObject({ keep: false });
+    reply(0, 1, { mannequin: fitted() });
+    await view;
+    const dress = fitter.dress(request.spec, 'skirt');
+    workers[0]?.fail({ message: 'boom' });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(1));
+    expect(workers[1]?.sent[0]).toMatchObject({ options: { age: 40 } });
+    expect(workers[1]?.sent[0]).not.toHaveProperty('keep');
+    reply(1, 0, { mannequin: fitted() });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(2));
+    reply(1, 1, { garment: garment() });
+    await dress;
+  });
+
+  it('un fit de consultation seul sur un worker neuf ne le dit pas « ajusté »', async () => {
+    const sent: Array<Record<string, unknown>> = [];
+    let listener: (e: unknown) => void = () => undefined;
+    const worker = {
+      postMessage: (m: Record<string, unknown>) => sent.push(m),
+      terminate: () => undefined,
+      addEventListener: (type: string, l: typeof listener) => {
+        if (type === 'message') listener = l;
+      },
+    } as unknown as WorkerLike;
+    const fitter = createWorkerFitter(() => worker);
+    const view = fitter.fitForView(measurements);
+    listener({ data: { id: sent[0]?.id, ok: true, mannequin: fitted() } });
+    await view;
+    void fitter.dress(request.spec, 'skirt').catch(() => undefined);
+    expect(sent).toHaveLength(2);
+    expect(sent[1]).toMatchObject({ kind: 'dress' });
+  });
+});

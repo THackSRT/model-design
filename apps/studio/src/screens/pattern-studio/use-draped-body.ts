@@ -1,4 +1,5 @@
 import { DRAPE_ARM_ANGLE_DEG, type MannequinFitter } from '@atelier/features';
+import type { StudioFitter } from '../../platform/worker-fitter.js';
 import type { FittedMannequin } from '@atelier/mannequin';
 import { useEffect, useState } from 'react';
 
@@ -16,7 +17,7 @@ const idle: DrapedBody = { status: 'idle' };
  * l'affichage du drapé. Le corps par défaut (habillage géométrique) n'est pas touché.
  */
 export function useDrapedBody(
-  fitter: MannequinFitter,
+  fitter: StudioFitter,
   measurements: Measurements | undefined,
   shown: boolean,
 ): DrapedBody {
@@ -28,7 +29,7 @@ export function useDrapedBody(
     }
     let current = true;
     setBody({ status: 'fitting' });
-    fitter.fit(measurements, { armAngleDeg: DRAPE_ARM_ANGLE_DEG }).then(
+    fitter.fitForView(measurements, { armAngleDeg: DRAPE_ARM_ANGLE_DEG }).then(
       (mannequin) => current && setBody({ status: 'ready', mannequin }),
       () => current && setBody({ status: 'failed' }),
     );

@@ -128,6 +128,22 @@ describe('vêtement porté', () => {
     );
   });
 
+  it('drapé affiché en 3D : zones de l’habillage géométrique masquées, visibles en vue en trait', () => {
+    const draped = { model: new ArrayBuffer(8), body: { status: 'fitting' as const } };
+    const { rerender } = render(
+      <PatternStudioView state={worn} actions={actions()} draped={draped} />,
+    );
+    expect(screen.queryByRole('listitem')).toBeNull();
+    rerender(
+      <PatternStudioView
+        state={{ ...worn, display: 'outline' }}
+        actions={actions()}
+        draped={draped}
+      />,
+    );
+    expect(screen.getByRole('listitem')).toBeTruthy();
+  });
+
   it('la bascule montre ou masque le vêtement', async () => {
     const a = actions();
     render(<PatternStudioView state={{ ...worn, showGarment: true }} actions={a} />);

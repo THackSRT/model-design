@@ -1,4 +1,4 @@
-import type { DrapeActions, DrapeState } from '@atelier/features';
+import { DRAPE_ARM_ANGLE_DEG, type DrapeActions, type DrapeState } from '@atelier/features';
 import { Button, Message, Panel } from '@atelier/ui-web';
 import { drapeProblemMessage, problemMessage, t } from '../../i18n/t.js';
 import { DRAPE_PRESETS, type DrapePreset } from './drape-fabrics.js';
@@ -25,7 +25,7 @@ function Outcome({ state }: Pick<DrapePanelProps, 'state'>) {
     case 'completed':
       return <Message>{t('drape.ready')}</Message>;
     case 'idle':
-      return <Message>{t('drape.hint')}</Message>;
+      return <Message>{t('drape.hint', { angleDeg: DRAPE_ARM_ANGLE_DEG })}</Message>;
   }
 }
 

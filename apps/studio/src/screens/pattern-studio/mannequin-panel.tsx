@@ -7,13 +7,13 @@ import { LazyDrapedView, LazyMannequinView } from './lazy-mannequin-view.js';
 import type { DrapedBody } from './use-draped-body.js';
 import type { PatternStudioViewProps } from './view.js';
 
-const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
 /** Vêtement drapé à montrer à la place de l'habillage géométrique, dont le corps est ajusté à la pose du drapé. */
 export interface DrapedProps {
   model: ArrayBuffer;
   body: DrapedBody;
 }
 
+const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
 const DISPLAYS = ['3d', 'outline'] as const;
 
 function DisplayToggle({ state, actions }: PatternStudioViewProps) {
@@ -126,7 +126,7 @@ export function MannequinPanel(props: PatternStudioViewProps) {
       {state.dressing.status === 'failed' && (
         <Message tone="danger">{t('garment.dressingFailed')}</Message>
       )}
-      <TightZones state={state} />
+      {!(props.draped && state.display === '3d') && <TightZones state={state} />}
       <div className="studio-viewer">
         <MannequinBody state={state} draped={props.draped} />
       </div>
