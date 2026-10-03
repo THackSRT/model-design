@@ -1,26 +1,91 @@
-# Proposition : studio temps réel (phase 1, lots 7 à 12)
+# Proposition : studio temps réel (phase 1, lots 7 à 11)
 
-**Statut : proposition à valider (3 octobre 2026).** Rien n'est inscrit au [tableau des travaux](travaux.md) avant
-la validation ; ensuite, `/planifier` inscrit les lots et `/livrer` lance le lot 7. La recherche qui fonde ce plan
-est dans [Recherche : studio temps réel](recherche-temps-reel.md).
+**Statut : proposition à valider, version 2 (3 octobre 2026).** Elle suit le flux demandé par l'utilisateur et
+l'exigence d'un moteur générique et dynamique, sans aucun réglage par vêtement. Rien n'est inscrit au
+[tableau des travaux](travaux.md) avant la validation ; ensuite, `/planifier` inscrit les lots et `/livrer` lance le
+lot 7. La recherche qui fonde ce plan est dans [Recherche : studio temps réel](recherche-temps-reel.md).
 
 ## En bref
 
-- **Les moteurs actuels ne peuvent pas faire de temps réel, par construction.** Le patron se calcule sur le
-  serveur et crée une version à chaque calcul. Le drapé est une tâche serveur sur CPU, rendue au bout de 3 à 55 s,
-  que le studio interroge toutes les 2 s (ADR 0013).
-- **Le vrai verrou est la mise en place des pièces, pas la vitesse du solveur.** Les réglages propres à chaque
-  vêtement et l'échec du corsage à manches viennent de là. Les méthodes publiées (placement guidé par les coutures
-  de Style3D, attaches de GarmentCodeData) le règlent, à condition que le patron dise le rôle de chaque bord.
-- **Le temps réel est à portée avec le code actuel.** Le cœur du drapé tourne déjà dans un Worker du studio (essai
-  de Cusick) et se situe à un facteur 1 à 3 du temps réel ; exécuté pas à pas, il montre le vêtement se coudre.
-  WebGPU (82,9 % des sessions, 74 % sous Android) ne vient qu'en accélérateur, si les mesures l'exigent.
-- **Aucun projet libre ne fournit ce moteur.** GarmentCode drape en 30 s sur RTX 3090 avec 72 % de succès, et son
-  simulateur est sous licence non commerciale ; ContourCraft et Design2GarmentCode ne cousent pas de patrons 2D.
-- **La vue « pièces autour de la silhouette, longueurs des bords, coutures colorées » n'existe nulle part telle
-  quelle : on la construit en premier.** Elle aurait montré tout de suite la manche trop étroite.
-- **Le patronage passe en TypeScript** (environ 1 900 lignes, parité contre les cinq références golden). **On gèle**
-  ce qui ne sert pas à voir le vêtement sur le mannequin.
+- **Aucun réglage par vêtement, nulle part.** Le moteur de couture ne connaît aucun vêtement : il lit le rôle de
+  chaque bord et le graphe des coutures. Une règle de lint l'impose, et un test le prouve : des vêtements composés
+  au hasard se cousent sans toucher au moteur.
+- **Le flux devient l'ossature du studio** : Modèle, Édition, Matières, Patrons finaux, Habillage 2D, Vue 3D.
+  Chaque étape se revisite et une modification se propage en direct aux suivantes.
+- **Le patronage devient un kit générique en TypeScript, sur le modèle de FreeSewing** (modèle = pièces, mesures,
+  options typées, extensions), complété de ce qui manque à FreeSewing : coutures appariées, rôle des bords,
+  opérations génériques (poche, bande, garniture, fermeture), matière par pièce, passage en 3D.
+- **Les moteurs actuels ne font pas de temps réel, mais leur cœur se réutilise.** Le drapé est une tâche serveur en
+  différé (3 à 55 s) ; son cœur tourne déjà dans un Worker du studio (essai de Cusick), à un facteur 1 à 3 du temps
+  réel. WebGPU (82,9 % des sessions, 74 % sous Android) ne viendra qu'en accélérateur.
+- **Le flux complet tient en environ quatre semaines**, en cinq lots qui suivent l'ordre des étapes.
+
+## Le flux : six étapes, un seul document de modèle
+
+Le studio enregistre un document : modèle choisi, mesures, options, liste des opérations, matière de chaque pièce.
+Tout le reste s'en déduit, en direct.
+
+| Étape            | Ce que fait l'utilisateur                                            | Ce que fait le moteur                                                                    | Où                     |
+| ---------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------- |
+| 1 · Modèle       | Choisit un modèle dans la galerie, saisit les mesures                | Le kit compose le modèle à partir de ses blocs et l'ajuste aux mesures                   | Navigateur, < 10 ms    |
+| 2 · Édition      | Ajoute poche, bande, accessoire, garniture ; règle les options       | Le moteur d'opérations rejoue la liste ; la carte 2D suit ; les coutures sont contrôlées | Navigateur, < 10 ms    |
+| 3 · Matières     | Choisit tissu et imprimé de chaque pièce, importe un imprimé         | Chaque matière porte physique et apparence ; l'imprimé suit le droit fil                 | Navigateur             |
+| 4 · Patrons      | Fixe valeurs de couture et tailles, exporte                          | Fabrication : valeurs de couture, crans, marques, gradation, plan de coupe, exports      | Serveur, moteur actuel |
+| 5 · Habillage 2D | Voit le vêtement porté, de face et de dos, avec ses matières         | Assemblage grossier par le moteur de couture, rendu à plat sur la silhouette             | Navigateur, Worker     |
+| 6 · Vue 3D       | Regarde le vêtement se coudre et tomber, lit les cartes d'ajustement | Même moteur en brouillon puis en HD, textures et coutures visibles                       | Navigateur, Worker     |
+
+Retour libre : changer la taille d'une poche à l'étape 2 met à jour la carte 2D, les patrons finaux, l'habillage
+2D et la 3D ; la couture repart de l'état précédent.
+
+## Moteur générique et dynamique
+
+1. **Le moteur de couture ne connaît aucun vêtement.** Il lit le rôle des bords (encolure, emmanchure, épaule, côté,
+   taille, ourlet, entrejambe), le graphe des coutures, le placement et les attaches. Une règle de lint interdit tout
+   nom de vêtement dans son code ; les réglages actuels (godets, jambe par jambe, tenues d'épaule) disparaissent.
+2. **Un vêtement est une donnée.** Un modèle assemble des blocs (corsage, manche, col, jupe, pantalon, ceinture)
+   avec des options typées, comme dans FreeSewing ; les blocs se raccordent par des interfaces nommées (encolure,
+   emmanchure, taille, ourlet), comme dans GarmentCode.
+3. **Une opération est générique.** « Poche plaquée » s'applique à n'importe quelle pièce ; « bande » et « volant
+   froncé » à n'importe quel bord dont le rôle convient. Chaque opération produit ses pièces, coutures, attaches et
+   marques, que la 2D, la fabrication et la 3D lisent sans code spécial.
+4. **Tout est dynamique.** Le document se rejoue en moins de 10 ms à chaque geste ; la couture reprend à chaud,
+   grossière pendant le glissement, fine au repos.
+
+**Preuve de généricité.** Un générateur compose au hasard des vêtements du catalogue (blocs, options,
+opérations), comme GarmentCodeData sur 115 000 vêtements. Chacun doit se coudre ou échouer avec un problème typé,
+sans changer une ligne du moteur ; le taux de réussite est suivi à chaque lot, et une opération n'entre au
+catalogue que si son test passe.
+
+| Capacité                                                   | FreeSewing                      | Atelier                              |
+| ---------------------------------------------------------- | ------------------------------- | ------------------------------------ |
+| Modèle paramétrique : pièces, mesures, options typées      | Oui                             | Oui, même découpage                  |
+| Un modèle en étend un autre (blocs)                        | Oui                             | Oui, plus des interfaces nommées     |
+| Calcul en direct dans le navigateur, historique            | Oui                             | Oui                                  |
+| Coutures appariées, rôle des bords, placement sur le corps | Non                             | Oui, dans le contrat                 |
+| Poche, bande, garniture, fermeture                         | Options propres à chaque modèle | Opérations applicables à tout modèle |
+| Matière par pièce, imprimés                                | Non                             | Oui, physique et apparence           |
+| Patrons finaux                                             | Oui (SVG, PDF)                  | Oui, avec DXF-AAMA et gradation      |
+| Habillage 2D, couture et drapé 3D                          | Non                             | Oui                                  |
+
+Recommandation : notre noyau TypeScript sur le modèle de FreeSewing, sans en dépendre (ses chemins ne portent ni
+coutures ni rôles de bords, et nos contrats, références golden et coutures égalisées existent). Quand le catalogue
+devra grandir, un adaptateur importera des modèles FreeSewing (MIT, avec attribution), chacun avec une fiche de
+couture : rôles, coutures, placement. C'est de la donnée, pas du réglage.
+
+Premier catalogue d'opérations :
+
+| Famille                   | Opérations                                                     | Ce qu'elles produisent                                               |
+| ------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Poches                    | Plaquée (forme réglable), passepoilée, dans la couture de côté | Pièces, marques de pose, attache de surface en 3D ou couture de côté |
+| Bandes                    | Ceinture, poignet, bande d'encolure, biais, parementure        | Pièce dérivée de la longueur du bord, couture sur l'interface        |
+| Garnitures                | Volant froncé, passepoil, galon, dentelle, frange              | Bande cousue avec un rapport de fronces, ou cousue en surface        |
+| Fermetures et accessoires | Boutonnage, fermeture à glissière, passants, nœud              | Marques de boutons et de boutonnières, accessoires rigides en 3D     |
+| Transformations           | Longueur, évasement, pinces changées en fronces, plis          | Modifient les blocs sans ajouter de pièce                            |
+
+Matières : chaque matière porte sa physique (préréglages existants : popeline, wax, bazin, lin, denim, satin,
+jersey) et son apparence (couleur, imprimé importé, échelle, sens par rapport au droit fil) ; une matière par pièce
+et par couche (extérieur, doublure, entoilage). L'imprimé se pose avec les coordonnées à plat de la pièce, donc il
+est juste sur la carte 2D, dans le plan de coupe et en 3D.
 
 ## Diagnostic
 
@@ -34,212 +99,144 @@ est dans [Recherche : studio temps réel](recherche-temps-reel.md).
 | Qualité standard (1.47)  | 3 vêtements sur 5 en échec : jupe cercle, corsage, corsage à manches           |
 | Patron 2D affiché        | pièces côte à côte, sans silhouette, sans longueurs de bords ni coutures       |
 
-Causes :
+Causes : drapé conçu comme un calcul en différé ; réglage par vêtement au lieu d'un moteur générique (le patron ne
+dit pas le rôle de ses bords) ; erreurs de patron visibles trop tard ; travail hors du chemin critique (banc
+d'essai des tissus, historique, sécurité, Storybook, Playwright, Helm) ; coût fixe de quatre à six projets par
+fonctionnalité ; flux jamais écrit. Ce qui se garde : contrat GarmentSpec, patronage aux coutures égalisées,
+fabrication, mannequin MakeHuman, cœur XPBD et maillage, critères de réussite, préréglages de tissus, i18n, jetons,
+tests.
 
-1. **Architecture** : le drapé a été conçu comme un calcul en différé (studio → designs → outbox → NATS →
-   travailleur → S3 → NATS → designs → interrogation) ; rien ne s'affiche avant la convergence.
-2. **Méthode** : un réglage par vêtement (jupe cercle « en godets », pantalon « jambe par jambe », corsage « tenu
-   aux épaules ») au lieu d'une mise en place générique ; le patron ne dit pas le rôle de ses bords. Le passage des
-   bras de 9° à 30° puis 90° a coûté un lot de sept tâches.
-3. **Retour visuel** : une erreur de patron n'apparaît qu'en « pénétration du corps » au bout d'un drapé ; le patron
-   2D n'affiche ni longueurs ni coutures.
-4. **Périmètre** : banc d'essai des tissus (11 lignes), historique des versions, bornes du contrat, sécurité RLS,
-   taille des paquets ; Storybook, Playwright et Helm planifiés. Rien de cela ne rapproche de l'écran attendu.
-5. **Coût fixe** : chaque fonctionnalité traverse quatre à six projets, plus ADR, changelog, tableau et relecture.
-6. **Produit** : l'écran cible (patron 2D et vêtement 3D côte à côte, en direct) n'a jamais été décrit.
-
-Ce qui se garde : le contrat GarmentSpec (placement et coutures compris), le patronage aux coutures égales à
-0,5 mm, la fabrication (SVG, PDF, DXF-AAMA), le mannequin MakeHuman ajusté dans un Worker et mesuré par coupe
-plane, le cœur XPBD et le maillage Delaunay, les critères de réussite du drapé, l'habillage géométrique, la
-traduction ICU, les jetons et les tests.
-
-## Architecture cible
-
-Tout ce qui est interactif tourne dans le navigateur ; le serveur enregistre et exporte.
+## Architecture
 
 ```mermaid
 flowchart LR
   subgraph NAV["Navigateur"]
-    IN["Mesures, modèle, style"] --> PAT["Patronage TypeScript"]
-    PAT --> P2D["Carte du corps 2D"]
-    PAT --> CHK["Contrôle avant simulation"]
-    PAT --> MESH["Maillage Delaunay"]
+    DOC["Document de modèle"] --> KIT["Kit de patronage et opérations"]
+    KIT --> SPEC["GarmentSpec : pièces, rôles, coutures, attaches, matières"]
+    SPEC --> P2D["Carte 2D et patron à plat"]
+    SPEC --> SEW["Moteur de couture générique, Worker"]
     MAN["Mannequin MakeHuman"] --> SDF["SDF du corps"]
-    MESH --> SIM["Couture XPBD, Worker"]
-    SDF --> SIM
-    SIM --> R3D["Rendu three.js"]
-    SIM -.->|palier facultatif| GPU["XPBD WebGPU"]
-    R3D <-->|sélection partagée| P2D
+    SDF --> SEW
+    SEW --> D2D["Habillage 2D"]
+    SEW --> R3D["Vue 3D"]
+    SEW -.->|palier facultatif| GPU["WebGPU"]
   end
   subgraph SRV["Serveur"]
-    DES["designs : versions"] --> FAB["manufacturing : SVG, PDF, DXF"]
-    DRP["drapé en tâche, inchangé"]
+    DES["designs : versions du document"] --> FAB["manufacturing : patrons finaux"]
   end
-  PAT -->|enregistrement différé| DES
+  DOC -->|enregistrement différé| DES
 ```
 
-| Brique        | Choix                                                                                                                        |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Patronage     | Portage TypeScript du cœur Python, parité à 0,01 mm contre les cinq références golden                                        |
-| Contrat       | GarmentSpec enrichi d'un champ facultatif : rôles de bord, sens endroit-envers des coutures, couche                          |
-| Contrôle      | Table des coutures (appariée, aisée, suspecte), manche contre tour de bras, aisance par zone, avant toute simulation         |
-| Solveur       | XPBD actuel (Float64, déterministe) dans un Worker, positions diffusées à chaque pas ; WASM SIMD puis WebGPU si besoin       |
-| Collisions    | SDF du corps cuit après chaque ajustement (voxels de 5 à 8 mm), étiquettes de parties du corps, décalage de peau 3 mm        |
-| Mise en place | Pièce-germe et alignement guidé par le graphe des coutures (Style3D 2024), attaches par rôle relâchées après N pas           |
-| Retouche      | Départ à chaud par coordonnées 2D de pièce ; maillage grossier pendant le glissement, fin au repos (Sensitive Couture)       |
-| Rendu         | WebGLRenderer conservé ; polylignes de couture et fils d'assemblage ; cartes d'aisance et de tension (`_EASE_MM`, `_STRAIN`) |
+| Brique             | Choix                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Document de modèle | Modèle, mesures, options, opérations, matières : la version de `designs` ; la spécification s'en déduit par le même kit  |
+| Kit de patronage   | TypeScript sur le modèle de FreeSewing ; nos quatre vêtements portés depuis Python, parité contre les références golden  |
+| Contrat            | Champs facultatifs : rôle des bords, interfaces, coutures avec sens et fronces, attaches, marques, accessoires, matières |
+| Moteur de couture  | XPBD actuel en Worker, pas à pas ; mise en place par graphe de coutures et attaches par rôle ; aucun nom de vêtement     |
+| Collisions         | SDF du corps cuit après chaque ajustement (voxels de 5 à 8 mm), étiquettes de parties du corps, décalage de peau de 3 mm |
+| Habillage 2D       | Assemblage grossier (30 à 40 mm) dans le Worker, rendu à plat de face et de dos, avec matières et coutures               |
+| Vue 3D             | three.js en WebGL, textures par coordonnées à plat, coutures visibles, cartes de tension et d'aisance ; WebGPU en option |
+| Patrons finaux     | Moteur de fabrication existant, étendu aux pièces et marques des opérations                                              |
 
-Le même code TypeScript tourne dans le Worker du studio et sur le serveur. Si WebGPU vient (lot 12), il sera un
-aperçu comparé au CPU en millimètres : le WGSL n'a ni f64 ni atomiques flottants. La tâche de drapé NATS et S3
-reste en place, hors du chemin critique.
+| Mesure                                  | Cible      | Condition                                               |
+| --------------------------------------- | ---------- | ------------------------------------------------------- |
+| Rejouer le document (kit et opérations) | < 10 ms    | bureau ; < 30 ms sur téléphone milieu de gamme          |
+| Carte 2D au glissement d'un curseur     | ≥ 30 img/s | Android d'entrée de gamme                               |
+| Habillage 2D                            | < 1,5 s    | assemblage grossier dans le Worker                      |
+| Première image 3D                       | < 1 s      | pièces posées, fils de couture visibles                 |
+| Drapé de brouillon posé                 | < 5 s      | portable de cinq ans                                    |
+| Stable après une retouche               | < 1 s      | départ à chaud                                          |
+| Généricité                              | suivie     | compositions au hasard, à chaque lot, aucun faux succès |
+| Qualité standard                        | 5 sur 5    | `test-standard` vert sans réglage par vêtement          |
 
-Budgets et portes de sortie, mesurés sur de vrais appareils (les vitesses publiées viennent des auteurs et de
-matériel de bureau ; aucune source ne mesure la couture sur GPU intégré ou sur téléphone) :
+## Plan : cinq lots qui suivent le flux (environ quatre semaines)
 
-| Mesure                                    | Cible      | Condition                                                        |
-| ----------------------------------------- | ---------- | ---------------------------------------------------------------- |
-| Carte du corps au glissement d'un curseur | ≥ 30 img/s | Android d'entrée de gamme, cinq vêtements, trois niveaux de zoom |
-| Recalcul du patron                        | < 5 ms     | bureau ; < 20 ms sur téléphone milieu de gamme                   |
-| Première image du drapé                   | < 1 s      | après le choix du modèle, fils de couture visibles               |
-| Drapé de brouillon posé                   | < 5 s      | portable de cinq ans, Worker                                     |
-| Stable après une retouche                 | < 1 s      | départ à chaud                                                   |
-| Écart entre Node et navigateurs           | < 0,1 mm   | même entrée, même code                                           |
-| Qualité standard                          | 5 sur 5    | `test-standard` vert sans réglage par vêtement                   |
-| JavaScript initial                        | < 350 Ko   | gzip ; three.js chargé à la demande                              |
+### Lot 7 — Socle générique et choix du modèle (4 jours, jalon J1 : étape 1)
 
-## Studio
+| N°    | Tâche                                                                                                  | Agent      | Dépend de    |
+| ----- | ------------------------------------------------------------------------------------------------------ | ---------- | ------------ |
+| 1.53  | ADR 0019 : boucle dans le navigateur, moteur sans aucun vêtement (lint), preuve de généricité, budgets | architecte | validation   |
+| 1.54  | ADR 0020 et contrats : GarmentSpec enrichi et document de modèle                                       | architecte | 1.53         |
+| 1.55a | Kit TypeScript : pièces, chemins, mesures, options typées, interfaces, composition de blocs, contrôles | dev-moteur | 1.54         |
+| 1.55b | Blocs corsage et manche (manche corrigée, 1.46), parité golden                                         | dev-moteur | 1.55a        |
+| 1.55c | Blocs jupe droite, jupe cercle et pantalon, parité golden                                              | dev-moteur | 1.55a        |
+| 1.55d | Coquille du studio v2 : parcours en six étapes, jetons, composants, tablette et téléphone              | dev-front  | 1.53         |
+| 1.55e | Étape 1 : galerie de modèles, mesures, carte du corps 2D en direct, contrôle des coutures              | dev-front  | 1.55d, 1.55b |
 
-Un écran, deux vues synchronisées : **Carte du corps 2D** (pièces disposées à l'échelle autour de la silhouette
-devant et dos, sur papier millimétré, sommets marqués, longueurs des bords en cm, crans, droit fil, coutures
-colorées par paires avec une lettre) et **Vêtement 3D** (couture en direct, fils d'assemblage puis coutures,
-cartes de tension de 100 à 120 % et d'aisance en mots). Pas de bouton « Calculer » : chaque curseur redessine le
-patron et reprend la couture à chaud, la version s'enregistre en différé. On part d'un modèle (galerie, puis ruban
-Vêtement, Mesures, Style ; l'avancé derrière « Plus »). Les alertes parlent atelier (« manche trop étroite de
-4,4 cm au biceps », avec la correction en un clic). Style : graphite indigo, accent fil d'or, couleurs de fil pour
-les coutures, thème clair, verre dépoli réservé aux barres flottantes et jamais derrière une cote. Clavier (⌘K),
-tactile (cibles de 44 px) et téléphone (bascule Patron | Vêtement, inspecteur en feuille basse).
+### Lot 8 — Édition, matières, patrons finaux (5 jours, jalon J2 : étapes 2 à 4)
 
-La « simulation 2D » couvre la carte du corps en direct, les vues techniques face et dos du vêtement drapé
-projetées sur la silhouette, et plus tard la vue 2,5D prévue en phase 3 pour les téléphones modestes.
+| N°    | Tâche                                                                                                  | Agent       | Dépend de    |
+| ----- | ------------------------------------------------------------------------------------------------------ | ----------- | ------------ |
+| 1.56a | Moteur d'opérations : liste rejouée, annuler et rétablir, contrôles, erreurs typées                    | dev-moteur  | 1.55a        |
+| 1.56b | Poches et bandes                                                                                       | dev-moteur  | 1.56a        |
+| 1.56c | Garnitures et fermetures                                                                               | dev-moteur  | 1.56a        |
+| 1.56d | Étape 2 : palette d'opérations, pose par glisser, inspecteur, historique                               | dev-front   | 1.55e, 1.56a |
+| 1.56e | Étape 3 : bibliothèque de matières, affectation par pièce et par couche, import d'imprimé, textures 2D | dev-front   | 1.55e        |
+| 1.56f | Fabrication : pièces et marques des opérations, valeurs de couture par rôle de bord                    | dev-moteur  | 1.54         |
+| 1.56g | Étape 4 : patron à plat, valeurs de couture, gradation, plan de coupe, exports                         | dev-front   | 1.56f        |
+| 1.56h | `designs` : le document de modèle devient la version, enregistrée en différé                           | dev-service | 1.54, 1.55a  |
 
-## Plan : voir d'abord, fiabiliser ensuite, accélérer en dernier
+### Lot 9 — Moteur de couture générique (6 à 7 jours, commencé pendant le lot 8, jalon J3)
 
-Durées au rythme actuel des agents, recalées après le lot 7.
+| N°    | Tâche                                                                                                         | Agent                    | Dépend de    |
+| ----- | ------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------ |
+| 1.57a | Cœur : API pas à pas, Worker qui diffuse les positions, matière par pièce                                     | dev-moteur               | 1.53         |
+| 1.57b | SDF du corps, étiquettes de parties du corps, collisions contre le SDF                                        | dev-moteur               | 1.53         |
+| 1.57c | Mise en place par graphe de coutures et attaches par rôle ; retrait des réglages par vêtement ; règle de lint | architecte → dev-moteur  | 1.54, 1.57b  |
+| 1.57d | Opérations en 3D : fronces, poches attachées, bandes, accessoires rigides                                     | dev-moteur               | 1.57c, 1.56c |
+| 1.57e | Preuve de généricité (compositions au hasard, taux suivi) et `test-standard` sur cinq vêtements               | dev-moteur, verificateur | 1.57d        |
+| 1.57f | Banc de débit sur trois appareils réels, identité Node et navigateurs ; décide WASM SIMD et WebGPU            | dev-moteur               | 1.57a        |
 
-### Lot 7 — Voir (3 jours, jalon J1)
+### Lot 10 — Habillage 2D et passage 3D (4 à 5 jours, jalon J4 : étapes 5 et 6)
 
-Résultat visible : dans le studio actuel, la carte du corps avec nos patrons, les erreurs de couture signalées avant
-toute simulation, et le vêtement qui se coud pas à pas. Relecture Opus (ADR, golden).
+| N°    | Tâche                                                                                           | Agent                 | Dépend de    |
+| ----- | ----------------------------------------------------------------------------------------------- | --------------------- | ------------ |
+| 1.58a | Étape 5 : assemblage grossier, vues de face et de dos du vêtement habillé, matières et coutures | dev-front             | 1.57d        |
+| 1.58b | Étape 6 : vue 3D texturée, fils puis lignes de couture, cartes de tension et d'aisance          | dev-front             | 1.57d        |
+| 1.58c | Dynamique : une modification aux étapes 2 et 3 met à jour 4, 5 et 6 (départ à chaud)            | dev-moteur, dev-front | 1.58a, 1.58b |
+| 1.58d | Liaison 2D et 3D, finitions tablette et téléphone                                               | dev-front             | 1.58b        |
 
-| N°    | Tâche                                                                                                                                                                           | Agent      | Dépend de  |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------- |
-| 1.53  | ADR 0019 « Boucle interactive dans le navigateur » : Worker CPU en fondation, WebGPU en palier facultatif, tâche serveur hors du chemin critique, budgets, patronage TypeScript | architecte | validation |
-| 1.54  | Carte du corps 2D : silhouettes devant et dos existantes, pièces selon `placement`, longueurs, sommets, crans, coutures lettrées, survol, zoom                                  | dev-front  | 1.53       |
-| 1.55  | Contrôle avant simulation : table des coutures, manche contre tour de bras au même repère, aisance par zone                                                                     | dev-front  | 1.54       |
-| 1.56a | Cœur du drapé : API pas à pas (`createSimulation`, `step`), résultats actuels inchangés                                                                                         | dev-moteur | 1.53       |
-| 1.56b | Studio : drapé de brouillon dans un Worker, positions diffusées à chaque pas, fils de couture tant que la couture n'est pas fermée                                              | dev-front  | 1.56a      |
-| 1.57  | Banc de débit (une journée) : pas par seconde à 25, 20 et 15 mm sur trois navigateurs, portable et Android ; identité Node et navigateurs ; coût d'un dispatch WebGPU           | dev-moteur | 1.56a      |
-| 1.46  | Manche corrigée si 1.55 confirme la cause ; référence golden régénérée avec accord                                                                                              | dev-moteur | 1.55       |
+### Lot 11 — Porte de sortie (3 à 5 jours plus les toiles, jalon J5)
 
-### Lot 8 — Patron en direct (2 à 3 jours, jalon J2)
+| N°    | Tâche                                                                                               | Agent             | Dépend de |
+| ----- | --------------------------------------------------------------------------------------------------- | ----------------- | --------- |
+| 1.59a | Un parcours de bout en bout, de la galerie à l'export et à la 3D                                    | dev-front         | 1.58c     |
+| 1.25  | Toiles coupées depuis les exports, écarts corrigés, golden figées, mannequin calibré au mètre ruban | équipe, modéliste | 1.59a     |
 
-Résultat visible : les curseurs déforment le patron et la carte du corps en direct. Relecture Opus (golden).
-
-| N°    | Tâche                                                                                  | Agent       | Dépend de    |
-| ----- | -------------------------------------------------------------------------------------- | ----------- | ------------ |
-| 1.58a | Paquet `@atelier/patterning` (TypeScript) : mesures, courbes, géométrie, contrôles     | dev-moteur  | 1.53         |
-| 1.58b | Jupes droite et cercle, pinces, pièces communes                                        | dev-moteur  | 1.58a        |
-| 1.58c | Pantalon, corsage, manche                                                              | dev-moteur  | 1.58a, 1.46  |
-| 1.58d | Parité : cinq références golden à 0,01 mm, coutures égales à 0,5 mm                    | dev-moteur  | 1.58b, 1.58c |
-| 1.58e | `designs` calcule avec le même paquet ; enregistrement d'une version calculée en local | dev-service | 1.58d        |
-| 1.58f | Studio : calcul local à chaque curseur, version enregistrée en différé, sans bouton    | dev-front   | 1.58d        |
-
-### Lot 9 — Couture robuste (4 à 5 jours, jalon J3)
-
-Résultat visible : les cinq vêtements de référence se cousent en qualité standard sans réglage propre à un
-vêtement ; `test-standard` est vert. Relecture Opus (contrat).
-
-| N°    | Tâche                                                                                                                 | Agent                   | Dépend de    |
-| ----- | --------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------ |
-| 1.59a | Contrat : champ facultatif pour les rôles de bord, le sens endroit-envers des coutures et la couche ; ADR             | architecte              | 1.53         |
-| 1.59b | Le patronage émet ces rôles (paquet TypeScript, et moteur Python tant qu'il sert)                                     | dev-moteur              | 1.59a, 1.58d |
-| 1.59c | SDF du corps cuit après chaque ajustement, étiquettes de parties du corps, collisions contre le SDF                   | dev-moteur              | 1.53         |
-| 1.59d | Mise en place guidée par le graphe des coutures et attaches par rôle, à la place des réglages par vêtement            | dev-moteur              | 1.59b, 1.59c |
-| 1.59e | Critères étendus et grille de poses à 30, 45, 60 et 90° sur `test-standard` ; l'architecte tranche la pose de couture | dev-moteur → architecte | 1.59d        |
-| 1.59f | Jupe cercle en standard : attaches à longue portée, multigrille si nécessaire                                         | dev-moteur              | 1.59d        |
-
-### Lot 10 — Studio v2 (5 à 6 jours, en parallèle du lot 9, jalon J4)
-
-Résultat visible : l'écran de la maquette, en vrai, sur bureau, tablette et téléphone. Relecture Sonnet.
-
-| N°    | Tâche                                                                                                                             | Agent      | Dépend de    |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
-| 1.60a | Jetons v2 (sombre et clair, indigo, fil d'or, couleurs de fil) et composants (curseur, segmenté, inspecteur, palette ⌘K, feuille) | dev-front  | 1.53         |
-| 1.60b | Coquille : barre du haut, rail, volets 2D et 3D, inspecteur, barre d'état, tablette et téléphone ; la carte du corps y entre      | dev-front  | 1.60a, 1.54  |
-| 1.60c | Vue 3D v2 : tissu, polylignes de couture aux couleurs de la carte, cartes d'aisance et de tension, vues face, profil, dos         | dev-front  | 1.60b, 1.56b |
-| 1.60d | Retouche à chaud par coordonnées 2D de pièce ; grossier pendant le glissement, fin au repos                                       | dev-moteur | 1.58f, 1.56b |
-| 1.60e | Liaison 2D et 3D, historique nommé des réglages                                                                                   | dev-front  | 1.60c        |
-| 1.60f | Vues techniques face et dos du vêtement drapé                                                                                     | dev-front  | 1.60c        |
-| 1.60g | Accueil : galerie de modèles, mesures d'exemple, ruban Vêtement, Mesures, Style                                                   | dev-front  | 1.60b        |
-
-### Lot 11 — Couverture et porte de sortie (3 à 5 jours plus les toiles, jalon J5)
-
-Résultat visible : des toiles validées par un modéliste ; la phase 1 est close. Relecture Opus (golden figées).
-
-| N°    | Tâche                                                                                                | Agent             | Dépend de    |
-| ----- | ---------------------------------------------------------------------------------------------------- | ----------------- | ------------ |
-| 1.61a | Robe (corsage et jupe), haut à manches avec col simple, sur le modèle de composition de GarmentCode  | dev-moteur        | 1.58d, 1.59b |
-| 1.61b | Ceinture du pantalon et parementures ; auto-collision minimale si nécessaire                         | dev-moteur        | 1.59d        |
-| 1.61c | Exports depuis le studio v2 et un parcours de bout en bout                                           | dev-front         | 1.60e        |
-| 1.25  | Porte : toiles coupées depuis les exports, golden figées, écarts du mannequin relevés au mètre ruban | équipe, modéliste | 1.61c        |
-
-### Lot 12 — Accélérer sur GPU (facultatif, environ une semaine)
-
-Seulement si le banc 1.57 montre que le Worker, même avec WASM SIMD, reste loin des budgets : XPBD en WebGPU sous
-contrat de tolérance (écart au CPU en mm), coloration des contraintes comme jspdown/cloth (MIT), budget de
-dispatchs par image, limites de base vérifiées à la compilation, repli en cours de session.
+Lots facultatifs : **12, WebGPU**, seulement si le banc 1.57f l'exige ; **13, import FreeSewing**, adaptateur et
+fiches de couture pour des modèles FreeSewing choisis (MIT, avec attribution), sans toucher au moteur.
 
 ## Mis de côté jusqu'à la porte
 
-| Travail                                | Sort                                                                       |
-| -------------------------------------- | -------------------------------------------------------------------------- |
-| Storybook et captures (1.21a à d)      | Après la porte                                                             |
-| Suites Playwright (1.24a à d)          | Un seul parcours de bout en bout (1.61c)                                   |
-| Images CI, Helm, recette               | Phase 2                                                                    |
-| Tâche de drapé NATS et S3              | Gardée telle quelle, sans évolution ; le studio n'en dépend plus           |
-| Réglages par vêtement du drapé         | Plus d'investissement ; remplacés par la mise en place générique (lot 9)   |
-| Banc d'essai des tissus                | Gardé en l'état                                                            |
-| Historique et comparaison des versions | Gardés en l'état                                                           |
-| Hors phase 1                           | Assistant IA, simulateurs neuronaux, VBD, AVBD, OGC, multicouche, pression |
-
-Façon de travailler : un résultat visible et une courte démonstration filmée par lot ; essais techniques bornés à
-une journée puis ADR d'une page ; réglages dans le journal du composant, pas en amendements d'ADR ; documentation
-une fois par lot ; studio développé sans la pile Docker ; `pnpm check:affected` avant chaque push ; chaque
-dépendance nouvelle (three-mesh-bvh par exemple) par une ADR.
+| Travail                           | Sort                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| Storybook et captures (1.21a à d) | Après la porte                                                           |
+| Suites Playwright (1.24a à d)     | Un seul parcours de bout en bout (1.59a)                                 |
+| Images CI, Helm, recette          | Phase 2                                                                  |
+| Tâche de drapé NATS et S3         | Gardée telle quelle, sans évolution ; le studio n'en dépend plus         |
+| Réglages par vêtement du drapé    | Retirés au lot 9, remplacés par la mise en place générique               |
+| Banc d'essai des tissus           | Gardé en l'état ; ses préréglages alimentent la bibliothèque de matières |
+| Hors phase 1                      | Assistant IA, simulateurs neuronaux, multicouche complexe, pression      |
 
 ## Décisions à prendre
 
-1. Toute la boucle interactive dans le navigateur, sur le Worker CPU d'abord ; WebGPU seulement au lot 12, si le
-   banc l'exige. Recommandé : oui.
-2. Patronage porté en TypeScript (troisième exception à l'ADR 0003), Python gardé comme référence jusqu'à la
-   parité puis retiré après la porte. Recommandé : oui. Alternative : garder Python avec un calcul d'aperçu sans
-   version (environ 100 ms par appel, pas de glisser fluide, pas d'usage hors ligne).
-3. Contrat enrichi (rôles de bord, sens des coutures, couche) en champ facultatif compatible. Recommandé : oui.
-4. La liste de gel ci-dessus. Recommandé : oui.
-5. Direction visuelle (graphite indigo et fil d'or, thème clair disponible), à valider sur la maquette.
-6. Vêtements de la porte : les quatre actuels avec manches corrigées, plus robe et haut à manches ; un modèle
-   prioritaire pour les clients (boubou, kaftan, chemise) peut remplacer l'un d'eux.
-7. Validation sur toile : quel modéliste, et quand ; la même séance sert à calibrer le mannequin au mètre ruban.
-8. Correction de la manche (1.46) : accord explicite pour régénérer la référence golden du corsage à manches.
+1. Moteur générique : aucun vêtement dans le moteur de couture, preuve par compositions au hasard. Recommandé : oui.
+2. Kit de patronage : notre noyau TypeScript sur le modèle de FreeSewing (recommandé), ou FreeSewing comme noyau
+   avec une couche de coutures et de rôles à maintenir ; import de modèles FreeSewing au lot 13 (lesquels ?).
+3. Premier catalogue d'opérations à valider ou compléter (col, capuche, fente, smocks, broderie…).
+4. Imprimés importés par l'utilisateur (photo d'un wax) dès la phase 1. Proposé : oui, avec échelle et sens.
+5. Boucle dans le navigateur, Worker d'abord, WebGPU en option, liste de gel. Recommandé : oui.
+6. Délai : flux complet en environ quatre semaines ; environ trois si garnitures et fermetures passent après la
+   porte.
+7. Validation sur toile (quel modéliste, quand) et accord pour régénérer la référence golden du corsage à manches.
 
 ## Risques
 
-| Risque                                                 | Parade                                                                                      |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Le Worker reste trop lent sur les appareils visés      | Maillage grossier pendant le glissement, WASM SIMD, puis lot 12 ; mesuré dès 1.57           |
-| Mise en place générique incomplète (68 % chez Style3D) | Attaches par rôle, déplacement d'une pièce à la main, réglage par modèle en dernier recours |
-| Identité Node et navigateurs non tenue                 | Tolérance de 0,1 mm vérifiée par 1.57 ; sinon le serveur recalcule la version enregistrée   |
-| Tours du mannequin surestimés (2 à 3,5 cm)             | Calibration contre le mètre ruban à la porte                                                |
-| Deux moteurs de patronage pendant le portage           | Parité contre les golden, retrait du Python après la porte                                  |
-| SDF piégé dans un minimum local (aisselle, entrejambe) | Étiquettes de parties du corps, départ hors du corps, contrôle de pénétration existant      |
-| Dérive du périmètre                                    | Liste de gel, démonstration par lot, tableau des travaux tenu à jour                        |
+| Risque                                                 | Parade                                                                           |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Mise en place générique incomplète (68 % chez Style3D) | Attaches par rôle, déplacement d'une pièce à la main ; taux mesuré à chaque lot  |
+| Une opération crée un cas 3D nouveau                   | Une opération n'entre au catalogue que si son test de couture passe              |
+| Le Worker reste trop lent sur les appareils visés      | Maillage grossier pendant le glissement, WASM SIMD, puis lot 12                  |
+| Deux moteurs de patronage pendant le portage           | Parité contre les golden, retrait du Python après la porte                       |
+| Tours du mannequin surestimés (2 à 3,5 cm)             | Calibration contre le mètre ruban à la porte                                     |
+| Périmètre plus large que la phase 1 initiale           | Chaque lot livre une étape utilisable ; garnitures et fermetures peuvent glisser |
