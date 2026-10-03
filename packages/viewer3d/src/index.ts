@@ -1,6 +1,6 @@
 export { type Bounds, boundsOf, cameraDistance } from './framing.js';
 export { MannequinView, type MannequinViewProps } from './mannequin-view.js';
-export type { GarmentLayer, MeshData } from './scene.js';
+export type { DrapedGarmentLayer, GarmentLayer, MeshData } from './scene.js';
 export {
   silhouetteOrigin,
   silhouettePaths,
@@ -11,3 +11,11 @@ export {
   type SilhouetteView,
 } from './silhouette/index.js';
 export { MannequinOutline, type MannequinOutlineProps } from './mannequin-outline.js';
+export {
+  METERS_TO_SCENE,
+  readDrapedGlb,
+  type DrapedLayer,
+  type GlbError,
+  type GlbErrorCode,
+  type GlbResult,
+} from './glb.js';
