@@ -6,13 +6,13 @@ import type { ClothMesh, SimulationResult } from '../core/types.js';
 import { meshGarment, type GarmentMesh } from '../mesh/garment-mesh.js';
 import { garmentHolds } from '../placement/holds.js';
 import { keepClearOfBody } from '../placement/clearance.js';
-import { assertPlacements, placeGarment } from '../placement/place-garment.js';
+import { assertPlacements, placeGarmentReport } from '../placement/place-garment.js';
 import type { AvatarShape } from '../placement/types.js';
 import { ENGINE_VERSION } from '../version.js';
 import { vertexAreas, vertexEase, vertexStrain } from './metrics.js';
 import { problemOf, type DrapeProblem } from './problems.js';
 import {
-  DRAPE_SETTINGS,
+  settingsFor,
   MAX_STEPS_LIMIT,
   PENETRATION_TOLERANCE_MM,
   SEAM_TOLERANCE_MM,
@@ -98,9 +98,9 @@ function run(job: DrapeJob, options: DrapeOptions): DrapeOutcome {
   assertPlacements(job.spec);
   const mesh = meshGarment(job.spec, job.quality);
   const avatar = buildAvatar(job.measurements, job.avatar);
-  const start = placeGarment(mesh, job.spec, avatar);
+  const { positionsMm: start, flareRatio } = placeGarmentReport(mesh, job.spec, avatar);
   const clearance = keepClearOfBody(start, avatar.body);
-  const settings = { ...DRAPE_SETTINGS[job.quality] };
+  const settings = settingsFor(job.quality, flareRatio);
   settings.maxSteps = clamp(options.maxSteps ?? settings.maxSteps, 0, MAX_STEPS_LIMIT);
   const holds = garmentHolds(mesh, job.spec, avatar, start);
   const cloth: ClothMesh = { ...mesh.cloth, positionsMm: start, ...(holds ? { holds } : {}) };

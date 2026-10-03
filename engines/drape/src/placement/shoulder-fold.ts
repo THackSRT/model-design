@@ -13,9 +13,9 @@ import type { AvatarShape, P2 } from './types.js';
 export const FOLD_BELOW_SHOULDER_MM = 40;
 /**
  * Le trajet sagittal par-dessus l'épaule est plus long que le patron (mesuré : les coutures d'épaule partent à 88 mm
- * sans ce facteur, 55 mm avec) : l'excédent de hauteur est porté sur le profil multiplié par ce facteur.
+ * sans ce facteur, 71 mm avec) : l'excédent de hauteur est porté sur le profil multiplié par ce facteur.
  */
-const FOLD_STRETCH = 1.1;
+const FOLD_STRETCH = 1.05;
 /** Pas des plans de coupe en x, mm (les profils sont mémorisés). */
 const X_STEP_MM = 5;
 /** Le profil ne garde que les points de cette hauteur sous le début du repli et au-dessus, jusqu'au cou, mm. */

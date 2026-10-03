@@ -112,7 +112,9 @@ function substep(c: Context, gravityScale: number, softness: Softness): number {
   for (let it = 0; it < c.iterations; it++) {
     solveStretch(c.model, c.x, invDt2, c.lambdas.stretch);
     solveBending(c.model, c.x, invDt2, c.lambdas.bending);
-    solveStitches(c.model, c.x, soft, c.lambdas.stitches); // la couture se ferme
+    // La couture se ferme, deux passes de suite : un cycle de coutures (raccord de quatre pièces) se résout en deux.
+    solveStitches(c.model, c.x, soft, c.lambdas.stitches);
+    solveStitches(c.model, c.x, soft, c.lambdas.stitches);
     if (c.holdModel && softness.hold !== null)
       solveHolds(c.holdModel, c.x, holdSoft, c.lambdas.holds);
   }

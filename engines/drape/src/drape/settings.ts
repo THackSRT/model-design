@@ -6,7 +6,11 @@ import type { MeshQuality } from '../mesh/limits.js';
  * 10 s en standard). Le temps de calcul est borné indirectement par `maxSteps` × `substeps` × nombre de sommets
  * (au plus 30 000) ; l'arrêt au repos (vitesse sous 1 mm/s pendant 10 pas) le raccourcit presque toujours.
  */
-export const DRAPE_SETTINGS: Readonly<Record<MeshQuality, SimulationSettings>> = {
+export const DRAPE_SETTINGS: Readonly<Record<MeshQuality, SimulationSettings>> & {
+  /** Réglage fin d'un tube très évasé : remplace les sous-pas et les itérations de la qualité. */
+  flare: Pick<SimulationSettings, 'substeps' | 'iterations'>;
+} = {
+  flare: { substeps: 50, iterations: 1 },
   draft: {
     stepS: 1 / 60,
     substeps: 10,
@@ -36,3 +40,12 @@ export const SEAM_TOLERANCE_MM = 2;
 export const PENETRATION_TOLERANCE_MM = 3;
 /** Aisance au plus égale à cette valeur : tissu au contact du corps (marge de contact de 2 mm, plus 1 mm). */
 export const TIGHT_EASE_MM = 3;
+
+/** Rapport tour fini / courbe à partir duquel la simulation prend le réglage fin (tissu suspendu sans appui). */
+export const FLARE_RATIO = 1.5;
+
+/** Réglages de la qualité ; le réglage fin (`flare`) y remplace sous-pas et itérations si le départ a plissé un niveau d'au moins `FLARE_RATIO`. */
+export function settingsFor(quality: MeshQuality, flareRatio: number): SimulationSettings {
+  const base = { ...DRAPE_SETTINGS[quality] };
+  return flareRatio >= FLARE_RATIO ? { ...base, ...DRAPE_SETTINGS.flare } : base;
+}

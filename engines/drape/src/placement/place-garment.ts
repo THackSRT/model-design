@@ -1,6 +1,7 @@
 import type { GarmentSpec, Panel } from '@atelier/contracts-ts';
 import type { GarmentMesh } from '../mesh/garment-mesh.js';
 import { makeFrame, type Frame } from './frames.js';
+import { createGodetPlacer, type GodetPlacer } from './godets.js';
 import { pointAt } from './hull.js';
 import { instancesOf, type Instance } from './instances.js';
 import { legModes, legPieceOf, type LegPiece, type WrapMode } from './leg-align.js';
@@ -34,6 +35,10 @@ interface Context {
   fold: ShoulderFold;
   /** Repérage par la ligne d'ancrage des exemplaires du tronc et des jambes (les bras gardent l'ordonnée du patron). */
   fields: ReadonlyMap<Instance, PieceField>;
+  /** Placeurs en godets des exemplaires évasés du tronc, créés à la demande. */
+  godets: Map<Instance, GodetPlacer>;
+  /** Plus grand rapport tour fini / courbe parmi les niveaux mis en godets (0 sans godets). */
+  flareRatio: number;
   out: Float64Array;
 }
 
@@ -76,6 +81,18 @@ function wrapped(level: LevelCurve, mode: WrapMode, total: number): [number, num
   ];
 }
 
+function godetOf(ctx: Context, inst: Instance, field: PieceField): GodetPlacer | undefined {
+  const known = ctx.godets.get(inst);
+  if (known) return known;
+  const made = createGodetPlacer({
+    stack: stackOf(ctx, inst).stack,
+    field,
+    circumference: (up) => ctx.circumference(inst, up),
+  });
+  ctx.godets.set(inst, made);
+  return made;
+}
+
 /** Hauteur du sommet v au-dessus de l'ancrage : par la ligne d'ancrage ou l'ordonnée du patron. */
 function heightOf(ctx: Context, inst: Instance, v: number): number {
   const field = ctx.fields.get(inst);
@@ -106,6 +123,14 @@ function planarPoint(
   const [s, d] = [field.s[local] as number, -up];
   const level = stack.curveAt(levelIndex(-d));
   const total = ctx.circumference(inst, -d);
+  const godet =
+    !leg && inst.zone === 'torso' && d >= 0
+      ? godetOf(ctx, inst, field)?.place(field.t[local] as number, d)
+      : undefined;
+  if (godet) {
+    ctx.flareRatio = Math.max(ctx.flareRatio, godet.ratio);
+    return { up: -godet.drop, ab: godet.ab };
+  }
   if (!leg) return { up: -d, ab: wrapped(level, wholeCurve(level, field.abscissa(s, d)), total) };
   const at = { s, d, heightMm: inst.heightMm - d, crotchMm: ctx.crotchMm };
   const modes = legModes(leg, level, field, at);
@@ -165,6 +190,12 @@ function fieldsOf(
   return fields;
 }
 
+/** Positions de départ et plus grand rapport tour fini / courbe des niveaux mis en godets (0 : aucun). */
+export interface Placement {
+  positionsMm: Float64Array;
+  flareRatio: number;
+}
+
 /**
  * Positions de départ (mm, 3 par sommet) du vêtement autour de l'avatar. Lance `PlacementError`
  * (`placement-failed`) si une pièce ne peut pas être enroulée ; `assertPlacements` doit avoir été appelée avant le
@@ -175,6 +206,15 @@ export function placeGarment(
   spec: GarmentSpec,
   avatar: AvatarShape,
 ): Float64Array {
+  return placeGarmentReport(mesh, spec, avatar).positionsMm;
+}
+
+/** Comme `placeGarment`, avec le rapport maximal tour fini / courbe (il choisit le réglage de la simulation). */
+export function placeGarmentReport(
+  mesh: GarmentMesh,
+  spec: GarmentSpec,
+  avatar: AvatarShape,
+): Placement {
   const instances = instancesOf(mesh, spec, avatar);
   const fields = fieldsOf(mesh, spec, instances);
   const sectioner = createSectioner(avatar.body);
@@ -187,6 +227,8 @@ export function placeGarment(
     crotchMm: avatar.landmarksMm.crotch,
     fold: createShoulderFold(avatar, sectioner),
     fields,
+    godets: new Map(),
+    flareRatio: 0,
     out: new Float64Array(mesh.cloth.positionsMm.length),
   };
   for (const inst of instances) {
@@ -203,5 +245,5 @@ export function placeGarment(
       throw error;
     }
   }
-  return ctx.out;
+  return { positionsMm: ctx.out, flareRatio: ctx.flareRatio };
 }

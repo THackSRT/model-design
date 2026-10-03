@@ -197,3 +197,65 @@ export function dartTable(line: AnchorLine, left: number[], right: number[]): Da
   const r = side(right);
   return { depthLeft: l.depth, sigmaLeft: l.sigma, depthRight: r.depth, sigmaRight: r.sigma };
 }
+
+/** Virage signé (rad, petit angle : produit vectoriel des directions unitaires, positif à gauche) entre les segments m et m + 1. */
+function turnAfter(line: AnchorLine, m: number): number {
+  if (m + 1 >= line.lengths.length || line.gap[m] === 1 || line.gap[m + 1] === 1) return 0;
+  const [a, b] = [4 * m, 4 * (m + 1)];
+  const [la, lb] = [f(line.lengths, m), f(line.lengths, m + 1)];
+  if (la < TINY || lb < TINY) return 0;
+  const [ax, ay] = [
+    (f(line.segments, a + 2) - f(line.segments, a)) / la,
+    (f(line.segments, a + 3) - f(line.segments, a + 1)) / la,
+  ];
+  const [bx, by] = [
+    (f(line.segments, b + 2) - f(line.segments, b)) / lb,
+    (f(line.segments, b + 3) - f(line.segments, b + 1)) / lb,
+  ];
+  return ax * by - ay * bx;
+}
+
+/**
+ * Abscisse lissée du point sur la courbe parallèle à la ligne, à la distance d : σ + d × (virage cumulé jusqu'au
+ * point). Une courbe parallèle à une ligne courbe a pour longueur celle de la ligne plus d fois son virage ; le
+ * repérage brut (σ) la perd : tous les points du coin d'un sommet de la chaîne, vus du côté extérieur, auraient le même
+ * σ. Dans ce coin, le virage partiel est tiré de la composante du point le long du segment (petit angle).
+ * `out[0]` = abscisse lissée depuis l'ancre (pinces non retirées), `out[1]` = d.
+ */
+export function projectSmooth(line: AnchorLine, px: number, py: number, out: Float64Array): void {
+  projectRaw(line, px, py, out);
+  const sigma = f(out, 0);
+  const d = f(out, 1);
+  const here = turningAt(line, sigma, [px, py], d);
+  const anchor = turningAt(line, line.anchorSigma, undefined, 0);
+  out[0] = sigma + d * here - (line.anchorSigma + d * anchor);
+}
+
+/** Virage cumulé jusqu'à l'abscisse brute σ ; `p` : point dont le coin du sommet de la chaîne donne un virage partiel. */
+function turningAt(
+  line: AnchorLine,
+  sigma: number,
+  p: readonly [number, number] | undefined,
+  d: number,
+): number {
+  let m = 0;
+  while (m < line.lengths.length - 1 && f(line.starts, m) + f(line.lengths, m) < sigma - TINY) m++;
+  let turn = 0;
+  for (let j = 0; j < m; j++) turn += turnAfter(line, j);
+  const len = f(line.lengths, m);
+  if (!p || len < TINY || m >= line.lengths.length - 1) return turn;
+  return turn + cornerTurn(line, m, p, d);
+}
+
+/** Virage partiel d'un point dans le coin de la fin du segment m (petit angle), 0 hors du coin. */
+function cornerTurn(line: AnchorLine, m: number, p: readonly [number, number], d: number): number {
+  const len = f(line.lengths, m);
+  const o = 4 * m;
+  const tx = (f(line.segments, o + 2) - f(line.segments, o)) / len;
+  const ty = (f(line.segments, o + 3) - f(line.segments, o + 1)) / len;
+  const beyond = (p[0] - f(line.segments, o + 2)) * tx + (p[1] - f(line.segments, o + 3)) * ty;
+  const own = turnAfter(line, m);
+  if (beyond <= TINY || Math.abs(d) <= TINY || d * own <= 0) return 0;
+  const part = Math.min(Math.abs(own), beyond / Math.abs(d));
+  return own > 0 ? part : -part;
+}

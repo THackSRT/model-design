@@ -1,6 +1,7 @@
 import type { Panel, Seam } from '@atelier/contracts-ts';
 import type { GarmentMesh, GarmentPiece } from '../mesh/garment-mesh.js';
 import { anchorLine, projectOnLine, type AnchorLine } from './anchor-line.js';
+import { projectSmooth } from './line-projection.js';
 
 // Repérage (s, d) des sommets d'un exemplaire de pièce par rapport à sa ligne d'ancrage, et longueurs de ses
 // isolignes d (ADR 0013) : la longueur totale d'une isoligne donne le tour fini d'un tube à une hauteur ; la part de
@@ -30,6 +31,12 @@ export interface PieceField {
   abscissa(s: number, d: number): number;
   /** Étendue [s min, s max] de l'isoligne d (0, 0 hors de la pièce). */
   span(d: number): readonly [number, number];
+  /**
+   * Abscisse lissée par sommet (mesurée sur la courbe parallèle à la ligne : sans plateau dans le coin d'un sommet de
+   * la chaîne) et étendue de l'isoligne d dans cette abscisse. Sert au départ en godets.
+   */
+  t: Float64Array;
+  tSpan(d: number): readonly [number, number];
 }
 
 /** Longueurs des isolignes aux niveaux `first + i` pas : totale, et part dans l'étendue de la ligne. */
@@ -165,6 +172,30 @@ function sampleIsolines(
   return samples;
 }
 
+/** (s, d) et abscisse lissée de chaque sommet de l'exemplaire par rapport à sa ligne d'ancrage. */
+function project(
+  mesh: GarmentMesh,
+  piece: GarmentPiece,
+  line: AnchorLine,
+): { s: Float64Array; d: Float64Array; smooth: Float64Array } {
+  const s = new Float64Array(piece.vertexCount);
+  const d = new Float64Array(piece.vertexCount);
+  const smooth = new Float64Array(piece.vertexCount);
+  const out = new Float64Array(2);
+  for (let i = 0; i < piece.vertexCount; i++) {
+    const [x, y] = [
+      f(mesh.cloth.flatMm, 2 * (piece.vertexStart + i)),
+      f(mesh.cloth.flatMm, 2 * (piece.vertexStart + i) + 1),
+    ];
+    projectOnLine(line, x, y, out);
+    s[i] = f(out, 0);
+    d[i] = f(out, 1);
+    projectSmooth(line, x, y, out);
+    smooth[i] = f(out, 0);
+  }
+  return { s, d, smooth };
+}
+
 /** Repère de l'exemplaire, ou `undefined` si sa ligne d'ancrage n'existe pas (contour vide). */
 export function pieceField(
   mesh: GarmentMesh,
@@ -174,17 +205,10 @@ export function pieceField(
 ): PieceField | undefined {
   const line = anchorLine(mesh, piece, panel, seams);
   if (!line || line.length <= 0) return undefined;
-  const s = new Float64Array(piece.vertexCount);
-  const d = new Float64Array(piece.vertexCount);
-  const out = new Float64Array(2);
-  for (let i = 0; i < piece.vertexCount; i++) {
-    const g = piece.vertexStart + i;
-    projectOnLine(line, f(mesh.cloth.flatMm, 2 * g), f(mesh.cloth.flatMm, 2 * g + 1), out);
-    s[i] = f(out, 0);
-    d[i] = f(out, 1);
-  }
+  const { s, d, smooth } = project(mesh, piece, line);
   const range = line.range;
   const samples = sampleIsolines(mesh, piece, { s, d }, range);
+  const smoothSamples = sampleIsolines(mesh, piece, { s: smooth, d }, range);
   const scale = (dd: number): number => {
     const k = interpolate(samples.inside, samples, dd) / (range[1] - range[0]);
     return k > 0 ? k : 1;
@@ -195,6 +219,14 @@ export function pieceField(
     d,
     fullLength: (dd) => interpolate(samples.full, samples, dd),
     span: (dd) => spanAt(samples, dd),
+    t: smooth,
+    tSpan(dd) {
+      // L'isoligne de la ligne même (d ≈ 0) se confond avec le bord : ses extrémités se prolongent depuis deux niveaux.
+      if (dd >= ISO_STEP_MM) return spanAt(smoothSamples, dd);
+      const [a, b] = [spanAt(smoothSamples, ISO_STEP_MM), spanAt(smoothSamples, 2 * ISO_STEP_MM)];
+      const w = (dd - ISO_STEP_MM) / ISO_STEP_MM;
+      return [a[0] + (b[0] - a[0]) * w, a[1] + (b[1] - a[1]) * w];
+    },
     scale,
     abscissa(sv, dd) {
       const inside = Math.max(range[0], Math.min(range[1], sv));

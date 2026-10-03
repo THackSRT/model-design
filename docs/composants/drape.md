@@ -196,12 +196,25 @@ pour que les exemplaires tiennent côte à côte ; sinon les coutures de côté 
 droite). `clearance.ts` : aucun sommet à moins de 3 mm du corps au départ (repoussé le long de la normale, au plus 100 mm
 sinon `placement-failed`). `assertPlacements` : `placement-missing`. `PlacementError` (`code`, `panelId`, jamais de mesure).
 
-Jupe cercle (brouillon, mesures fictives, popeline, avatar par défaut, 0.7.0) : coutures à 89 mm au plus au départ (227 à 971 mm
-avant) ; le drapé se termine en `seam-not-closed` (écart 5,7 mm, convergé en 265 pas) avec 13 mm de pénétration (bras à 9° :
-nul à 30°) et un bas de ceinture à ≈ 55 mm sous la taille. Cause mesurée : la ceinture s'allonge de 37 % sous le poids de la jupe
-(quatre itérations par sous-pas ne tiennent pas une chaîne de 650 mm) ; avec 20 sous-pas, 4 itérations : allongement 21 %, 0 mm
-de pénétration, écart 2,2 mm, ceinture à la taille, mais non convergé en 400 pas ; 30 sous-pas : convergé, 1,1 mm, ceinture
-26 mm trop haute. Réglage à décider (ADR 0013 fixe 10 sous-pas) ; les critères de l'ADR sont donc encore ouverts.
+**Jupe cercle : départ en godets (0.10.0, `godets.ts`)** : le cône déroulé de 0.7.0 partait avec un allongement des arêtes de 222 % au 95e centile
+(la couture refermait un maillage froissé). Pour une pièce du tronc sous l'ancre dont le tour fini dépasse la courbe du corps décalée de plus de 5 % à son
+niveau le plus large, la courbe de chaque niveau garde sa taille et l'excédent est plissé en ondes radiales (profil 16u²(1 − u)², un godet par 150 mm de la part de
+courbe de la pièce au niveau le plus large, au moins un, creux aux bouts de la pièce). L'amplitude de chaque niveau vient d'une dichotomie (40 tours) qui égale la
+longueur de la courbe ondulée à celle de l'isoligne ; l'abscisse d'un sommet est sa fraction de l'isoligne, portée sur la courbe ondulée ; la hauteur est le repère
+moins ∫ √(1 − (dr/dd)²) dd (r : rayon moyen du niveau, ondes comprises) ; la position est interpolée entre deux niveaux. Tous les niveaux de la pièce sont en godets
+(amplitude nulle où la courbe suffit : un seuil par niveau déchirait le maillage au passage). Deux écarts à l'ADR, mesurés : la longueur de l'isoligne se mesure par
+`PieceField.t` / `tSpan`, abscisse lissée (`projectSmooth` : σ + d × virage cumulé de la chaîne) ; le repérage brut σ donne le même σ à tous les points du coin d'un
+sommet de la chaîne, vus du dehors, et la fraction de l'isoligne s'y effondrait (allongement de 38 % au 95e centile, arêtes de 0 à 300 %) ; et la courbe est toujours
+ramenée à l'isoligne (étirement jusqu'à 28 % en haut, où le tour fini est plus petit que la courbe) pour que les pièces se rejoignent à tous les niveaux.
+La mise en place rend aussi le rapport maximal tour fini / courbe (`placeGarmentReport`) ; s'il atteint 1,5 (`FLARE_RATIO`), `drapeGarment` prend le réglage fin
+`DRAPE_SETTINGS.flare` (50 sous-pas, 1 itération, le reste de la qualité) : tissu suspendu sans appui, qui charge la ceinture. Double passe de couture
+(`solveStitches` deux fois par itération, avant les tenues) pour tous les vêtements. Mesuré (brouillon, mesures fictives, popeline, bras à 30°) : rapport 3,87 ;
+départ : allongement 5,5 % (médiane) et 24 % (95e centile), coutures à 92 mm ; drapé `ok`, convergé en 244 pas, pénétration 0, écart de couture 0,02 mm, bas de
+ceinture à waist − 38 mm (limite −40), rayon d'ourlet 1,56 fois celui de la hanche (limite 1,5), ourlet à 0,93 fois la longueur sous la ceinture (limite 0,8) ; `costRatio` 29 (limite 30,
+marge mince, machine chargée) ; mise en place 0,4 s. Le résultat varie de quelques millimètres d'une exécution à l'autre selon la machine : les marges sur la ceinture et
+l'ourlet sont minces (60 sous-pas × 1 est permis par l'ADR si elles cèdent, avec un budget de 40). À 9° : `body-penetration` (l'avant-bras traverse la jupe ; 14 s).
+Qualité standard (9 756 sommets, 30°) : 51 s, convergé en 300 pas, pénétration 0, écart 0,11 mm, sous la borne de 60 s mais près d'elle (mesurée à la main, non testée).
+Départs de la jupe droite, du pantalon et des corsages inchangés au bit près (test `godets.test.ts`). Tests : `drape-circle-skirt.test.ts`, `godets.test.ts`.
 
 **Pantalon jambe par jambe (0.8.0, `leg-align.ts`)** : les pièces `leg` (devant et dos, dessinées vues de dehors : l'abscisse croît dans le
 sens horaire vu d'en haut) s'enroulent autour du tube de leur jambe, et non plus par le coin de taille. Sous `crotch`, le milieu de
@@ -219,14 +232,15 @@ minimale ≈ 2 mm, allongement maximal 28 %, `costRatio` 8,5 à 9. Test : `drape
 milieu du dos : l'ancre est sur l'axe du corps) ; la pièce garde alors le repérage du patron (x depuis l'ancre, y moins l'ancre) ; avant, la ligne
 verticale tournait la pièce de 90° (coutures à 392 à 636 mm). (2) `shoulder-fold.ts` : au-dessus de `shoulder` − 40 mm, le sommet garde son x de
 la coupe à cette hauteur, puis est couché sur le profil sagittal (coupe x = constante pas de 5 mm, sans les composantes bras, points de
-`shoulder` − 140 mm à `neck`, enveloppe convexe décalée de `clearanceMm`) depuis la face regardée, de l'excédent de hauteur multiplié par 1,1 (le trajet
-par-dessus l'épaule est plus long que le patron : coutures d'épaule à 88 mm sans facteur, 55 à 63 mm avec). Un plan qui ne coupe que des bras
+`shoulder` − 140 mm à `neck`, enveloppe convexe décalée de `clearanceMm`) depuis la face regardée, de l'excédent de hauteur multiplié par 1,05 (le trajet
+par-dessus l'épaule est plus long que le patron : coutures d'épaule à 88 mm sans facteur, 71 mm avec ; 1,1 donnait 63 mm mais, avec la double passe de
+couture de 0.10.0, laissait 12 mm de pénétration à l'emmanchure du corsage : 1,0, 1,05, 1,15 et 1,2 passent, 1,1 est un point malchanceux d'une dynamique sensible). Un plan qui ne coupe que des bras
 (bout d'épaule) reprend le profil d'un x plus proche du milieu. (3) `holds.ts` : tenues des coutures d'épaule (couture entre une pièce
 `torso` `front` et une `back` dont tous les points ont une hauteur reportée d'au moins `shoulder` − 30 mm ; axe vertical) et du haut de manche (bords d'une pièce
-`arm` dont une extrémité est l'ancre à 0,5 mm près ; axe = −axe du bras). Le facteur 1,1 et le seuil raide sont des réglages du moteur, pas du contrat.
+`arm` dont une extrémité est l'ancre à 0,5 mm près ; axe = −axe du bras). Le facteur 1,05 et le seuil raide sont des réglages du moteur, pas du contrat.
 Mesuré (brouillon, mesures fictives, popeline, bras à 30°) : corsage `ok`, convergé en 128 pas, pénétration 0, écart 0,02 mm, aisance minimale 2 mm,
-épaules entre 1 366 et 1 395 mm (shoulder 1 312, neck 1 425), ourlet médian à waist − 39,4 mm (limite 40, peu de marge), `costRatio` 4,5 ; coutures
-d'épaule à 63 mm au départ. À 9° : succès non convergé en 400 pas (aisance minimale 0,3 mm). Corsage à manches : `body-penetration` à 9° comme à 30°
+épaules entre 1 365 et 1 395 mm (shoulder 1 312, neck 1 425), ourlet médian à waist − 37,4 mm (limite 40, peu de marge), `costRatio` 4,5 ; coutures
+d'épaule à 71 mm au départ (valeurs de 0.9.0 avec 1,1 : 128 pas, ourlet −39,4 mm). À 9° : succès non convergé en 400 pas (aisance minimale 0,3 mm). Corsage à manches : `body-penetration` à 9° comme à 30°
 (≈ 28 mm). Cause mesurée : la manche du patron a 188 mm de large à 143 mm sous l'épaule alors que le bras a 232 mm de tour à ce niveau (sans aisance),
 et l'emmanchure (285 mm) est courte ; les sommets du creux du dos (emmanchure et haut de manche) finissent dans le bras. Les tenues de manche ne
 changent pas ce résultat (28 mm avec, 33 mm sans). Garde-fou : succès conforme ou problème typé (`drape-bodice.test.ts`).
@@ -252,8 +266,7 @@ Mesuré (poste de développement) : jupe droite en brouillon (1 364 sommets) : a
 allongement maximal 25 % (taille sur les hanches, autour des pinces). Test de coût : `costRatio` 4,5 à 9, seuil 20. Écart
 moyen de position avec l'habillage géométrique 1.34a : 32 mm, seuil 50 mm (les deux ne visent pas la même chose : le drapé
 tombe et se serre, l'habillage est un tube à tour fini). Hors jupe droite (draft, mesures de la référence) : jupe cercle
-`seam-not-closed` (18 s), pantalon (avant 0.8.0 : `seam-not-closed`), corsage `body-penetration`, corsage à manches converge (écart de
-couture 1,3 mm, aisance minimale −60 mm) : à reprendre (corsages et manches : 1.19e2c).
+(avant 0.10.0 : `seam-not-closed`, 18 s), pantalon (avant 0.8.0 : `seam-not-closed`), corsage (avant 0.9.0 : `body-penetration`), corsage à manches (0.9.0 : voir plus haut).
 
 ### Validation des tissus — ADR 0015
 
