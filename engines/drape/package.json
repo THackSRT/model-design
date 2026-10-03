@@ -24,6 +24,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "test-standard": "vitest run --config vitest.standard.config.ts",
     "dev": "tsc -p tsconfig.build.json && node dist/main.js",
     "start": "node dist/main.js"
   },

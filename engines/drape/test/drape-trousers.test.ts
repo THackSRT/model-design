@@ -12,25 +12,13 @@ import { meshGarment, PENETRATION_TOLERANCE_MM, SEAM_TOLERANCE_MM } from '../src
 import { pelvisWeight } from '../src/placement/leg-align.js';
 import { pieceField } from '../src/placement/piece-field.js';
 import { costRatio } from './helpers.js';
-import { fixture, jobOf, MEASUREMENTS } from './drape-helpers.js';
+import { fixture, jobOf, MEASUREMENTS, seamGaps } from './drape-helpers.js';
 
 // Pantalon en brouillon sur l'avatar, posé jambe par jambe (ADR 0013, 1.19e2b). Mesures fictives des références, popeline.
 
 const spec = fixture('trousers');
 const MAX_START_GAP_MM = 120;
 const CROSSED_LEG_MM = 10;
-
-function seamGaps(positions: ArrayLike<number>, stitches: Uint32Array): number {
-  let widest = 0;
-  for (let k = 0; k < stitches.length; k += 2) {
-    const [a, b] = [stitches[k] as number, stitches[k + 1] as number];
-    const dx = (positions[3 * a] as number) - (positions[3 * b] as number);
-    const dy = (positions[3 * a + 1] as number) - (positions[3 * b + 1] as number);
-    const dz = (positions[3 * a + 2] as number) - (positions[3 * b + 2] as number);
-    widest = Math.max(widest, Math.sqrt(dx * dx + dy * dy + dz * dz));
-  }
-  return widest;
-}
 
 describe('pantalon en brouillon sur l’avatar', () => {
   let avatar: AvatarShape;

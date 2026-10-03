@@ -9,7 +9,16 @@ import {
 } from '../src/node.js';
 import { meshGarment, PENETRATION_TOLERANCE_MM, SEAM_TOLERANCE_MM } from '../src/index.js';
 import { costRatio } from './helpers.js';
-import { fixture, jobOf, MEASUREMENTS } from './drape-helpers.js';
+import {
+  bandBottom as bandBottomOf,
+  fixture,
+  hemVertices as hemVerticesOf,
+  jobOf,
+  MEASUREMENTS,
+  median,
+  seamGaps,
+  startStrainP95,
+} from './drape-helpers.js';
 
 // Jupe cercle en brouillon sur l'avatar, bras à 30° (ADR 0013, 1.19e2a4 : départ en godets, réglage fin, double passe
 // de couture). Mesures fictives des références, popeline.
@@ -21,77 +30,12 @@ const MAX_START_STRAIN = 0.25;
 const SKIRT_LENGTH_MM = 650;
 const HIP_RADIUS_MM = MEASUREMENTS.hipGirthMm / (2 * Math.PI);
 
-function seamGaps(positions: ArrayLike<number>, stitches: Uint32Array): number {
-  let widest = 0;
-  for (let k = 0; k < stitches.length; k += 2) {
-    const [a, b] = [stitches[k] as number, stitches[k + 1] as number];
-    const dx = (positions[3 * a] as number) - (positions[3 * b] as number);
-    const dy = (positions[3 * a + 1] as number) - (positions[3 * b + 1] as number);
-    const dz = (positions[3 * a + 2] as number) - (positions[3 * b + 2] as number);
-    widest = Math.max(widest, Math.sqrt(dx * dx + dy * dy + dz * dz));
-  }
-  return widest;
-}
-
-/** Allongement absolu des arêtes de triangle au 95e centile (position de départ contre longueur à plat). */
-function startStrainP95(mesh: ReturnType<typeof meshGarment>, start: ArrayLike<number>): number {
-  const { flatMm, triangles } = mesh.cloth;
-  const strains: number[] = [];
-  for (let k = 0; k < triangles.length; k += 3) {
-    for (let j = 0; j < 3; j++) {
-      const a = triangles[k + j] as number;
-      const b = triangles[k + ((j + 1) % 3)] as number;
-      const flat = Math.hypot(
-        (flatMm[2 * b] as number) - (flatMm[2 * a] as number),
-        (flatMm[2 * b + 1] as number) - (flatMm[2 * a + 1] as number),
-      );
-      const now = Math.hypot(
-        (start[3 * b] as number) - (start[3 * a] as number),
-        (start[3 * b + 1] as number) - (start[3 * a + 1] as number),
-        (start[3 * b + 2] as number) - (start[3 * a + 2] as number),
-      );
-      strains.push(Math.abs(now / flat - 1));
-    }
-  }
-  strains.sort((p, q) => p - q);
-  return strains[Math.floor(0.95 * strains.length)] as number;
-}
-
-const median = (values: number[]): number => {
-  const sorted = values.slice().sort((a, b) => a - b);
-  return sorted[sorted.length >> 1] as number;
-};
-
 describe('jupe cercle en brouillon sur l’avatar, bras à 30°', () => {
   let avatar: AvatarShape;
   let out: DrapeOutcome;
   const mesh = meshGarment(spec, 'draft');
-  const panels = new Map(spec.panels.map((p) => [p.id, p]));
-
-  /** Sommets des bords de rôle `hem`. */
-  const hemVertices = (): number[] => {
-    const found: number[] = [];
-    for (const piece of mesh.pieces) {
-      for (let v = piece.vertexStart; v < piece.vertexStart + piece.vertexCount; v++) {
-        const edge = mesh.vertexEdge[v] as number;
-        if (edge >= 0 && panels.get(piece.panelId)?.edges[edge]?.role === 'hem') found.push(v);
-      }
-    }
-    return found;
-  };
-
-  /** Hauteur médiane du bas de la ceinture (sommets de la ceinture à y = 0 à plat). */
-  const bandBottom = (positions: ArrayLike<number>): number => {
-    const heights: number[] = [];
-    for (const piece of mesh.pieces.filter((p) => p.panelId.startsWith('waistband'))) {
-      for (let v = piece.vertexStart; v < piece.vertexStart + piece.vertexCount; v++) {
-        if ((mesh.cloth.flatMm[2 * v + 1] as number) < 1e-6) {
-          heights.push(positions[3 * v + 1] as number);
-        }
-      }
-    }
-    return median(heights);
-  };
+  const hemVertices = (): number[] => hemVerticesOf(mesh, spec);
+  const bandBottom = (positions: ArrayLike<number>): number => bandBottomOf(mesh, positions);
 
   beforeAll(async () => {
     await loadAvatarEngine();
