@@ -21,7 +21,6 @@ vi.mock('@atelier/viewer3d', async (original) => ({
 }));
 vi.mock('../src/platform/mannequin.js', () => ({
   getMannequinFitter: () => ({
-    fitForView: (measurements: unknown, options: unknown) => mocked.fit(measurements, options),
     fit: (measurements: unknown, options: unknown) => mocked.fit(measurements, options),
     dress: () => new Promise(() => undefined),
   }),
@@ -140,7 +139,7 @@ describe('panneau Drapé de l’onglet Patron', () => {
     expect(requestDrape.mock.calls[0]?.[2].fabric).toEqual({ preset: 'cotton-poplin' });
   });
 
-  it('en cours puis prêt : vêtement drapé passé à la visionneuse, corps à 90°', async () => {
+  it('en cours puis prêt : vêtement drapé passé à la visionneuse, corps de l’habillage à 90°', async () => {
     const u = await calculated();
     await u.click(drapeButton());
     expect(await screen.findByText('Drapé en cours…')).toBeTruthy();

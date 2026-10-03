@@ -1,6 +1,6 @@
 import type { CreateDesignVersionRequest } from '@atelier/contracts-ts';
 import { useCallback, useRef, useState } from 'react';
-import { initialMannequinState, type MannequinState } from './fitter.js';
+import { AVATAR_FIT_OPTIONS, initialMannequinState, type MannequinState } from './fitter.js';
 import {
   generate,
   type GenerationResult,
@@ -35,7 +35,7 @@ export function useStudioRun(deps: PatternStudioDeps) {
       const isPatronLatest = () => isLatest() && patronEpoch === epoch.current;
       setPatron((p) => ({ ...p, pending: true }));
       setBody((b) => ({ status: 'fitting', mannequin: b.mannequin }));
-      deps.mannequin.fit(request.measurements).then(
+      deps.mannequin.fit(request.measurements, AVATAR_FIT_OPTIONS).then(
         (mannequin) => isLatest() && setBody({ status: 'ready', mannequin }),
         () => isLatest() && setBody({ status: 'failed' }),
       );

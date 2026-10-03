@@ -3,8 +3,8 @@ import { err, ok } from '@atelier/kernel';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiProblem, DesignsClient } from '../src/api/designs-client.js';
+import { AVATAR_ARM_ANGLE_DEG } from '../src/pattern-studio/fitter.js';
 import {
-  DRAPE_ARM_ANGLE_DEG,
   DRAPE_POLL_MS,
   type DrapeFabric,
   drapeRequestBody,
@@ -56,8 +56,8 @@ describe('useDrape', () => {
   });
 
   it("l'angle partagé est l'horizontale (90°) et la demande l'envoie", () => {
-    expect(DRAPE_ARM_ANGLE_DEG).toBe(90);
-    expect(drapeRequestBody(fabric).avatar).toEqual({ armAngleDeg: DRAPE_ARM_ANGLE_DEG });
+    expect(AVATAR_ARM_ANGLE_DEG).toBe(90);
+    expect(drapeRequestBody(fabric).avatar).toEqual({ armAngleDeg: AVATAR_ARM_ANGLE_DEG });
   });
 
   it('demande en brouillon, interroge toutes les 2 s puis lit le modèle', async () => {

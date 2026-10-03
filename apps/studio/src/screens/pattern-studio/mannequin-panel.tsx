@@ -4,13 +4,11 @@ import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline
 import { Suspense, useMemo } from 'react';
 import { t } from '../../i18n/t.js';
 import { LazyDrapedView, LazyMannequinView } from './lazy-mannequin-view.js';
-import type { DrapedBody } from './use-draped-body.js';
 import type { PatternStudioViewProps } from './view.js';
 
-/** Vêtement drapé à montrer à la place de l'habillage géométrique, dont le corps est ajusté à la pose du drapé. */
+/** Vêtement drapé à montrer à la place de l'habillage géométrique, sur le même corps (même pose des bras). */
 export interface DrapedProps {
   model: ArrayBuffer;
-  body: DrapedBody;
 }
 
 const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
@@ -42,9 +40,10 @@ function DisplayToggle({ state, actions }: PatternStudioViewProps) {
   );
 }
 
-function DrapedBodyView({ model, body }: DrapedProps) {
-  const meshes = useMemo(() => (body.mannequin ? [body.mannequin.body] : []), [body.mannequin]);
-  if (body.status === 'failed') return <Message tone="danger">{t('drape.bodyFailed')}</Message>;
+function DrapedBodyView({ model, state }: DrapedProps & Pick<PatternStudioViewProps, 'state'>) {
+  const { mannequin, mannequinStatus } = state;
+  const meshes = useMemo(() => (mannequin ? [mannequin.body] : []), [mannequin]);
+  if (mannequinStatus === 'failed') return <Message tone="danger">{t('drape.bodyFailed')}</Message>;
   if (meshes.length === 0) return <Message>{t('drape.bodyFitting')}</Message>;
   return (
     <Suspense fallback={<Message>{t('mannequin.loading3d')}</Message>}>
@@ -77,7 +76,7 @@ function MannequinBody({
     back: t('mannequin.view.back'),
   };
   const body = meshes[0];
-  if (draped && state.display === '3d') return <DrapedBodyView {...draped} />;
+  if (draped && state.display === '3d') return <DrapedBodyView {...draped} state={state} />;
   if (!body) return null;
   return state.display === 'outline' ? (
     <MannequinOutline mesh={body} garment={worn} views={OUTLINE_VIEWS} labels={labels} />

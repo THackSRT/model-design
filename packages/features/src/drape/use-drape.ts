@@ -1,12 +1,11 @@
 import type { Drape, DrapeRequest } from '@atelier/contracts-ts';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiProblem, DesignsClient } from '../api/designs-client.js';
+import { AVATAR_ARM_ANGLE_DEG } from '../pattern-studio/fitter.js';
 import type { VersionRef } from '../cut-pieces/use-cut-pieces.js';
 
 /** Intervalle d'interrogation d'un drapé en calcul (contrat : « toutes les 2 s »). */
 export const DRAPE_POLL_MS = 2000;
-/** Bras à l'horizontale (pose en T), en degrés depuis la verticale : avatar affiché et drapé (ADR 0018). */
-export const DRAPE_ARM_ANGLE_DEG = 90;
 
 export interface DrapeDeps {
   designs: DesignsClient;
@@ -33,7 +32,7 @@ export interface DrapeActions {
 
 /** Corps de la demande : toujours en brouillon (ADR 0013) ; le défaut du contrat est standard. */
 export function drapeRequestBody(fabric: DrapeFabric): DrapeRequest {
-  return { fabric, avatar: { armAngleDeg: DRAPE_ARM_ANGLE_DEG }, quality: 'draft' };
+  return { fabric, avatar: { armAngleDeg: AVATAR_ARM_ANGLE_DEG }, quality: 'draft' };
 }
 
 type Progress = Omit<DrapeState, 'canRequest'>;

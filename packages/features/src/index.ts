@@ -95,6 +95,7 @@ export {
   WAIST_HEIGHT_RATIO,
 } from './pattern-studio/garment-defaults.js';
 export {
+  AVATAR_ARM_ANGLE_DEG,
   type DressingState,
   initialDressingState,
   initialMannequinState,
@@ -176,7 +177,6 @@ export {
   useFabricBench,
 } from './fabric-bench/use-fabric-bench.js';
 export {
-  DRAPE_ARM_ANGLE_DEG,
   DRAPE_POLL_MS,
   type DrapeActions,
   type DrapeDeps,

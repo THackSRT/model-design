@@ -29,7 +29,7 @@ import type {
   MannequinState,
   MannequinStatus,
 } from './fitter.js';
-import { useDressing } from './use-dressing.js';
+import { sleeveLengthOf, useDressing } from './use-dressing.js';
 import type { GenerationResult, PatternStudioDeps } from './generate.js';
 import { layoutPanels, type PanelsLayout } from './panels.js';
 import { useStudioRun } from './use-studio-run.js';
@@ -110,7 +110,14 @@ function statusOf(isWorking: boolean, result: GenerationResult | undefined): Stu
 /** Habillage du mannequin avec le patron de la version calculée. */
 function useDressingOf(fitter: MannequinFitter, body: MannequinState, version?: DesignVersion) {
   const input = useMemo(
-    () => (version ? { spec: version.spec, garmentType: version.garment.type } : undefined),
+    () =>
+      version
+        ? {
+            spec: version.spec,
+            garmentType: version.garment.type,
+            sleeveLengthMm: sleeveLengthOf(version.garment),
+          }
+        : undefined,
     [version],
   );
   return useDressing(fitter, body.status === 'ready', body.mannequin, input);

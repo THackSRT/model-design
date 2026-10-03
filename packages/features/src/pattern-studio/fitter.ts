@@ -34,3 +34,12 @@ export interface DressingState {
 }
 
 export const initialDressingState: DressingState = { status: 'idle' };
+
+/**
+ * Angle des bras de l'avatar, depuis la verticale : bras à l'horizontale (pose en T). Seule constante
+ * d'angle du studio : ajustement du corps habillé, demande de drapé et corps du drapé.
+ */
+export const AVATAR_ARM_ANGLE_DEG = 90;
+
+/** Options d'ajustement de l'avatar, les mêmes dans toutes les vues. */
+export const AVATAR_FIT_OPTIONS: FitOptions = { armAngleDeg: AVATAR_ARM_ANGLE_DEG };
