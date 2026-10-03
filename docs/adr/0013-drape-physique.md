@@ -385,3 +385,13 @@ Décision :
   (multigrille, ou maillage plus grossier pour la partie suspendue) ; en attendant, le studio demande le brouillon.
 - **Découpage** : une tâche dans `engines/drape` (1.19e2a3), après la fusion de 1.19e2c, car les fichiers et
   `ENGINE_VERSION` sont les mêmes ; version mineure suivante.
+
+**Après relecture du lot 4 (03/10/2026, décisions de l'orchestrateur).** Budget de coût de la jupe cercle :
+`costRatio` < 40 (24,6 à 25,1 au repos, 29,2 sous charge : un seuil de 30 aurait fait échouer le hook au hasard),
+en gardant 50 sous-pas × 1 itération. Le corsage est dans une zone sensible du drapé : avec la double passe de
+couture, `FOLD_STRETCH` 1,1 laisse 12 mm de pénétration à l'emmanchure alors que 1,0, 1,05, 1,15 et 1,2 passent ;
+on garde 1,05 sans chercher d'optimum, et un critère du corsage qui bascule après un changement sans rapport est ce
+signal, pas un réglage à reprendre. Écarts de mise en place acceptés : l'abscisse le long de la courbe est lissée
+(`PieceField.t`, σ + d × virage cumulé) pour que l'isoligne ne s'effondre pas aux coins de la chaîne d'ancrage, et
+les pièces sont toujours ramenées à la courbe du corps (étirement au départ jusqu'à 28 %, contrôlé par le critère
+d'allongement des arêtes) au lieu de n'être « jamais agrandies ».
