@@ -33,6 +33,7 @@ Tourne à l'identique dans le navigateur et dans Node.
   `test/characterization.test.ts` (sortie figée sur trois jeux de mesures fictifs : garde-fou de tout
   changement de calcul ; ne l'actualiser que si le changement est voulu, avec `ENGINE_VERSION`/relecture) ;
   un test par module de `src/core` (`geometry`, `morph`, `mhz-data`, `regions`, `measure`, `render-pose`) ;
+  `test/arm-t-pose.test.ts` (bras à 90°, pose en T : `armAngleDeg` 0 à 90, aucune borne dans le moteur) ;
   `test/landmarks.test.ts` (entrejambe et repères de hauteur) ; `test/arms.test.ts` (épaules, poignets, axes des bras).
 - `src/garment/` : habillage rapide (`dressMannequin(fitted, spec, { type }, { rings?, segments? })`, tâche
   1.34a). Approximation géométrique, sans simulation physique (le drapé est 1.19), par anneaux horizontaux comme
