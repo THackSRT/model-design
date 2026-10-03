@@ -118,4 +118,29 @@ def test_cut_line_self_intersects() -> None:
     [{}, {"spec": {}}, {"spec": "x"}, {"spec": skirt_spec(), "sizeLabel": "<script>"}],
 )
 def test_request_outside_the_schema_is_rejected(body: dict[str, Any]) -> None:
-    assert _post(body).status_code == 422
+    response = _post(body)
+    assert response.status_code == 422
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json()["type"] == "/problems/invalid-request"
+
+
+def _with_grainline_x(value: float) -> dict[str, Any]:
+    spec = skirt_spec()
+    spec["panels"][0]["grainline"][1][0] = value
+    return {"spec": spec}
+
+
+@pytest.mark.parametrize("value", [10000.5, -10000.5])
+def test_point_beyond_ten_metres_is_rejected(value: float) -> None:
+    response = _post(_with_grainline_x(value))
+    assert response.status_code == 422
+    assert response.headers["content-type"] == "application/problem+json"
+    problem = response.json()
+    assert problem["type"] == "/problems/invalid-request"
+    assert problem["errors"][0]["constraint"] in {"less_than_equal", "greater_than_equal"}
+    assert str(abs(value)) not in str(problem)
+
+
+@pytest.mark.parametrize("value", [10000, -10000])
+def test_point_at_exactly_ten_metres_is_accepted(value: float) -> None:
+    assert _post(_with_grainline_x(value)).status_code == 200

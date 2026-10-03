@@ -5,14 +5,14 @@
  */
 export type SizeLabel = string;
 /**
- * [x, y] en millimètres.
+ * [x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.
  *
  * @minItems 2
  * @maxItems 2
  */
 export type Point = [number, number];
 /**
- * [x, y] en millimètres.
+ * [x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.
  *
  * @minItems 2
  * @maxItems 2
@@ -40,7 +40,7 @@ export type Segment1 = [Point, Point];
  */
 export type Segment2 = [Point, Point];
 /**
- * [x, y] en millimètres.
+ * [x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.
  *
  * @minItems 2
  * @maxItems 2

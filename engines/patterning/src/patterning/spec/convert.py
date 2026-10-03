@@ -31,7 +31,7 @@ from patterning.spec.request import camel_case
 
 
 def _point(p: tuple[float, float]) -> Point:
-    return Point([p[0], p[1]])
+    return Point.model_validate([p[0], p[1]])
 
 
 def _edge(edge: Edge) -> SpecEdge:

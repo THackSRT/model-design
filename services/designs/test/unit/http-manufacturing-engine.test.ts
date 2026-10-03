@@ -80,6 +80,7 @@ describe('client du moteur de fabrication', () => {
 
   it.each([
     ['type hors liste', problem('/problems/surprise')],
+    ['invalid-request du moteur', problem('/problems/invalid-request')],
     [
       'validation FastAPI',
       { status: 422, type: 'application/json', body: '{"detail":[{"loc":[]}]}' },

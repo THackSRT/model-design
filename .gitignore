@@ -18,3 +18,5 @@ site/
 .import_linter_cache/
 # Réglages personnels de Claude Code (les réglages d'équipe sont dans .claude/settings.json)
 .claude/settings.local.json
+# État du lot en cours de Claude Code (CLAUDE.md, « Interruption et reprise »)
+.claude/lot-en-cours.md

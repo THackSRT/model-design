@@ -27,7 +27,7 @@ export function useStudioRun(deps: PatternStudioDeps) {
   const epoch = useRef(0);
 
   const run = useCallback(
-    (request: CreateDesignVersionRequest) => {
+    (request: CreateDesignVersionRequest, onCreated?: () => void) => {
       latest.current += 1;
       const id = latest.current;
       const isLatest = () => id === latest.current;
@@ -41,7 +41,11 @@ export function useStudioRun(deps: PatternStudioDeps) {
       );
       generate(deps.designs, session.current, request, deps.designName)
         .catch((): GenerationResult => ({ problem: NETWORK_PROBLEM }))
-        .then((result) => isPatronLatest() && setPatron({ pending: false, result }));
+        .then((result) => {
+          if (!isPatronLatest()) return;
+          setPatron({ pending: false, result });
+          if (result.version) onCreated?.();
+        });
     },
     [deps],
   );

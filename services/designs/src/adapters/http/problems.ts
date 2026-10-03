@@ -4,6 +4,9 @@ import { ProblemException } from '@atelier/service-kit/nest';
 const STATUS: Record<string, number> = {
   'design-not-found': 404,
   'version-not-found': 404,
+  'drape-not-found': 404,
+  'drape-not-completed': 409,
+  'storage-unavailable': 502,
   'invalid-name': 400,
   'garment-type-mismatch': 422,
   'pattern-impossible': 422,

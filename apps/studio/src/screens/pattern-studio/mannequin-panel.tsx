@@ -3,8 +3,15 @@ import { Button, Message, Panel } from '@atelier/ui-web';
 import { MannequinOutline, type SilhouetteView } from '@atelier/viewer3d/outline';
 import { Suspense, useMemo } from 'react';
 import { t } from '../../i18n/t.js';
-import { LazyMannequinView } from './lazy-mannequin-view.js';
+import { LazyDrapedView, LazyMannequinView } from './lazy-mannequin-view.js';
+import type { DrapedBody } from './use-draped-body.js';
 import type { PatternStudioViewProps } from './view.js';
+
+/** Vêtement drapé à montrer à la place de l'habillage géométrique, dont le corps est ajusté à la pose du drapé. */
+export interface DrapedProps {
+  model: ArrayBuffer;
+  body: DrapedBody;
+}
 
 const OUTLINE_VIEWS: readonly SilhouetteView[] = ['front', 'side', 'back'];
 const DISPLAYS = ['3d', 'outline'] as const;
@@ -35,7 +42,21 @@ function DisplayToggle({ state, actions }: PatternStudioViewProps) {
   );
 }
 
-function MannequinBody({ state }: Pick<PatternStudioViewProps, 'state'>) {
+function DrapedBodyView({ model, body }: DrapedProps) {
+  const meshes = useMemo(() => (body.mannequin ? [body.mannequin.body] : []), [body.mannequin]);
+  if (body.status === 'failed') return <Message tone="danger">{t('drape.bodyFailed')}</Message>;
+  if (meshes.length === 0) return <Message>{t('drape.bodyFitting')}</Message>;
+  return (
+    <Suspense fallback={<Message>{t('mannequin.loading3d')}</Message>}>
+      <LazyDrapedView model={model} meshes={meshes} />
+    </Suspense>
+  );
+}
+
+function MannequinBody({
+  state,
+  draped,
+}: Pick<PatternStudioViewProps, 'state'> & { draped?: DrapedProps }) {
   const meshes = useMemo(() => (state.mannequin ? [state.mannequin.body] : []), [state.mannequin]);
   const worn = state.showGarment ? state.dressing.garment : undefined;
   const layer = useMemo(
@@ -56,6 +77,7 @@ function MannequinBody({ state }: Pick<PatternStudioViewProps, 'state'>) {
     back: t('mannequin.view.back'),
   };
   const body = meshes[0];
+  if (draped && state.display === '3d') return <DrapedBodyView {...draped} />;
   if (!body) return null;
   return state.display === 'outline' ? (
     <MannequinOutline mesh={body} garment={worn} views={OUTLINE_VIEWS} labels={labels} />
@@ -104,9 +126,9 @@ export function MannequinPanel(props: PatternStudioViewProps) {
       {state.dressing.status === 'failed' && (
         <Message tone="danger">{t('garment.dressingFailed')}</Message>
       )}
-      <TightZones state={state} />
+      {!(props.draped && state.display === '3d') && <TightZones state={state} />}
       <div className="studio-viewer">
-        <MannequinBody state={state} />
+        <MannequinBody state={state} draped={props.draped} />
       </div>
     </Panel>
   );

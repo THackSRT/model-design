@@ -107,3 +107,13 @@ def test_too_many_pieces_is_a_problem() -> None:
 
 def test_invalid_request_is_rejected() -> None:
     assert _post({"garments": [], "fabric": {"fabricWidthMm": 1400}}).status_code == 422
+
+
+def test_plan_length_beyond_ten_metres_is_accepted() -> None:
+    body = _request({"fabricWidthMm": 700})
+    body["garments"] = [{"label": "38", "spec": skirt_spec(), "count": 20}]
+    response = _post(body)
+    assert response.status_code == 200
+    plan = response.json()
+    CuttingPlan.model_validate(plan)
+    assert plan["fabricLengthMm"] > 10000

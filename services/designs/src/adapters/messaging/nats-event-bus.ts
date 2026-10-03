@@ -9,6 +9,17 @@ import {
 /** Flux des événements de ce service : sujets = `type` des événements (`design.versioned`, …). */
 export const DESIGNS_STREAM = { name: 'DESIGNS', subjects: ['design.>'] } as const;
 
+/**
+ * Flux des tâches de drapé (ADR 0013), consommé par le moteur drape. Sujet = type de l'événement. File de travail
+ * (un message disparaît une fois acquitté) et âge maximal de 24 h.
+ */
+export const DRAPE_JOBS_STREAM = {
+  name: 'DRAPE_JOBS',
+  subjects: ['drape.requested'],
+  retention: 'workqueue',
+  maxAgeMs: 24 * 60 * 60 * 1000,
+} as const;
+
 export interface EventBus {
   publisher: EventPublisher;
   /** Vide puis ferme la connexion. */
@@ -42,11 +53,15 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 /** Réessaie tant que NATS est injoignable ; la reconnexion après coupure est assurée par le client. */
-async function connectWithRetry(url: string, options: ConnectOptions): Promise<NatsConnection> {
+export async function connectWithRetry(
+  url: string,
+  options: ConnectOptions,
+  name = 'designs',
+): Promise<NatsConnection> {
   const { signal, logger, retryDelayMs = 2000 } = options;
   while (!signal.aborted) {
     try {
-      const connection = await connectNats(url, 'designs');
+      const connection = await connectNats(url, name);
       if (!signal.aborted) return connection;
       await connection.close();
     } catch (error) {
@@ -62,6 +77,7 @@ export async function connectEventBus(url: string, options: ConnectOptions): Pro
   const connection = await connectWithRetry(url, options);
   try {
     await ensureStream(connection, DESIGNS_STREAM);
+    await ensureStream(connection, DRAPE_JOBS_STREAM);
   } catch (error) {
     await connection.close();
     throw error;

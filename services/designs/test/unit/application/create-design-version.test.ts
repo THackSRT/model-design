@@ -2,6 +2,7 @@ import type { DesignId } from '../../../src/domain/design.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type DesignsDeps, designsUseCases } from '../../../src/application/use-cases/index.js';
 import { InMemoryDesignRepository } from '../../../src/adapters/persistence/in-memory/in-memory-design-repository.js';
+import { InMemoryDrapeRepository } from '../../../src/adapters/persistence/in-memory/in-memory-drape-repository.js';
 import { nodeHasher } from '../../../src/adapters/platform/node-hasher.js';
 import {
   aDesign,
@@ -13,14 +14,17 @@ import {
   someMeasurements,
 } from '../../builders.js';
 import { FakeManufacturingEngine } from '../../doubles/fake-manufacturing-engine.js';
+import { FakeObjectStore } from '../../doubles/fake-object-store.js';
 import { FakePatterningEngine } from '../../doubles/fake-patterning-engine.js';
 
 describe('créer une version de modèle', () => {
   let designs: InMemoryDesignRepository;
   const deps = (patterning = new FakePatterningEngine()): DesignsDeps => ({
     designs,
+    drapes: new InMemoryDrapeRepository(),
     patterning,
     manufacturing: new FakeManufacturingEngine(),
+    models: new FakeObjectStore(),
     hasher: nodeHasher,
     ids: sequentialIds(),
     clock,

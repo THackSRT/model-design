@@ -80,6 +80,13 @@ describe('client du moteur de patronage', () => {
     expect(JSON.stringify(failure)).not.toContain('secret');
   });
 
+  it('invalid-request du moteur (désaccord de contrat) : indisponible, rien recopié', async () => {
+    reply = problem('/problems/invalid-request', 'secret');
+    const failure = await draft();
+    expect(failure?.kind).toBe('engine-unavailable');
+    expect(JSON.stringify(failure)).not.toContain('secret');
+  });
+
   it('validation du moteur (corps recopiant les valeurs) : indisponible, rien recopié', async () => {
     reply = {
       status: 422,

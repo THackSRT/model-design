@@ -44,6 +44,20 @@ export interface components {
       status: number;
       detail?: string;
     };
+    /** @description Requête hors schéma (RFC 9457), rendue par le kit des moteurs (py/engine-kit) : type /problems/invalid-request, statut 422. errors liste au plus 20 violations ; detail en donne le nombre total. Aucune entrée ne recopie la valeur reçue (mesures de client). */
+    InvalidRequestProblem: components['schemas']['Problem'] & {
+      /** @constant */
+      type: '/problems/invalid-request';
+      /** @constant */
+      status: 422;
+      errors: components['schemas']['ValidationError'][];
+    };
+    ValidationError: {
+      /** @description Chemin JSON de la valeur fautive dans le corps, sans préfixe body (ex. panels[0].edges[2].from[1], measurements.waistGirthMm) ; $ pour le corps entier. */
+      path: string;
+      /** @description Type de contrainte violée, celui de Pydantic (ex. missing, less_than_equal, extra_forbidden, literal_error). Jamais la valeur reçue. */
+      constraint: string;
+    };
     DraftPatternRequest: components['schemas']['create-design-version-request.schema'];
     /**
      * MeasurementSet
@@ -293,7 +307,7 @@ export interface components {
       measurements: components['schemas']['measurement-set.schema'];
       garment: components['schemas']['garment-request.schema'];
     };
-    /** @description [x, y] en millimètres. */
+    /** @description [x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé). */
     Point: number[];
     Edge: {
       id: string;
@@ -406,7 +420,7 @@ export interface components {
       /** @description Mesures absentes de la demande, estimées par le moteur : noms de champs de MeasurementSet (ex. bustGirthMm). Absent ou vide : aucune estimation. */
       estimatedMeasurements?: string[];
       $defs: {
-        /** @description [x, y] en millimètres. */
+        /** @description [x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé). */
         Point: number[];
         Edge: {
           id: string;
@@ -502,13 +516,14 @@ export interface components {
     };
   };
   responses: {
-    /** @description Entrées valides mais impossibles à tracer, au format RFC 9457. Types stables : /problems/measurement-required (mesure obligatoire absente pour ce vêtement ; le détail cite le champ, jamais sa valeur), /problems/inconsistent-measurements (mesures données et estimées incohérentes entre elles), /problems/garment-type-not-supported (type de vêtement pas encore tracé par cette version du moteur), /problems/skirt-shorter-than-hip-depth (jupe droite plus courte que la ligne des hanches), /problems/trousers-shorter-than-crotch (pantalon trop court sous l'entrejambe), /problems/trousers-hem-too-narrow (tour d'ourlet trop petit pour la jambe), /problems/neckline-too-deep (encolure creusée sous la ligne de poitrine ou sous l'aisselle), /problems/sleeve-shorter-than-cap (manche plus courte que sa tête), /problems/curve-tangents-parallel et /problems/curve-tangents-diverge (courbe impossible à construire avec ces valeurs). Le détail ne contient jamais de valeur de mesure. Un nouveau type est un ajout compatible ; un type ne change jamais de sens. Une requête hors schéma reçoit la réponse 422 de validation de FastAPI (sans type /problems/), qui peut recopier les valeurs reçues : elle ne se relaie ni ne se journalise. */
+    /** @description Entrées valides mais impossibles à tracer, au format RFC 9457. Types stables : /problems/measurement-required (mesure obligatoire absente pour ce vêtement ; le détail cite le champ, jamais sa valeur), /problems/inconsistent-measurements (mesures données et estimées incohérentes entre elles), /problems/garment-type-not-supported (type de vêtement pas encore tracé par cette version du moteur), /problems/skirt-shorter-than-hip-depth (jupe droite plus courte que la ligne des hanches), /problems/trousers-shorter-than-crotch (pantalon trop court sous l'entrejambe), /problems/trousers-hem-too-narrow (tour d'ourlet trop petit pour la jambe), /problems/neckline-too-deep (encolure creusée sous la ligne de poitrine ou sous l'aisselle), /problems/sleeve-shorter-than-cap (manche plus courte que sa tête), /problems/curve-tangents-parallel et /problems/curve-tangents-diverge (courbe impossible à construire avec ces valeurs). Le détail ne contient jamais de valeur de mesure. Un nouveau type est un ajout compatible ; un type ne change jamais de sens. Une requête hors schéma reçoit le problème /problems/invalid-request (InvalidRequestProblem : chemins et contraintes, jamais les valeurs reçues). */
     DraftingProblem: {
       headers: {
         [name: string]: unknown;
       };
       content: {
-        'application/problem+json': components['schemas']['Problem'];
+        'application/problem+json':
+          components['schemas']['Problem'] | components['schemas']['InvalidRequestProblem'];
       };
     };
   };

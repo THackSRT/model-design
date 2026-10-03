@@ -5,22 +5,22 @@ Ce document dit **quoi construire** : acteurs, services, moteurs, échanges, don
 du projet : chaque décision qui le modifie passe par une [fiche de décision](../adr/index.md), et la colonne
 « Dans le code » ci-dessous suit ce qui existe réellement dans le dépôt.
 
-| Section                                                             | Contenu                                   | Dans le code                                                                |
-| ------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
-| [1. Objet, périmètre et principes](#1-objet-perimetre-et-principes) | Ce que couvre la plateforme               | Référence                                                                   |
-| [2. Diagramme global](vue-globale.md)                               | Couches, services, moteurs                | Tranche phase 1 : studio, `designs`, `patterning`, mannequin                |
-| [3. Acteurs et applications](acteurs.md)                            | Rôles, applications, boucle de la filière | Studio web (phase 1)                                                        |
-| [4. Services métier](services.md)                                   | Les seize services                        | `designs` (service de référence)                                            |
-| [5. Les moteurs](moteurs.md)                                        | Les sept moteurs                          | `mannequin`, `patterning`, `manufacturing` (exports) ; `drape` en squelette |
-| [6. Communications](communications.md)                              | Modes d'échange, séquences                | HTTP + outbox + NATS JetStream                                              |
-| [7. Données, stockage et formats](donnees.md)                       | Modèle conceptuel, entités, normes        | Tables de `designs`, format pivot `GarmentSpec`                             |
-| [8. Infrastructure](infrastructure.md)                              | Conteneurs, environnements                | Images Docker et `docker compose` locaux                                    |
-| [9. Sécurité et licences](securite.md)                              | Données sensibles, licences               | Isolation par organisation (ADR 0005)                                       |
-| [10. Communication et sécurité entre services](inter-services.md)   | Zéro confiance, jetons, sagas             | Délais, erreurs RFC 9457 ; maillage à venir                                 |
-| [11. Observabilité](observabilite.md)                               | Traces, métriques, objectifs              | Journaux JSON structurés                                                    |
-| [12. Pile technique](pile-technique.md)                             | Choix justifiés                           | Appliquée (ADR 0003)                                                        |
-| [13. Architecture du code](architecture-du-code.md)                 | Monorepo, clean architecture              | Appliquée                                                                   |
-| [14. Mise en œuvre et risques](mise-en-oeuvre.md)                   | Phases, portes, risques                   | Phase 1 en cours ([suivi](../suivi/phase-1.md))                             |
+| Section                                                             | Contenu                                   | Dans le code                                                                                                          |
+| ------------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| [1. Objet, périmètre et principes](#1-objet-perimetre-et-principes) | Ce que couvre la plateforme               | Référence                                                                                                             |
+| [2. Diagramme global](vue-globale.md)                               | Couches, services, moteurs                | Tranche phase 1 : studio, `designs`, `patterning`, mannequin                                                          |
+| [3. Acteurs et applications](acteurs.md)                            | Rôles, applications, boucle de la filière | Studio web (phase 1)                                                                                                  |
+| [4. Services métier](services.md)                                   | Les seize services                        | `designs` (service de référence)                                                                                      |
+| [5. Les moteurs](moteurs.md)                                        | Les sept moteurs                          | `mannequin`, `patterning`, `manufacturing` (exports) ; `drape` (ENGINE_VERSION 0.5.0 : cœur, maillage, avatar, drapé) |
+| [6. Communications](communications.md)                              | Modes d'échange, séquences                | HTTP + outbox + NATS JetStream                                                                                        |
+| [7. Données, stockage et formats](donnees.md)                       | Modèle conceptuel, entités, normes        | Tables de `designs`, format pivot `GarmentSpec`                                                                       |
+| [8. Infrastructure](infrastructure.md)                              | Conteneurs, environnements                | Images Docker et `docker compose` locaux                                                                              |
+| [9. Sécurité et licences](securite.md)                              | Données sensibles, licences               | Isolation par organisation (ADR 0005)                                                                                 |
+| [10. Communication et sécurité entre services](inter-services.md)   | Zéro confiance, jetons, sagas             | Délais, erreurs RFC 9457 ; maillage à venir                                                                           |
+| [11. Observabilité](observabilite.md)                               | Traces, métriques, objectifs              | Journaux JSON structurés                                                                                              |
+| [12. Pile technique](pile-technique.md)                             | Choix justifiés                           | Appliquée (ADR 0003)                                                                                                  |
+| [13. Architecture du code](architecture-du-code.md)                 | Monorepo, clean architecture              | Appliquée                                                                                                             |
+| [14. Mise en œuvre et risques](mise-en-oeuvre.md)                   | Phases, portes, risques                   | Phase 1 en cours ([suivi](../suivi/phase-1.md))                                                                       |
 
 ## 1. Objet, périmètre et principes
 

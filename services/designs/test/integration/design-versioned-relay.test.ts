@@ -7,10 +7,12 @@ import { describe, expect, it } from 'vitest';
 import { designsUseCases } from '../../src/application/use-cases/index.js';
 import { runMigrations } from '../../src/adapters/persistence/postgres/migrate.js';
 import { PostgresDesignRepository } from '../../src/adapters/persistence/postgres/postgres-design-repository.js';
+import { PostgresDrapeRepository } from '../../src/adapters/persistence/postgres/postgres-drape-repository.js';
 import { PostgresOutboxStore } from '../../src/adapters/persistence/postgres/postgres-outbox-store.js';
 import { nodeHasher } from '../../src/adapters/platform/node-hasher.js';
 import { aDesign, aSkirt, clock, ORG, sequentialIds, someMeasurements } from '../builders.js';
 import { FakeManufacturingEngine } from '../doubles/fake-manufacturing-engine.js';
+import { FakeObjectStore } from '../doubles/fake-object-store.js';
 import { FakePatterningEngine } from '../doubles/fake-patterning-engine.js';
 
 const MIGRATIONS = fileURLToPath(new URL('../../migrations', import.meta.url));
@@ -24,8 +26,10 @@ describe('de la version de modèle à la publication (sans réseau)', () => {
     await designs.create(aDesign());
     const created = await designsUseCases({
       designs,
+      drapes: new PostgresDrapeRepository(db, { ids, clock }),
       patterning: new FakePatterningEngine(),
       manufacturing: new FakeManufacturingEngine(),
+      models: new FakeObjectStore(),
       hasher: nodeHasher,
       ids,
       clock,

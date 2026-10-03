@@ -356,7 +356,8 @@ components:
         /problems/neckline-too-deep, /problems/sleeve-shorter-than-cap ; le détail est relayé (il ne
         contient jamais de mesure). Un autre type /problems/… du moteur devient
         /problems/pattern-impossible, avec un détail fixé par le service. Une erreur de validation du
-        moteur (422 sans type /problems/…), un délai dépassé ou une réponse hors contrat deviennent 502
+        moteur (422 /problems/invalid-request, ou 422 sans type), un délai dépassé ou une réponse hors
+        contrat deviennent 502
         /problems/engine-unavailable ; leur corps n'est ni relayé ni journalisé.
       content:
         application/problem+json:
@@ -368,8 +369,8 @@ components:
         cette liste : /problems/unknown-edge, /problems/allowance-on-fold, /problems/allowance-on-dart,
         /problems/adjacent-darts, /problems/notch-outside-edge, /problems/open-contour,
         /problems/fold-edge-missing, /problems/cut-line-self-intersects,
-        /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur,
-        devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure.
+        /problems/export-format-unavailable. Tout autre type, ou une erreur de validation du moteur
+        (/problems/invalid-request), devient 502 /problems/engine-unavailable. Le détail est relayé ; il ne contient jamais de mesure.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }

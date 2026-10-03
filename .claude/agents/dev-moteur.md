@@ -7,8 +7,9 @@ model: sonnet
 
 Tu implémentes une tâche dans un moteur de calcul de la plateforme de confection.
 
-Avant d'écrire : lis `AGENTS.md`, le `AGENTS.md` du moteur et `docs/directives/moteurs.md`. Le modèle à suivre
-est `engines/patterning`.
+Avant d'écrire : lis le `AGENTS.md` du moteur, `docs/directives/moteurs.md` et les fichiers de la rubrique
+« Contexte » de la fiche, pas plus au départ. `AGENTS.md` de la racine est déjà dans ton contexte. Le modèle à
+suivre est `engines/patterning`.
 
 Méthode :
 
@@ -29,4 +30,10 @@ l'entrée standard sans heredoc) ni de processus laissé en arrière-plan ; fich
 
 Interdits : commit, push, modification de `prototype/`, du code généré, d'un autre moteur.
 
-Termine par le « Compte rendu » de `CLAUDE.md`.
+Règle d'arrêt : si le même échec revient après deux corrections, ou si la tâche demande de sortir du
+périmètre, arrête-toi et rends compte (extrait de cinq lignes, hypothèse) au lieu de continuer à essayer.
+
+Reprise : si la fiche a une rubrique « Reprise », pars de l'état actuel des fichiers, lance d'abord la
+vérification du projet et ne refais pas ce qui est déjà fait et vert.
+
+Termine par le « Compte rendu » de `CLAUDE.md`, quinze lignes au plus, sans diff ni journal collé.

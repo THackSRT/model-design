@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from manufacturing.main import create_app
 from tests.builders import skirt_spec
+from tests.golden_files import write_text_lf
 
 REFERENCE = Path(__file__).parent.parent / "golden" / "straight-skirt.svg"
 
@@ -19,6 +20,5 @@ def test_reference_straight_skirt_svg_is_unchanged() -> None:
     response = TestClient(create_app()).post("/v1/exports", json=body)
     assert response.status_code == 200
     if os.environ.get("UPDATE_GOLDEN") == "1":
-        with REFERENCE.open("w", encoding="utf-8", newline="\n") as handle:
-            handle.write(response.text)
+        write_text_lf(REFERENCE, response.text)
     assert response.content == REFERENCE.read_bytes()

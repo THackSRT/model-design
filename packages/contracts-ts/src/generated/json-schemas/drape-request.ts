@@ -1,0 +1,25 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « drapeRequest ». */
+export const drapeRequestJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/designs/drape-request.schema.json',
+  title: 'DrapeRequest',
+  description:
+    "Demande de drapé d'une version de modèle : le tissu, les options de l'avatar et la finesse. Les mesures et le patron sont ceux de la version. Même demande canonique sur la même version : même drapé (ADR 0013).",
+  type: 'object',
+  additionalProperties: false,
+  required: ['fabric'],
+  properties: {
+    fabric: { $ref: '../drape/fabric.schema.json' },
+    avatar: {
+      $ref: '../avatar-options.schema.json',
+      description: 'Absent : défauts du studio, comme {}.',
+    },
+    quality: {
+      type: 'string',
+      description: 'draft (arête de 25 mm) ou standard (arête de 15 mm).',
+      enum: ['draft', 'standard'],
+      default: 'standard',
+    },
+  },
+} as const;

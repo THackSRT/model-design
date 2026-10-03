@@ -2,20 +2,29 @@ import { systemClock, systemIdGenerator } from '@atelier/kernel';
 import { loadConfig, type Logger, type OutboxStore } from '@atelier/service-kit';
 import { z } from 'zod';
 import type { DesignRepository } from './application/ports/design-repository.js';
+import type { DrapeRepository } from './application/ports/drape-repository.js';
+import type { ObjectStore } from './application/ports/object-store.js';
 import { type DesignsDeps, designsUseCases } from './application/use-cases/index.js';
 import { HttpManufacturingEngine } from './adapters/engines/http-manufacturing-engine.js';
 import { HttpPatterningEngine } from './adapters/engines/http-patterning-engine.js';
+import { S3ObjectStore, unavailableObjectStore } from './adapters/storage/s3-object-store.js';
 import { createHttpApp } from './adapters/http/http-app.js';
 import { fixedOrganization } from './adapters/http/organization-context.js';
+import { drapeResultHandler } from './adapters/messaging/drape-result-handler.js';
+import { subscribeDrapeResults } from './adapters/messaging/nats-drape-results.js';
 import { connectEventBus } from './adapters/messaging/nats-event-bus.js';
 import { InMemoryDesignRepository } from './adapters/persistence/in-memory/in-memory-design-repository.js';
+import { InMemoryDrapeRepository } from './adapters/persistence/in-memory/in-memory-drape-repository.js';
 import { openPostgres } from './adapters/persistence/postgres/postgres-persistence.js';
 import { nodeHasher } from './adapters/platform/node-hasher.js';
+import { type SubscribeDrapeResults, startDrapeConsumer } from './start-drape-consumer.js';
 import { type ConnectBus, startRelay } from './start-relay.js';
 
 export const configSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3101),
   DATABASE_URL: z.url().optional(),
+  // Connexion du propriétaire des tables, utilisée seulement avec MIGRATE_ON_START (DATABASE_URL = rôle de service).
+  MIGRATION_DATABASE_URL: z.url().optional(),
   MIGRATE_ON_START: z.stringbool().default(false),
   MIGRATIONS_DIR: z.string().default('migrations'),
   PATTERNING_URL: z.url().default('http://localhost:3201'),
@@ -27,6 +36,13 @@ export const configSchema = z.object({
   NATS_URL: z.url().optional(),
   OUTBOX_INTERVAL_MS: z.coerce.number().int().positive().default(1000),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().positive().default(100),
+  // Stockage objet des modèles 3D (lecture seule). Point d'accès ou identifiants absents : GET …/model rend 502.
+  S3_ENDPOINT: z.url().optional(),
+  S3_REGION: z.string().min(1).default('us-east-1'),
+  S3_BUCKET: z.string().min(1).default('drapes'),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  S3_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
 });
 export type DesignsConfig = z.infer<typeof configSchema>;
 
@@ -37,10 +53,12 @@ export interface ComposeOptions {
   deps?: Partial<DesignsDeps>;
   outbox?: OutboxStore;
   connectBus?: ConnectBus;
+  subscribeDrapeResults?: SubscribeDrapeResults;
 }
 
 interface Persistence {
   designs: DesignRepository;
+  drapes: DrapeRepository;
   outbox?: OutboxStore;
   close(): Promise<void>;
 }
@@ -50,19 +68,52 @@ async function persistence(config: DesignsConfig, logger: Logger): Promise<Persi
     logger.log('warn', 'in-memory-repository', {
       reason: 'DATABASE_URL absent : données perdues à l’arrêt',
     });
-    return { designs: new InMemoryDesignRepository(), close: async () => undefined };
+    return {
+      designs: new InMemoryDesignRepository(),
+      drapes: new InMemoryDrapeRepository(),
+      close: async () => undefined,
+    };
+  }
+  // Jamais de migration avec le compte du service : sans MIGRATION_DATABASE_URL, on refuse de démarrer.
+  if (config.MIGRATE_ON_START && !config.MIGRATION_DATABASE_URL) {
+    throw new Error(
+      'MIGRATE_ON_START exige MIGRATION_DATABASE_URL (connexion du propriétaire des tables)',
+    );
   }
   return openPostgres({
     url: config.DATABASE_URL,
-    migrate: config.MIGRATE_ON_START,
+    migrationUrl: config.MIGRATE_ON_START ? config.MIGRATION_DATABASE_URL : undefined,
     migrationsDir: config.MIGRATIONS_DIR,
   });
 }
 
+function objectStore(config: DesignsConfig, logger: Logger): ObjectStore {
+  const { S3_ENDPOINT: endpoint, S3_ACCESS_KEY_ID: accessKeyId } = config;
+  const secretAccessKey = config.S3_SECRET_ACCESS_KEY;
+  if (!endpoint || !accessKeyId || !secretAccessKey) {
+    logger.log('warn', 's3-disabled', {
+      reason: 'S3_ENDPOINT ou identifiants absents : pas de modèle 3D',
+    });
+    return unavailableObjectStore;
+  }
+  return new S3ObjectStore({
+    endpoint,
+    region: config.S3_REGION,
+    bucket: config.S3_BUCKET,
+    accessKeyId,
+    secretAccessKey,
+    timeoutMs: config.S3_TIMEOUT_MS,
+  });
+}
+
 /** Racine de composition : relie chaque port à son adaptateur. Aucune logique ici. */
-export function composeDeps(designs: DesignRepository, config: DesignsConfig): DesignsDeps {
+export function composeDeps(
+  repositories: { designs: DesignRepository; drapes: DrapeRepository },
+  config: DesignsConfig,
+  logger: Logger,
+): DesignsDeps {
   return {
-    designs,
+    ...repositories,
     patterning: new HttpPatterningEngine({
       baseUrl: config.PATTERNING_URL,
       timeoutMs: config.PATTERNING_TIMEOUT_MS,
@@ -71,6 +122,7 @@ export function composeDeps(designs: DesignRepository, config: DesignsConfig): D
       baseUrl: config.MANUFACTURING_URL,
       timeoutMs: config.MANUFACTURING_TIMEOUT_MS,
     }),
+    models: objectStore(config, logger),
     hasher: nodeHasher,
     ids: systemIdGenerator,
     clock: systemClock,
@@ -90,9 +142,10 @@ export async function composeService(
 ): Promise<Service> {
   const store = await persistence(config, logger);
   try {
-    const deps = { ...composeDeps(store.designs, config), ...options.deps };
+    const deps = { ...composeDeps(store, config, logger), ...options.deps };
+    const useCases = designsUseCases(deps);
     const app = await createHttpApp({
-      useCases: designsUseCases(deps),
+      useCases,
       organization: fixedOrganization(config.DEV_ORGANIZATION_ID),
       logger,
     });
@@ -101,11 +154,17 @@ export async function composeService(
       connectBus: options.connectBus ?? connectEventBus,
       logger,
     });
+    const stopDrapeConsumer = startDrapeConsumer(config.NATS_URL, {
+      subscribe: options.subscribeDrapeResults ?? subscribeDrapeResults,
+      handler: drapeResultHandler(useCases.recordDrapeOutcome, logger),
+      logger,
+    });
     return {
       app,
       close: async () => {
         await app.close();
         await stopRelay();
+        await stopDrapeConsumer();
         await store.close();
       },
     };

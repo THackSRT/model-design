@@ -1,4 +1,10 @@
-import type { BodyMesh, ClothMesh, FabricPhysics, SimulationSettings } from '../src/index.js';
+import {
+  simulate,
+  type BodyMesh,
+  type ClothMesh,
+  type FabricPhysics,
+  type SimulationSettings,
+} from '../src/index.js';
 
 export const FABRIC: FabricPhysics = {
   weightGPerM2: 150,
@@ -189,6 +195,58 @@ export const NO_BODY: BodyMesh = {
   positionsMm: new Float64Array(0),
   triangles: new Uint32Array(0),
 };
+
+/**
+ * Temps de calcul (CPU) de `fn`, en s. Les tests de performance mesurent le temps CPU du processus et non
+ * l'horloge murale : sous charge (lint, build et autres fichiers de test en parallèle) l'horloge compte l'attente
+ * du processeur, ce qui a fait échouer un seuil de 10 s sans changement de code. Vitest isole chaque fichier de test
+ * dans son propre processus (pool `forks`), donc seul son propre calcul est compté.
+ */
+export function cpuSeconds(fn: () => void): number {
+  const before = process.cpuUsage();
+  fn();
+  const used = process.cpuUsage(before);
+  return (used.user + used.system) / 1e6;
+}
+
+/** Borne absolue de sécurité (s CPU) contre une régression catastrophique ; le vrai contrôle est relatif. */
+export const ABSOLUTE_LIMIT_S = 60;
+
+/** Charge de référence fixe et déterministe : 40 × 40 sommets sur une sphère, 30 pas. */
+function referenceWorkload(): void {
+  const cloth = gridCloth({
+    nx: 39,
+    ny: 39,
+    edgeMm: 5,
+    place: (u, v) => [u - 97, 190, v - 97],
+  });
+  simulate(cloth, sphereBody([0, 0, 0], 150, 24, 48), FABRIC, { ...SETTINGS, maxSteps: 30 });
+}
+
+let referenceWarm = false;
+
+function referenceSeconds(): number {
+  if (!referenceWarm) {
+    referenceWorkload(); // chauffe du compilateur
+    referenceWarm = true;
+  }
+  return cpuSeconds(referenceWorkload);
+}
+
+/**
+ * Coût de `fn` rapporté à celui de la charge de référence, mesurée dans le même processus juste avant et juste
+ * après (moyenne). Le temps CPU gonfle sous contention (autres projets de `pnpm check`, fréquence du processeur) ;
+ * le rapport, lui, reste stable car numérateur et dénominateur subissent la même machine. Les seuils `k` des tests
+ * sont fixés par mesure au repos avec une marge d'environ ×2 (la référence dure ≈ 0,55 s CPU ; le compteur CPU
+ * de Windows a un pas d'environ 15 ms). Une borne absolue large garde contre l'emballement.
+ */
+export function costRatio(fn: () => void): number {
+  const before = referenceSeconds();
+  const seconds = cpuSeconds(fn);
+  const after = referenceSeconds();
+  if (seconds > ABSOLUTE_LIMIT_S) throw new Error(`absolute limit exceeded: ${seconds} s CPU`);
+  return seconds / ((before + after) / 2);
+}
 
 export function sameBits(a: Float64Array, b: Float64Array): boolean {
   return Buffer.from(a.buffer).equals(Buffer.from(b.buffer));

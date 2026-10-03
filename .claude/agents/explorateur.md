@@ -15,7 +15,8 @@ Réponds à la question posée, et seulement à elle :
 
 - chemins exacts avec numéros de ligne (`services/designs/src/domain/design.ts:31`) ;
 - extraits courts, jamais de fichiers entiers ;
-- si tu ne trouves pas, dis-le et indique où tu as cherché.
+- si tu ne trouves pas, dis-le et indique où tu as cherché ;
+- quinze lignes au plus : l'orchestrateur garde ta réponse dans son contexte.
 
 Termine par :
 

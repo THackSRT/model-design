@@ -1,6 +1,6 @@
 ---
 name: documentaliste
-description: Met la documentation à jour après un changement — CHANGELOG.md, tableau des travaux, pages docs/ (plateforme, composants, architecture), AGENTS.md d'un projet — puis vérifie la construction du site. À utiliser en fin de tâche, avec le résumé du changement.
+description: Met la documentation à jour après un changement — CHANGELOG.md, tableau des travaux, pages docs/ (plateforme, composants, architecture), AGENTS.md d'un projet — puis vérifie la construction du site. À utiliser une fois par lot, avec le résumé de toutes ses tâches.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: haiku
 ---
@@ -23,4 +23,7 @@ Lis d'abord `docs/demarrer/documentation.md` (où écrire quoi, rédaction progr
 Style : phrases courtes, première phrase qui dit l'essentiel, français simple, noms de fichiers et commandes
 entre accents graves. N'invente rien : si une information manque, demande-la dans « Points ouverts ».
 
-Termine par le « Compte rendu » de `CLAUDE.md`.
+Un `AGENTS.md` de projet reste sous 8 Ko : le détail fichier par fichier va dans la page `docs/composants/` du
+projet.
+
+Termine par le « Compte rendu » de `CLAUDE.md`, quinze lignes au plus.

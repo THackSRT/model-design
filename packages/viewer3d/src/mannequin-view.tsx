@@ -1,17 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { buildScene, type GarmentLayer, type MeshData } from './scene.js';
+import { buildScene, type DrapedGarmentLayer, type GarmentLayer, type MeshData } from './scene.js';
 
-export interface MannequinViewProps {
+interface MannequinViewBase {
   meshes: MeshData[];
   /** Couleur du corps, lue dans les jetons de design par l'appelant. */
   color: string;
   label: string;
   /** Message affiché à la place de la vue sans WebGL (traduit par l'appelant). */
   webglUnavailableLabel: string;
-  /** Vêtement porté, dessiné par-dessus le corps ; absent : corps seul. */
-  garment?: GarmentLayer;
 }
+
+/** Un seul habillage à la fois : géométrique (`garment`) ou drapé lu d'un GLB (`draped`). */
+export type MannequinViewProps = MannequinViewBase &
+  (
+    | {
+        /** Vêtement porté, dessiné par-dessus le corps ; absent : corps seul. */
+        garment?: GarmentLayer;
+        draped?: never;
+      }
+    | {
+        /** Vêtement drapé (lu par `readDrapedGlb`), dessiné par-dessus le corps. */
+        draped?: DrapedGarmentLayer;
+        garment?: never;
+      }
+  );
 
 function attachRotation(canvas: HTMLCanvasElement, pivot: THREE.Object3D, render: () => void) {
   let last: number | undefined;
@@ -37,10 +50,10 @@ function mount(
   canvas: HTMLCanvasElement,
   meshes: MeshData[],
   color: string,
-  garment?: GarmentLayer,
+  wear: { garment?: GarmentLayer; draped?: DrapedGarmentLayer },
 ) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  const { scene, camera, pivot, dispose } = buildScene(meshes, color, garment);
+  const { scene, camera, pivot, dispose } = buildScene(meshes, color, wear.garment, wear.draped);
   const render = () => renderer.render(scene, camera);
   const resize = () => {
     const { clientWidth: w, clientHeight: h } = canvas;
@@ -72,13 +85,14 @@ export function MannequinView({
   label,
   webglUnavailableLabel,
   garment,
+  draped,
 }: MannequinViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [webgl] = useState(hasWebGL);
   useEffect(() => {
     if (!webgl || !canvasRef.current || meshes.length === 0) return;
-    return mount(canvasRef.current, meshes, color, garment);
-  }, [webgl, meshes, color, garment]);
+    return mount(canvasRef.current, meshes, color, { garment, draped });
+  }, [webgl, meshes, color, garment, draped]);
   if (!webgl) return <p role="status">{webglUnavailableLabel}</p>;
   return (
     <canvas

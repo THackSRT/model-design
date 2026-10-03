@@ -1,4 +1,5 @@
 import type { MannequinFitter } from '@atelier/features';
+import type { FittedMannequin } from '@atelier/mannequin';
 import type { WorkerRequest, WorkerResponse } from './fit-protocol.js';
 
 /** Ce dont l'adaptateur a besoin d'un Worker (permet de le tester sans navigateur). */
@@ -16,7 +17,17 @@ export interface WorkerFitterOptions {
 
 export const DEFAULT_FIT_TIMEOUT_MS = 30_000;
 
+/** Ajusteur du studio : le port, plus un ajustement de consultation qui ne touche pas au corps habillé. */
+export interface StudioFitter extends MannequinFitter {
+  /** Corps pour l'affichage seul (ex. drapé) : ni habillé par `dress`, ni rejoué après la mort du worker. */
+  fitForView(
+    measurements: Parameters<MannequinFitter['fit']>[0],
+    options?: Parameters<MannequinFitter['fit']>[1],
+  ): Promise<FittedMannequin>;
+}
+
 interface Waiting {
+  keeps?: boolean;
   resolve: (response: WorkerResponse) => void;
   reject: (error: Error) => void;
 }
@@ -26,12 +37,17 @@ class WorkerSession {
   private readonly waiting = new Map<number, Waiting>();
   private alive = true;
   private readonly worker: WorkerLike;
+  /** Vrai quand un ajustement a réussi dans ce worker : il garde le corps à habiller. */
+  fitted = false;
+  /** Rejeu du dernier ajustement en cours (partagé par les habillages simultanés). */
+  replay: Promise<void> | undefined;
 
   constructor(createWorker: () => WorkerLike) {
     this.worker = createWorker();
     this.worker.addEventListener('message', (event) => {
       const entry = this.waiting.get(event.data.id);
       this.waiting.delete(event.data.id);
+      if (entry?.keeps && event.data.ok && 'mannequin' in event.data) this.fitted = true;
       entry?.resolve(event.data);
     });
     this.worker.addEventListener('error', (event) =>
@@ -45,57 +61,122 @@ class WorkerSession {
   }
 
   send(request: WorkerRequest, waiting: Waiting): void {
-    this.waiting.set(request.id, waiting);
+    this.waiting.set(request.id, {
+      ...waiting,
+      keeps: !('measurements' in request) || request.keep !== false,
+    });
     this.worker.postMessage(request);
   }
 
-  kill(reason: string): void {
+  kill(reason: string, error: Error = new WorkerDiedError(reason)): void {
     if (!this.alive) return;
     this.alive = false;
     this.worker.terminate();
-    for (const entry of this.waiting.values()) entry.reject(new Error(reason));
+    for (const entry of this.waiting.values()) entry.reject(error);
     this.waiting.clear();
+  }
+}
+
+/** Le worker a planté ou s'est terminé : la demande peut être renvoyée à un worker neuf. */
+class WorkerDiedError extends Error {}
+
+/** Nombre maximal d'envois d'une demande (le premier + les relances après la mort du worker). */
+export const MAX_WORKER_ATTEMPTS = 2;
+
+type Build = (id: number) => WorkerRequest;
+
+/** Envoie les demandes au worker courant, le recrée s'il est mort, relance si besoin. */
+class WorkerCaller {
+  private session: WorkerSession | undefined;
+  private nextId = 0;
+  lastFit: Build | undefined;
+
+  constructor(
+    private readonly createWorker: () => WorkerLike,
+    private readonly timeoutMs: number,
+  ) {}
+
+  private current(): WorkerSession {
+    if (!this.session?.isAlive) this.session = new WorkerSession(this.createWorker);
+    return this.session;
+  }
+
+  /** Redonne au worker courant le corps du dernier ajustement s'il ne l'a pas (une seule fois). */
+  private bodyReplay(): Promise<void> | undefined {
+    const session = this.current();
+    const last = this.lastFit;
+    if (session.fitted || !last) return undefined;
+    session.replay ??= this.send(last)
+      .then((response) => {
+        if (!response.ok) throw new Error(response.message);
+      })
+      .finally(() => {
+        session.replay = undefined;
+      });
+    return session.replay;
+  }
+
+  private async send(build: Build): Promise<WorkerResponse> {
+    const current = this.current();
+    this.nextId += 1;
+    const request = build(this.nextId);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return new Promise<WorkerResponse>((resolve, reject) => {
+      timer = setTimeout(
+        () => current.kill('worker timeout', new Error('worker timeout')),
+        this.timeoutMs,
+      );
+      current.send(request, { resolve, reject });
+    }).finally(() => clearTimeout(timer));
+  }
+
+  /**
+   * Un worker mort pendant la demande est recréé et la demande renvoyée (bornée par MAX_WORKER_ATTEMPTS).
+   * Un worker neuf n'a plus le corps : pour un habillage, le dernier ajustement est rejoué d'abord.
+   */
+  async call(build: Build, replayFit = false): Promise<WorkerResponse> {
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        // Sans attente inutile : le worker peut mourir entre une vérification et l'envoi.
+        for (let pending = replayFit && this.bodyReplay(); pending;)
+          pending = (await pending, replayFit && this.bodyReplay());
+        const response = await this.send(build);
+        if (!response.ok) throw new Error(response.message);
+        return response;
+      } catch (error) {
+        if (!(error instanceof WorkerDiedError) || attempt >= MAX_WORKER_ATTEMPTS) throw error;
+      }
+    }
   }
 }
 
 /**
  * Adaptateur du port `MannequinFitter` : un message par demande, réponse retrouvée par son id.
- * Un worker qui plante, renvoie un message illisible ou ne répond plus est jugé mort : les demandes
- * en cours sont rejetées et un nouveau worker est créé à la demande suivante.
+ * Un worker qui plante ou renvoie un message illisible est recréé et la demande renvoyée une fois ;
+ * un worker qui ne répond plus (délai) est jugé mort : la demande est rejetée, le suivant est neuf.
  */
 export function createWorkerFitter(
   createWorker: () => WorkerLike,
   { timeoutMs = DEFAULT_FIT_TIMEOUT_MS }: WorkerFitterOptions = {},
-): MannequinFitter {
-  let session: WorkerSession | undefined;
-  let nextId = 0;
-  async function call(build: (id: number) => WorkerRequest): Promise<WorkerResponse> {
-    if (!session?.isAlive) session = new WorkerSession(createWorker);
-    const current = session;
-    nextId += 1;
-    const request = build(nextId);
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const response = await new Promise<WorkerResponse>((resolve, reject) => {
-      timer = setTimeout(() => current.kill('worker timeout'), timeoutMs);
-      current.send(request, { resolve, reject });
-    }).finally(() => clearTimeout(timer));
-    if (!response.ok) throw new Error(response.message);
-    return response;
-  }
+): StudioFitter {
+  const caller = new WorkerCaller(createWorker, timeoutMs);
+  const fitBody = async (build: Build) => {
+    const response = await caller.call(build);
+    if (!('mannequin' in response)) throw new Error('unexpected worker response');
+    return response.mannequin;
+  };
   return {
-    async fit(measurements, options) {
-      const response = await call((id) => ({ id, measurements, options }));
-      if (!('mannequin' in response)) throw new Error('unexpected worker response');
-      return response.mannequin;
+    fit(measurements, options) {
+      caller.lastFit = (id) => ({ id, measurements, options });
+      return fitBody(caller.lastFit);
     },
+    fitForView: (measurements, options) =>
+      fitBody((id) => ({ id, measurements, options, keep: false })),
     async dress(spec, garmentType, options) {
-      const response = await call((id) => ({
-        kind: 'dress',
-        id,
-        spec,
-        garment: { type: garmentType },
-        options,
-      }));
+      const response = await caller.call(
+        (id) => ({ kind: 'dress', id, spec, garment: { type: garmentType }, options }),
+        true,
+      );
       if (!('garment' in response)) throw new Error('unexpected worker response');
       return response.garment;
     },

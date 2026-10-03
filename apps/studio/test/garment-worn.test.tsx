@@ -57,6 +57,7 @@ const actions = (): PatternStudioActions => ({
   setShowGarment: vi.fn(),
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
+  applyForm: vi.fn(),
 });
 
 const base: PatternStudioState = {
@@ -67,6 +68,8 @@ const base: PatternStudioState = {
   display: '3d',
   dressing: { status: 'idle' },
   showGarment: true,
+  dirty: false,
+  runs: 0,
 };
 
 describe('vêtement porté', () => {
@@ -123,6 +126,22 @@ describe('vêtement porté', () => {
     expect(screen.getByRole('listitem').textContent).toBe(
       'Trop juste de 70 mm entre 820 et 900 mm du sol',
     );
+  });
+
+  it('drapé affiché en 3D : zones de l’habillage géométrique masquées, visibles en vue en trait', () => {
+    const draped = { model: new ArrayBuffer(8), body: { status: 'fitting' as const } };
+    const { rerender } = render(
+      <PatternStudioView state={worn} actions={actions()} draped={draped} />,
+    );
+    expect(screen.queryByRole('listitem')).toBeNull();
+    rerender(
+      <PatternStudioView
+        state={{ ...worn, display: 'outline' }}
+        actions={actions()}
+        draped={draped}
+      />,
+    );
+    expect(screen.getByRole('listitem')).toBeTruthy();
   });
 
   it('la bascule montre ou masque le vêtement', async () => {

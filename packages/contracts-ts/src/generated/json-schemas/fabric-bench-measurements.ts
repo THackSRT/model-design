@@ -1,0 +1,170 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « fabricBenchMeasurements ». */
+export const fabricBenchMeasurementsJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/drape/fabric-bench-measurements.schema.json',
+  title: 'FabricBenchMeasurements',
+  description:
+    "Mesures brutes d'un tissu, saisies par un modéliste au banc d'essai des tissus, telles que lues sur les instruments (ADR 0015). Chaque essai est facultatif ; stretchWarp et bendingWarp portent sur une bande découpée dans le sens de la chaîne (droit fil), stretchWeft et bendingWeft dans le sens de la trame (travers du fil). Les grandeurs physiques en sont déduites par le moteur de drapé ; elles ne sont jamais saisies directement. Mesures d'un tissu, jamais d'une personne.",
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    weighing: { $ref: '#/$defs/FabricWeighing' },
+    thickness: { $ref: '#/$defs/FabricThicknessTest' },
+    stretchWarp: { $ref: '#/$defs/StripStretchTest' },
+    stretchWeft: { $ref: '#/$defs/StripStretchTest' },
+    bendingWarp: { $ref: '#/$defs/CantileverBendingTest' },
+    bendingWeft: { $ref: '#/$defs/CantileverBendingTest' },
+    friction: { $ref: '#/$defs/InclinedPlaneFrictionTest' },
+    drape: { $ref: '#/$defs/MeasuredDrape' },
+  },
+  $defs: {
+    FabricWeighing: {
+      title: 'FabricWeighing',
+      type: 'object',
+      description:
+        "Pesée d'un échantillon découpé. Grammage déduit : masse / aire × 1 000 000, en g/m².",
+      additionalProperties: false,
+      required: ['sampleMassG', 'sampleAreaMm2'],
+      properties: {
+        sampleMassG: {
+          type: 'number',
+          description: "Masse de l'échantillon, en grammes.",
+          exclusiveMinimum: 0,
+          maximum: 1000,
+        },
+        sampleAreaMm2: {
+          type: 'number',
+          description:
+            "Aire de l'échantillon, en millimètres carrés (50 × 50 mm au moins, 1 m² au plus).",
+          minimum: 2500,
+          maximum: 1000000,
+        },
+      },
+    },
+    FabricThicknessTest: {
+      title: 'FabricThicknessTest',
+      type: 'object',
+      description:
+        'Épaisseur au pied à coulisse ou au micromètre, mâchoires serrées sans écraser le tissu. Épaisseur déduite : moyenne des lectures, en mm.',
+      additionalProperties: false,
+      required: ['readingsMm'],
+      properties: {
+        readingsMm: {
+          type: 'array',
+          description: "Lectures en différents points de l'échantillon, en millimètres.",
+          minItems: 1,
+          maxItems: 32,
+          items: { type: 'number', minimum: 0.01, maximum: 10 },
+        },
+      },
+    },
+    StripStretchTest: {
+      title: 'StripStretchTest',
+      type: 'object',
+      description:
+        "Allongement d'une bande suspendue sous une masse connue. Deux repères tracés sur la bande, distance mesurée avant et après la mise en charge. Allongement déduit, ramené à la charge de référence de Fabric (10 N sur 50 mm de large) par proportionnalité (hypothèse linéaire, ADR 0015).",
+      additionalProperties: false,
+      required: ['stripWidthMm', 'gaugeLengthMm', 'loadedLengthMm', 'hangingMassG'],
+      properties: {
+        stripWidthMm: {
+          type: 'number',
+          description: 'Largeur de la bande, en millimètres (50 mm recommandés).',
+          minimum: 10,
+          maximum: 100,
+        },
+        gaugeLengthMm: {
+          type: 'number',
+          description:
+            'Distance entre les repères avant la mise en charge (bande suspendue, sans masse), en millimètres (200 mm recommandés).',
+          minimum: 50,
+          maximum: 1000,
+        },
+        loadedLengthMm: {
+          type: 'number',
+          description:
+            'Distance entre les repères sous la masse, en millimètres ; au moins gaugeLengthMm.',
+          minimum: 50,
+          maximum: 2000,
+        },
+        hangingMassG: {
+          type: 'number',
+          description:
+            'Masse suspendue à la bande, pince comprise, en grammes (1 000 g donnent 9,81 N, proche de la charge de référence).',
+          minimum: 50,
+          maximum: 5000,
+        },
+      },
+    },
+    CantileverBendingTest: {
+      title: 'CantileverBendingTest',
+      type: 'object',
+      description:
+        "Flexion au porte-à-faux (ASTM D1388, option A ; ISO 9073-7) : bande de 25 × 200 mm poussée au-delà du bord d'une plateforme jusqu'à ce que sa pointe touche un plan incliné à 41,5°. Longueur de flexion c = porte-à-faux / 2 ; rigidité de flexion B = grammage × g × c³ (ADR 0015).",
+      additionalProperties: false,
+      required: ['overhangLengthsMm'],
+      properties: {
+        overhangLengthsMm: {
+          type: 'array',
+          description:
+            'Longueurs en porte-à-faux lues sur la règle, en millimètres (quatre recommandées : chaque extrémité, chaque face).',
+          minItems: 1,
+          maxItems: 32,
+          items: { type: 'number', minimum: 5, maximum: 500 },
+        },
+      },
+    },
+    InclinedPlaneFrictionTest: {
+      title: 'InclinedPlaneFrictionTest',
+      type: 'object',
+      description:
+        "Frottement au plan incliné : un patin lesté recouvert du tissu, posé sur une planche recouverte de la surface d'appui, qu'on incline lentement jusqu'au glissement. Coefficient déduit : moyenne des tan θ (frottement statique, ADR 0015).",
+      additionalProperties: false,
+      required: ['slideAnglesDeg', 'counterSurface'],
+      properties: {
+        slideAnglesDeg: {
+          type: 'array',
+          description:
+            "Angles de la planche au moment du glissement, en degrés par rapport à l'horizontale.",
+          minItems: 1,
+          maxItems: 32,
+          items: { type: 'number', exclusiveMinimum: 0, maximum: 75 },
+        },
+        counterSurface: {
+          type: 'string',
+          description:
+            "Surface d'appui : dress-form-cover (housse d'un buste de couture), skin-substitute (peau synthétique), same-fabric (le tissu lui-même), other. Le moteur de drapé modélise le frottement du tissu sur le corps.",
+          enum: ['dress-form-cover', 'skin-substitute', 'same-fabric', 'other'],
+        },
+      },
+    },
+    MeasuredDrape: {
+      title: 'MeasuredDrape',
+      type: 'object',
+      description:
+        "Coefficient de drapé mesuré au drapomètre de Cusick (BS 5058, ISO 9073-9), si l'atelier en a un : DC = (aire de l'ombre − aire du disque) / (aire de l'éprouvette − aire du disque).",
+      additionalProperties: false,
+      required: ['drapeCoefficient', 'specimenDiameterMm', 'discDiameterMm'],
+      properties: {
+        drapeCoefficient: {
+          type: 'number',
+          description:
+            'Coefficient de drapé, sans unité (0 : tombe à la verticale ; 1 : reste plat).',
+          minimum: 0,
+          maximum: 1,
+        },
+        specimenDiameterMm: {
+          type: 'number',
+          description:
+            "Diamètre de l'éprouvette circulaire, en millimètres. Seul l'essai de 300 mm est comparable à l'essai simulé.",
+          enum: [300],
+        },
+        discDiameterMm: {
+          type: 'number',
+          description: 'Diamètre du disque support, en millimètres.',
+          enum: [180],
+        },
+      },
+    },
+  },
+} as const;

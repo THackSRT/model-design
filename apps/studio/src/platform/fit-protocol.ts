@@ -15,6 +15,8 @@ export interface FitRequest {
   id: number;
   measurements: MeasurementSet;
   options?: FitOptions;
+  /** Faux : ajustement de consultation, le worker ne retient pas ce corps pour l'habillage. */
+  keep?: boolean;
 }
 
 /** Habiller le dernier corps ajusté (gardé par le worker) avec le patron. */
@@ -80,7 +82,7 @@ export function handleFitRequest(
 ): HandledFit {
   try {
     const mannequin = engine.fit(request.measurements, request.options);
-    if (state) state.last = copyOf(mannequin);
+    if (state && request.keep !== false) state.last = copyOf(mannequin);
     return {
       response: { id: request.id, ok: true, mannequin },
       transfer: transferablesOf(mannequin),

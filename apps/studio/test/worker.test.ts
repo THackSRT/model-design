@@ -116,19 +116,78 @@ describe('adaptateur Web Worker', () => {
     await expect(first).rejects.toThrow('non');
   });
 
-  it('rejette les demandes en cours si le worker plante', async () => {
+  it('recrée le worker qui plante et renvoie la demande une fois', async () => {
     const { create, workers } = fakeWorkers();
     const pending = createWorkerFitter(create).fit(measurements);
     workers[0]?.listeners['error']?.({ message: 'boom' });
-    await expect(pending).rejects.toThrow('boom');
+    await vi.waitFor(() => expect(workers).toHaveLength(2));
     expect(workers[0]?.terminated).toBe(true);
+    expect(workers[1]?.sent).toHaveLength(1);
+    const mannequin = fitted();
+    workers[1]?.listeners['message']?.({
+      data: { id: workers[1].sent[0]?.id, ok: true, mannequin },
+    });
+    await expect(pending).resolves.toBe(mannequin);
   });
 
-  it('rejette la demande sur un message illisible (messageerror)', async () => {
+  it('relance aussi sur un message illisible (messageerror)', async () => {
     const { create, workers } = fakeWorkers();
     const pending = createWorkerFitter(create).fit(measurements);
     workers[0]?.listeners['messageerror']?.({});
-    await expect(pending).rejects.toThrow('message error');
+    await vi.waitFor(() => expect(workers).toHaveLength(2));
+    const mannequin = fitted();
+    workers[1]?.listeners['message']?.({
+      data: { id: workers[1].sent[0]?.id, ok: true, mannequin },
+    });
+    await expect(pending).resolves.toBe(mannequin);
+  });
+
+  it('ignore la réponse tardive d’un ancien worker', async () => {
+    const { create, workers } = fakeWorkers();
+    const pending = createWorkerFitter(create).fit(measurements);
+    const oldId = workers[0]?.sent[0]?.id;
+    workers[0]?.listeners['error']?.({ message: 'boom' });
+    await vi.waitFor(() => expect(workers).toHaveLength(2));
+    workers[0]?.listeners['message']?.({
+      data: { id: oldId, ok: true, mannequin: { stale: true } },
+    });
+    const mannequin = fitted();
+    workers[1]?.listeners['message']?.({
+      data: { id: workers[1].sent[0]?.id, ok: true, mannequin },
+    });
+    await expect(pending).resolves.toBe(mannequin);
+  });
+
+  it('s’arrête après la borne de tentatives si le nouveau worker meurt aussi', async () => {
+    const { create, workers } = fakeWorkers();
+    const pending = createWorkerFitter(create).fit(measurements);
+    const assertion = expect(pending).rejects.toThrow('crash 2');
+    workers[0]?.listeners['error']?.({ message: 'crash 1' });
+    await vi.waitFor(() => expect(workers).toHaveLength(2));
+    workers[1]?.listeners['error']?.({ message: 'crash 2' });
+    await assertion;
+    expect(workers).toHaveLength(2);
+  });
+
+  it('rejoue le dernier ajustement avant de renvoyer un habillage sur un worker neuf', async () => {
+    const { create, workers } = fakeWorkers();
+    const fitter = createWorkerFitter(create);
+    const reply = (worker: number, index: number, payload: object) => {
+      const w = workers[worker];
+      w?.listeners['message']?.({ data: { id: w.sent[index]?.id, ok: true, ...payload } });
+    };
+    const fit = fitter.fit(measurements);
+    reply(0, 0, { mannequin: fitted() });
+    await fit;
+    const dress = fitter.dress({} as never, 'skirt');
+    workers[0]?.listeners['error']?.({ message: 'boom' });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(1));
+    expect(workers[1]?.sent[0]).toHaveProperty('measurements');
+    reply(1, 0, { mannequin: fitted() });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(2));
+    const garment = { vertices: 1 };
+    reply(1, 1, { garment });
+    await expect(dress).resolves.toBe(garment);
   });
 
   it('rejette après le délai maximal, puis recrée le worker à la demande suivante', async () => {
@@ -165,5 +224,85 @@ describe('adaptateur Web Worker', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('habillage sur un worker neuf (corps perdu)', () => {
+  const setup = () => {
+    const { create, workers } = fakeWorkers();
+    const reply = (worker: number, index: number, payload: object, ok = true) => {
+      const w = workers[worker];
+      w?.listeners['message']?.({ data: { id: w.sent[index]?.id, ok, ...payload } });
+    };
+    return { fitter: createWorkerFitter(create, { timeoutMs: 1000 }), workers, reply };
+  };
+  const garment = { vertices: 1 };
+
+  it('après un délai dépassé : le worker neuf reçoit d’abord le fit', async () => {
+    vi.useFakeTimers();
+    try {
+      const { fitter, workers, reply } = setup();
+      const fit = fitter.fit(measurements);
+      reply(0, 0, { mannequin: fitted() });
+      await fit;
+      const slow = fitter.dress({} as never, 'skirt');
+      const slowAssertion = expect(slow).rejects.toThrow('timeout');
+      await vi.advanceTimersByTimeAsync(1000);
+      await slowAssertion;
+      const dress = fitter.dress({} as never, 'skirt');
+      expect(workers[1]?.sent[0]).toHaveProperty('measurements');
+      reply(1, 0, { mannequin: fitted() });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(workers[1]?.sent).toHaveLength(2);
+      reply(1, 1, { garment });
+      await expect(dress).resolves.toBe(garment);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('après le plantage d’un worker inactif : le worker neuf reçoit d’abord le fit', async () => {
+    const { fitter, workers, reply } = setup();
+    const fit = fitter.fit(measurements);
+    reply(0, 0, { mannequin: fitted() });
+    await fit;
+    workers[0]?.listeners['error']?.({ message: 'boom' });
+    const dress = fitter.dress({} as never, 'skirt');
+    expect(workers[1]?.sent[0]).toHaveProperty('measurements');
+    reply(1, 0, { mannequin: fitted() });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(2));
+    reply(1, 1, { garment });
+    await expect(dress).resolves.toBe(garment);
+  });
+
+  it('fit rejoué en échec : l’erreur réelle remonte, sans envoyer l’habillage', async () => {
+    const { fitter, workers, reply } = setup();
+    const fit = fitter.fit(measurements);
+    reply(0, 0, { mannequin: fitted() });
+    await fit;
+    workers[0]?.listeners['error']?.({ message: 'boom' });
+    const dress = fitter.dress({} as never, 'skirt');
+    const assertion = expect(dress).rejects.toThrow('mesures incohérentes');
+    reply(1, 0, { message: 'mesures incohérentes' }, false);
+    await assertion;
+    expect(workers[1]?.sent).toHaveLength(1);
+  });
+
+  it('deux habillages en cours quand le worker meurt : un seul fit rejoué', async () => {
+    const { fitter, workers, reply } = setup();
+    const fit = fitter.fit(measurements);
+    reply(0, 0, { mannequin: fitted() });
+    await fit;
+    const first = fitter.dress({} as never, 'skirt');
+    const second = fitter.dress({} as never, 'skirt');
+    workers[0]?.listeners['error']?.({ message: 'boom' });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(1));
+    reply(1, 0, { mannequin: fitted() });
+    await vi.waitFor(() => expect(workers[1]?.sent).toHaveLength(3));
+    const sent = workers[1]?.sent as Array<object>;
+    expect(sent.filter((m) => 'measurements' in m)).toHaveLength(1);
+    reply(1, 1, { garment });
+    reply(1, 2, { garment });
+    await expect(Promise.all([first, second])).resolves.toEqual([garment, garment]);
   });
 });

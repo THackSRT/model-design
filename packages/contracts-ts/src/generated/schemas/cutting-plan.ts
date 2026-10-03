@@ -5,7 +5,7 @@
  */
 export type SizeLabel = string;
 /**
- * [x, y] en millimètres.
+ * [x, y] en millimètres, dans le repère du plan. Non borné : x va jusqu'au métrage (fabricLengthMm), qui dépasse 10 m pour une série ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.
  *
  * @minItems 2
  * @maxItems 2

@@ -38,3 +38,34 @@ describe('scène avec vêtement', () => {
     expect(colors?.getY(2)).toBeCloseTo(alert.g);
   });
 });
+
+describe('scène avec vêtement drapé', () => {
+  const layer = {
+    name: 'front',
+    positions: Float32Array.of(0, 80, 0, 30, 80, 0, 30, 100, 0),
+    normals: new Float32Array(0),
+    index: Uint32Array.of(0, 1, 2),
+    tight: [false, false, true],
+  };
+  const draped = { layers: [layer], color: '#c9c2b6', tightColor: '#b42318' };
+
+  it('ajoute une maille par pièce, teintée sur les sommets serrés', () => {
+    const { scene } = buildScene([rectangle(0, 0, 20, 170)], '#e9e4dc', undefined, draped);
+    const meshes = meshesOf(scene);
+    expect(meshes).toHaveLength(2);
+    const colors = meshes[1]?.geometry.getAttribute('color');
+    expect(colors?.getX(0)).toBeCloseTo(new THREE.Color('#c9c2b6').r);
+    expect(colors?.getX(2)).toBeCloseTo(new THREE.Color('#b42318').r);
+  });
+
+  it('libère géométries et matériaux au démontage', () => {
+    const { scene, dispose } = buildScene([rectangle(0, 0, 20, 170)], '#e9e4dc', undefined, draped);
+    const mesh = meshesOf(scene)[1] as THREE.Mesh;
+    let geometryDisposed = 0;
+    let materialDisposed = 0;
+    mesh.geometry.addEventListener('dispose', () => geometryDisposed++);
+    (mesh.material as THREE.Material).addEventListener('dispose', () => materialDisposed++);
+    dispose();
+    expect([geometryDisposed, materialDisposed]).toEqual([1, 1]);
+  });
+});

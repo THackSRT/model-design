@@ -4,3 +4,6 @@ import { lazy } from 'react';
 export const LazyMannequinView = lazy(async () => ({
   default: (await import('@atelier/viewer3d')).MannequinView,
 }));
+
+/** Le vêtement drapé (lecture du GLB comprise) vit dans le même chunk paresseux que la vue 3D. */
+export const LazyDrapedView = lazy(() => import('./draped-view.js'));

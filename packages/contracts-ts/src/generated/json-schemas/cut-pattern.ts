@@ -1,0 +1,239 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « cutPattern ». */
+export const cutPatternJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/manufacturing/cut-pattern.schema.json',
+  title: 'CutPattern',
+  description:
+    'Pièces de coupe : chaque pièce du patron avec sa ligne de couture, sa ligne de coupe (valeurs de couture ajoutées), ses crans, son droit fil et sa pliure. Coordonnées en millimètres dans le repère de la pièce de GarmentSpec (y vers le haut), arrondies à 0,01 mm.',
+  type: 'object',
+  additionalProperties: false,
+  required: ['unit', 'engine', 'specEngine', 'garment', 'pieces'],
+  properties: {
+    unit: {
+      const: 'mm',
+    },
+    engine: {
+      $ref: '#/$defs/EngineRef',
+    },
+    specEngine: {
+      $ref: '#/$defs/EngineRef',
+      description: "Moteur qui a calculé la spécification d'entrée (GarmentSpec.engine).",
+    },
+    garment: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type'],
+      properties: {
+        type: {
+          type: 'string',
+        },
+      },
+    },
+    sizeLabel: {
+      $ref: './size-label.schema.json',
+    },
+    pieces: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        $ref: '#/$defs/CutPiece',
+      },
+    },
+  },
+  $defs: {
+    Point: {
+      type: 'array',
+      description:
+        "[x, y] en millimètres, dans le repère de la pièce. Sortie du moteur, non bornée : la ligne de coupe dépasse la ligne de couture des valeurs de couture ; les points d'entrée (GarmentSpec) sont bornés à 10 000 mm.",
+      items: {
+        type: 'number',
+      },
+      minItems: 2,
+      maxItems: 2,
+    },
+    EngineRef: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['name', 'version'],
+      properties: {
+        name: {
+          type: 'string',
+        },
+        version: {
+          type: 'string',
+        },
+      },
+    },
+    Segment: {
+      type: 'array',
+      description: 'Segment de deux points.',
+      items: {
+        $ref: '#/$defs/Point',
+      },
+      minItems: 2,
+      maxItems: 2,
+    },
+    CutPiece: {
+      type: 'object',
+      additionalProperties: false,
+      required: [
+        'panelId',
+        'name',
+        'quantity',
+        'cutOnFold',
+        'cutLine',
+        'seamLine',
+        'notches',
+        'grainline',
+        'labelAnchor',
+        'bounds',
+        'cutAreaMm2',
+      ],
+      properties: {
+        panelId: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+        quantity: {
+          type: 'integer',
+          minimum: 1,
+          description: 'Nombre de pièces à couper par vêtement (Panel.quantity).',
+        },
+        cutOnFold: {
+          type: 'boolean',
+          description:
+            'Vrai : la pièce est dessinée à moitié et se coupe sur la pliure du tissu (voir foldLine).',
+        },
+        cutLine: {
+          type: 'array',
+          description:
+            'Ligne de coupe : polygone fermé (le dernier point rejoint le premier, sans être répété), sens trigonométrique, courbes aplaties.',
+          minItems: 3,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        seamLine: {
+          type: 'array',
+          description:
+            "Ligne de couture, bord par bord, dans l'ordre de Panel.edges ; la fin de chaque bord est le début du suivant.",
+          minItems: 3,
+          items: {
+            $ref: '#/$defs/SeamLineEdge',
+          },
+        },
+        notches: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/NotchMark',
+          },
+        },
+        grainline: {
+          $ref: '#/$defs/Segment',
+          description:
+            "Droit fil : celui de la spécification, ou, s'il manque, une ligne verticale (axe y de la pièce) au centre de la pièce.",
+        },
+        foldLine: {
+          $ref: '#/$defs/Segment',
+          description: 'Ligne de pliure (bord de rôle fold), présente si cutOnFold est vrai.',
+        },
+        labelAnchor: {
+          $ref: '#/$defs/Point',
+          description: 'Point intérieur à la pièce où placer son étiquette.',
+        },
+        bounds: {
+          $ref: '#/$defs/Bounds',
+        },
+        cutAreaMm2: {
+          type: 'number',
+          minimum: 0,
+          description:
+            'Aire de la ligne de coupe, en mm², telle que dessinée (moitié de pièce si cutOnFold).',
+        },
+      },
+    },
+    SeamLineEdge: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['edgeId', 'role', 'allowanceMm', 'points'],
+      properties: {
+        edgeId: {
+          type: 'string',
+        },
+        role: {
+          type: 'string',
+          description: 'Rôle du bord (Edge.role de GarmentSpec ; seam si absent).',
+          enum: ['seam', 'fold', 'hem', 'waistline', 'opening'],
+        },
+        allowanceMm: {
+          type: 'integer',
+          minimum: 0,
+          description: 'Valeur de couture appliquée à ce bord (0 pour une pliure).',
+        },
+        points: {
+          type: 'array',
+          description: 'Polyligne du bord (courbe de Bézier aplatie), du début à la fin.',
+          minItems: 2,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+      },
+    },
+    NotchMark: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['edgeId', 'distanceMm', 'count', 'position', 'segments'],
+      properties: {
+        edgeId: {
+          type: 'string',
+        },
+        distanceMm: {
+          type: 'number',
+          minimum: 0,
+          description: 'Distance le long de la ligne de couture depuis le début du bord.',
+        },
+        count: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 3,
+        },
+        source: {
+          type: 'string',
+          enum: ['requested', 'auto'],
+        },
+        position: {
+          $ref: '#/$defs/Point',
+          description: 'Point de la ligne de couture repéré par le cran.',
+        },
+        segments: {
+          type: 'array',
+          description:
+            "Entailles à couper (une par cran), de la ligne de coupe vers l'intérieur de la pièce.",
+          minItems: 1,
+          maxItems: 3,
+          items: {
+            $ref: '#/$defs/Segment',
+          },
+        },
+      },
+    },
+    Bounds: {
+      type: 'object',
+      description: 'Rectangle englobant de la ligne de coupe.',
+      additionalProperties: false,
+      required: ['min', 'max'],
+      properties: {
+        min: {
+          $ref: '#/$defs/Point',
+        },
+        max: {
+          $ref: '#/$defs/Point',
+        },
+      },
+    },
+  },
+} as const;

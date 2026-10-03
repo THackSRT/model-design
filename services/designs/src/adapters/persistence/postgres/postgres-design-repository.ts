@@ -8,6 +8,7 @@ import type {
   VersionSummary,
 } from '../../../domain/design-version.js';
 import type { Database } from './database.js';
+import { inOrganization } from './organization-scope.js';
 import { designs, designVersions, outbox } from './schema.js';
 
 type DesignRow = typeof designs.$inferSelect;
@@ -39,23 +40,21 @@ export class PostgresDesignRepository implements DesignRepository {
   ) {}
 
   async create(design: Design): Promise<void> {
-    await this.db.insert(designs).values(design);
+    await inOrganization(this.db, design.organizationId, (tx) => tx.insert(designs).values(design));
   }
 
   async byId(organizationId: OrganizationId, designId: DesignId): Promise<Design | undefined> {
-    const rows = await this.db
-      .select()
-      .from(designs)
-      .where(and(eq(designs.id, designId), eq(designs.organizationId, organizationId)));
+    const rows = await inOrganization(this.db, organizationId, (tx) =>
+      tx
+        .select()
+        .from(designs)
+        .where(and(eq(designs.id, designId), eq(designs.organizationId, organizationId))),
+    );
     return rows[0] ? toDesign(rows[0]) : undefined;
   }
 
   async saveNewVersion({ design, version, events }: VersionAdded): Promise<void> {
-    await this.db.transaction(async (tx) => {
-      // Contexte lu par les politiques de sécurité au niveau des lignes (migrations/0001).
-      await tx.execute(
-        sql`select set_config('app.organization_id', ${design.organizationId}, true)`,
-      );
+    await inOrganization(this.db, design.organizationId, async (tx) => {
       await tx
         .update(designs)
         .set({ latestVersionNumber: design.latestVersionNumber })
@@ -73,16 +72,18 @@ export class PostgresDesignRepository implements DesignRepository {
     designId: DesignId,
     number: number,
   ): Promise<DesignVersion | undefined> {
-    const rows = await this.db
-      .select()
-      .from(designVersions)
-      .where(
-        and(
-          eq(designVersions.designId, designId),
-          eq(designVersions.organizationId, organizationId),
-          eq(designVersions.number, number),
+    const rows = await inOrganization(this.db, organizationId, (tx) =>
+      tx
+        .select()
+        .from(designVersions)
+        .where(
+          and(
+            eq(designVersions.designId, designId),
+            eq(designVersions.organizationId, organizationId),
+            eq(designVersions.number, number),
+          ),
         ),
-      );
+    );
     return rows[0] ? toVersion(rows[0]) : undefined;
   }
 
@@ -92,8 +93,7 @@ export class PostgresDesignRepository implements DesignRepository {
     page: { limit: number; before?: number },
   ): Promise<VersionSummary[]> {
     // Ni les mesures ni le patron entier ne sont lus : seulement de quoi faire un résumé.
-    return this.db.transaction(async (tx) => {
-      await tx.execute(sql`select set_config('app.organization_id', ${organizationId}, true)`);
+    return inOrganization(this.db, organizationId, async (tx) => {
       const rows = await tx
         .select({
           number: designVersions.number,

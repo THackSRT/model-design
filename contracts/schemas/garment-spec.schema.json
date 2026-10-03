@@ -61,9 +61,11 @@
   "$defs": {
     "Point": {
       "type": "array",
-      "description": "[x, y] en millimètres.",
+      "description": "[x, y] en millimètres, chaque coordonnée entre -10 000 et 10 000 mm (10 m, bornes comprises) : un vêtement réel tient sous 3 m ; la borne refuse une entrée hostile dès la validation (ADR 0013, MAX_COORDINATE_MM du drapé).",
       "items": {
-        "type": "number"
+        "type": "number",
+        "minimum": -10000,
+        "maximum": 10000
       },
       "minItems": 2,
       "maxItems": 2

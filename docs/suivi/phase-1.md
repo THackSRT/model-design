@@ -5,6 +5,14 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
 
 ## Ce qui est prêt
 
+- **Historique et comparaison des versions** : chaque calcul d'un patron crée une nouvelle version stockée au
+  service ; dans le studio, le panneau « Historique » de l'onglet Patron liste les versions de la session,
+  permet de reprendre l'une d'elles (avec confirmation si des modifications non calculées existent), et de
+  comparer deux versions pour voir les changements de paramètres et mesures avec écarts d'aire et périmètre
+  par pièce (ADR 0014 : limité au modèle de la session).
+- **Maillage triangulaire des pièces et du vêtement complet** (ENGINE_VERSION 0.4.0) : Delaunay contraint pour
+  la simulation drapé (pas de < 25 mm en brouillon, < 15 mm en standard, angle > 20°) ; cinq vêtements de
+  référence se maillent en 0,02 à 0,17 s (jupe cercle standard : 9 756 sommets) ; ADR 0013 complétée.
 - **Tranche verticale de bout en bout** : `apps/studio` → `services/designs` → `engines/patterning` (quatre
   types de vêtement, douze mesures facultatives), et le mannequin MakeHuman ajusté dans le navigateur
   (`engines/mannequin`) puis affiché en 3D (`packages/viewer3d`) ou en silhouettes 2D. Un patron impossible
@@ -20,15 +28,28 @@ Porte de sortie : des patrons validés sur toile par un modéliste.
   pour 1700 mm de stature). Habillage géométrique rapide (`dressMannequin()`, 35–50 ms). Ajustement dans un
   Web Worker (`apps/studio`) : l'écran du studio ne fige plus.
 - **Silhouettes 2D du mannequin** (face, profil, dos) affichées dans le studio de patron : bascule interactif 3D / silhouettes vectorielles.
+- **Drapé sur l'avatar** (ENGINE_VERSION 0.5.0) : calcule le mannequin depuis les mesures et les options, place
+  chaque pièce autour du corps selon `Panel.placement`, simule, applique l'aisance et l'allongement ; jupe
+  droite en brouillon drape correctement (convergence 116 pas, aisance bassin ~6 mm). Autres vêtements non
+  maintenus (1.19e2 à venir).
 - **Moteur de fabrication** (`engines/manufacturing`, port 3202, ENGINE_VERSION 0.4.0) : pièces de coupe avec
   valeurs de couture par bord, crans demandés ou automatiques, droit fil, pliure, pinces (pont) ; gradation par
   recalcul ; plan de coupe simple et déterministe ; exports SVG 1:1, PDF A4 tuilé et DXF-AAMA en mm. Erreurs
   RFC 9457 typées.
-- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.2.0) : cœur de
+- **Moteur drapé** (`engines/drape`, paquet `@atelier/drape`, port 3203, ENGINE_VERSION 0.5.0) : cœur de
   simulation XPBD sur CPU en TypeScript (ADR 0013, exception à l'ADR 0003), sans dépendance de calcul,
-  déterministe ; étirement chaîne/trame, flexion, coutures, collision, frottement, arrêt au repos ; tests
-  physiques, `/health`. Maillage, glTF en S3 à cache (version + avatar), tâche NATS, événements
-  `drape.requested`, `drape.completed`, `drape.failed` à venir (1.19d–g).
+  déterministe ; étirement chaîne/trame, flexion, coutures, collision, frottement, arrêt au repos ; λ cumulé
+  par sous-pas (XPBD correct), option `iterations` (1–32), validation des maillages ; essai de drapé de
+  Cusick simulé (coefficient de drapé, 0,75–2 s) ; tests physiques, `/health`. Recalcule le mannequin depuis
+  les mesures et les options, place chaque pièce selon `Panel.placement`, applique l'aisance et l'allongement ;
+  jupe droite en brouillon drape correctement (convergence 116 pas, aisance bassin ~6 mm). Autres vêtements non
+  maintenus (1.19e2 à venir). Tâche NATS, résultats glTF lus depuis S3 (1.19g1–g2 : routes dans `designs`,
+  consommateur, variables S3).
+- **Banc d'essai des tissus** (ADR 0015) : contrats et schémas (`fabric-physics`, mesures, valeurs dérivées,
+  rapport de validation) ; moteur : essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement),
+  tolérances et écarts, essai de Cusick simulé ; features : modèle de vue `useFabricBench`, import/export du
+  rapport ; ui-web : composants `Tabs`, `TextArea`, `ChoiceGroup`, `FileButton` ; studio : onglets Patron |
+  Tissus et écran du banc avec Worker de Cusick et vue de dessus (1.39a–j).
 - **Outillage** : contrats et code généré (`pnpm contracts:gen|check`), générateurs (`pnpm gen`), règles
   d'architecture dans le lint, `pnpm check` (16 projets et documentation), hook `pre-push`, intégration continue manuelle.
 - **Conteneurs** : une image par moteur, service et application ; toute la pile tourne avec `pnpm stack:up`.
@@ -48,14 +69,18 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
    (`prototype/js/body.js`) ; ajustement dans un Web Worker pour ne pas figer l'écran.
 3. ✅ **Vues 2D trait du mannequin** (silhouettes SVG, reprise de `prototype/js/viewer3d.js`) affichées dans
    le studio (`packages/viewer3d` + `apps/studio`).
-4. 🟡 **Retouches** : édition des paramètres du modèle dans le studio (1.16b ⬜), liste et comparaison des
-   versions (`GET /v1/designs/{id}/versions`, 1.16a ✅, curseur opaque, pas de mesures dans les résumés).
+4. ✅ **Retouches** : liste et comparaison des versions (`GET /v1/designs/{id}/versions`, 1.16a ✅, curseur
+   opaque, pas de mesures dans les résumés) ; features clients et modèle de vue (1.16b ✅) ; panneau
+   Historique du studio (1.16c ✅) avec reprise et comparaison. Édition des paramètres du modèle reste à faire.
 5. ✅ **`engines/manufacturing`** : pièces de coupe, valeurs de couture (défaut 10 mm, ourlet 30 mm), crans,
    droit fil, pliure, pinces ; gradation par recalcul ; plan de coupe ; exports SVG 1:1 (1.18a), PDF A4
    tuilé (1.18b) et DXF-AAMA (1.18c).
-6. 🟡 **`engines/drape`** : placement de chaque pièce (1.19c ✅, `Panel.placement` : zone, côté, sens, ancrage,
-   aisance) ; couture virtuelle et simulation XPBD sur CPU en TypeScript (1.19b ✅), en tâche NATS, sortie
-   glTF, carte d'aisance, cache S3 (1.19 🟡, restent 1.19d-g).
+6. 🟡 **`engines/drape`** : contrat du drapé physique (1.19a ✅, `Panel.placement`) ; simulation XPBD sur CPU
+   en TypeScript (1.19b ✅, ENGINE_VERSION 0.2.0–0.4.0) ; placement de chaque pièce (1.19c ✅) ; maillage
+   triangulaire Delaunay contraint (1.19d ✅, ENGINE_VERSION 0.4.0, 0,02–0,17 s pour les références) ;
+   drapé sur l'avatar avec aisance (1.19e ✅, ENGINE_VERSION 0.5.0, jupe droite brouillon validée) ;
+   routes `/drapes` dans `designs` avec consommateur et modèle glTF depuis S3 (1.19g1–g2 ✅). Restent
+   1.19e2 (maintien des autres vêtements), 1.19f (glTF et S3 complétement intégrés).
 7. ✅ **Relais de l'outbox vers NATS JetStream** : implémenté dans `service-kit` et branché dans `designs`
    avec flux `DESIGNS` (sujets `design.>`), variables d'environnement `NATS_URL`, `OUTBOX_INTERVAL_MS`, `OUTBOX_BATCH_SIZE`.
 8. ✅ **Studio** : `three.js` chargé à la demande (paquet de 806 kB réduit à 303 kB) ; bibliothèque de
@@ -69,5 +94,9 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
     dans le studio avec silhouette en trait superposée.
 12. ✅ **Repères d'épaule et de poignet** (1.35) : `landmarksMm.shoulder|wrist` (hauteurs), `armsMm`
     (pivot, poignet, axe, longueur) pour habillage géométrique précis.
-13. **Plateforme** : construction des images en CI, charts Helm, environnement de recette.
-14. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées.
+13. ✅ **Banc d'essai des tissus** (ADR 0015, 1.37, 1.39a–j) : contrats et schémas `fabric-*` ; moteur :
+    essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement), essai de Cusick simulé ;
+    features : modèle de vue, import/export du rapport ; studio : onglets Patron | Tissus et écran du banc
+    avec Worker de Cusick.
+14. **Plateforme** : construction des images en CI, charts Helm, environnement de recette.
+15. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées.

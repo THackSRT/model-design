@@ -1,39 +1,89 @@
 # Moteur drape (TypeScript)
 
-Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique à base de positions étendue, XPBD, sur
-CPU, sans aucune dépendance). Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin).
-Aujourd'hui : le socle du paquet `@atelier/drape` et le cœur de simulation (tâche 1.19b) ; maillage des pièces,
-avatar, glTF et tâche NATS suivent (1.19d, 1.19e).
+Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU ; cœur sans dépendance ; adaptateurs : @nats-io/*, aws4fetch).
+Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État : socle du paquet, simulation (1.19b), maillage (1.19d),
+placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; travailleur NATS et S3 (1.19f2).
 
-- `src/index.ts` : API (`simulate`, `FABRIC_PRESETS`, `toXpbdParams`, types, `ENGINE_VERSION`) ;
-  `src/server.ts` + `src/main.ts` : `GET /health` (`{ name: "drape", version }`), `node:http`, port `PORT` ou 8000.
-- `src/core/` : cœur pur et déterministe (ni E/S, ni horloge, ni hasard ; mm, g, s ; axe Y vers le haut). Le lint
-  (`eslint.config.mjs`) interdit à `src/core/` d'importer `node:*`, `adapters/`, `output/`, `body/`. À venir hors du
-  cœur : `src/body/` (avatar par `@atelier/mannequin`, cm → mm ici seulement), `src/output/` (glTF, mètres ici
-  seulement), `src/adapters/` (NATS, stockage).
-  - `types.ts` : `ClothMesh`, `BodyMesh`, `FabricPhysics`, `SimulationSettings`, `SimulationResult` (interface
-    partagée avec 1.19d : ne pas la changer sans le signaler ; `iterations?` est un ajout facultatif) ;
-  - `fabric.ts` : préréglages (valeurs ESTIMÉES, à faire valider) et conversion des unités physiques vers les
-    raideurs XPBD (`toXpbdParams`, formules commentées) ;
-  - `topology.ts` : masses, arêtes d'étirement (raideur `k = K(θ)·A/l²`, interpolée entre chaîne et trame par
-    cos² de l'angle au droit fil), stencils de flexion isométrique (Bergou 2006, `k = D/(A0+A1)`) ;
-  - `constraints.ts` : passes de Gauss-Seidel (étirement, flexion, coutures) ; `simulate.ts` : boucle (petits pas,
-    phase de couture à gravité réduite, arrêt au repos : vitesse max sous le seuil pendant 10 pas) ;
-  - `body-grid.ts`, `body-query.ts`, `triangle-distance.ts`, `collision.ts` : collision sommet-triangle contre un
-    corps fermé (normales vers l'extérieur par l'ordre des sommets), grille de hachage spatiale, frottement de
-    Coulomb positionnel ; `damping.ts` : amortissement des modes non rigides.
-- Déterminisme au bit près : `Float64Array`, ordre fixe, un seul fil, seulement `+ − × ÷`, `Math.sqrt`, `abs`, `min`,
-  `max` (et `Math.floor` pour la grille) ; ni `sin`, `cos`, `exp`, `pow` dans le cœur. Changer un calcul : changer
-  `ENGINE_VERSION`.
-- Les fonctions chaudes lisent les tableaux par deux petits utilitaires locaux à chaque module (`f`, `u`) : les
-  importer d'un autre module ralentit d'un facteur 6 sous Vitest (accès indirect aux imports).
-- Limites connues : une itération par sous-pas (« petits pas ») sous-estime la raideur des chaînes très raides ou
-  très longues (régler `substeps` / `iterations?`) ; l'anisotropie chaîne/trame est interpolée par arête, donc
-  approchée (écart mesuré : environ 10 % pour un rapport 1,25 entre les deux sens, 25 % pour un rapport 2) ; pas
-  d'auto-collision du vêtement ; la capture des collisions est limitée à 8 mm au-delà de la distance de contact
-  (pas de traversée tant que la vitesse reste sous environ 4 m/s).
-- Tests (`test/`, Vitest) : déterminisme, chute libre, bande suspendue (étirement), porte-à-faux (flexion, solution
-  exacte de l'élastique pesant dans `elastica.ts`), sphère, plan incliné, coutures, performance (70 × 70 sommets en
-  moins de 10 s), conversions, `/health`.
-- Commandes : `pnpm nx run @atelier/drape:lint`, `…:typecheck`, `…:test`, `…:build`, `…:dev`.
-- Modèle à suivre : `engines/mannequin`.
+## Entrées et API
+
+- `src/index.ts` : API navigateur (`simulate`, `meshGarment`, `FABRIC_PRESETS`, `toXpbdParams`, types,
+  `ENGINE_VERSION`). Aucun `node:*`, pas d'imports de `@atelier/mannequin` ; `test/browser-entry.test.ts` le
+  vérifie.
+- `src/node.ts` : réservée à Node (`loadAvatarEngine`, `buildAvatar`, `placeGarment`, `drapeGarment`,
+  `PlacementError`) ; serveur et tests de drapé seuls l'importent.
+- `src/output/` (Node seulement, via `src/node.ts`) : `buildGlb` (GLB déterministe, mètres ici seulement), `cacheKeyOf` et `modelKeyOf` (SHA-256 du JSON canonique), `completedEvent` et `failedEvent` (contenu exact de `drape.completed` et `drape.failed`). Sans E/S ; détail dans la page du composant.
+- `src/server.ts` + `src/main.ts` : serveur HTTP (`GET /health`), port `PORT` ou 8000.
+- `src/adapters/` (Node, E/S) : travailleur de la file `DRAPE_JOBS` (consommateur durable `drape`). Actif seulement si
+  `NATS_URL` est défini ; alors `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` sont obligatoires
+  (`S3_REGION` us-east-1, `S3_BUCKET` drapes, `S3_TIMEOUT_MS` 30000). Le calcul tourne dans un fil (`drape-thread.ts`)
+  pour que NATS reste vivant. Ni mesure ni contenu de tâche dans les journaux. Ne pas importer service-kit : les
+  modèles y sont recopiés. Détail : page du composant.
+
+## Architecture des dossiers
+
+- `src/core/` : calcul pur et déterministe (ni E/S, ni horloge, pas de `node:*`, `adapters/`, `output/`, `body/`).
+  Unités : mm, g, s ; axe Y vers le haut. Types partagés (`types.ts`), validation (`validate.ts`, `InvalidInputError`),
+  tissus (`fabric.ts`, `FabricPhysics`, `FABRIC_PRESETS`), topologie et arêtes (`topology.ts`), contraintes XPBD
+  (`constraints.ts`), boucle de simulation (`simulate.ts`), collision (`collision.ts`, `body-query.ts`), amortissement
+  (`damping.ts`).
+- `src/bench/` (ADR 0015) : essais d'atelier hors du cœur déterministe, mêmes règles d'imports. Conversions de
+  mesures brutes (`workshop.ts`), tolérances et comparaison (`compare.ts`), test de Cusick simulé (`cusick.ts`,
+  `cusick-mesh.ts`, `projected-area.ts`).
+- `src/mesh/` : maillage plat d'une pièce de patron (mm, y vers le haut). Pur et déterministe, pas de
+  `node:*`/`adapters`. Contour et lattice (`outline.ts`, `lattice.ts`), triangulation Delaunay contrainte
+  (`triangulation.ts`, `constrain.ts`, `refine.ts`), maillage d'une pièce (`panel-mesh.ts`), maillage d'un vêtement
+  entier (`garment-mesh.ts`), pliures et coutures (`unfold.ts`, `copies.ts`, `seams.ts`).
+- `src/body/` : seul à importer `@atelier/mannequin` (exception déclarée au lint). Avatar (1.19e) : cm → mm,
+  soudure des sommets UV (`weld.ts`).
+- `src/placement/` : pur comme `src/core`. Coupe du corps (`section.ts`), enveloppe convexe (`hull.ts`), niveaux
+  autour de l'ancrage (`levels.ts`), placement d'une pièce (`place-garment.ts`), dégagement corps (`clearance.ts`).
+  Pantalon départ symétrique (0.11.0) : `PieceField.span` lit l'étendue au plus à `dMax − 5 mm` (ourlet oblique,
+  maillages miroirs).
+- `src/drape/` : orchestration `drapeGarment(job, { maxSteps? }): DrapeOutcome`. Placements, maillage, avatar,
+  placement, dégagement, simulation. Résultat : succès avec `DrapeResultCore` et `metrics`, ou échec avec type et
+  panelId.
+
+## Invariants et déterminisme
+
+- **Pureté** : `src/core/`, `src/mesh/`, `src/placement/` et `src/bench/` sont purs (règles d'imports du lint).
+  `src/body/` est le seul dossier autorisé à importer `@atelier/mannequin`.
+- **Déterminisme au bit près** : `Float64Array`, ordre fixe, un seul fil, seulement `+−×÷`, `Math.sqrt`, `abs`,
+  `min`, `max`, `floor`. Changer un calcul = changer `ENGINE_VERSION`.
+- **Unités et orientation** : longueurs mm, masses g, temps s, Y vers le haut. Seule conversion du moteur :
+  cm → mm dans `src/body/weld.ts` ; les mètres du glTF n'apparaîtront que dans `src/output/`.
+- **Fonctions chaudes** : elles lisent les tableaux par deux petits utilitaires locaux à chaque module (`f`, `u`) ;
+  les importer d'un autre module ralentit d'un facteur 6 sous Vitest.
+- **Entrées du réseau** (1.19g) : rien ne tourne sans fin ni n'alloue sans borne ; les refus de taille passent
+  avant le travail coûteux (détail dans la page du composant).
+- **Fixtures** `test/fixtures/*.json` : copies des références golden du moteur de patronage ; ne pas les modifier
+  ici.
+- **Interfaces statiques** : `SimulationResult` partagée depuis 1.19d ; `iterations?` entier 1 à `MAX_ITERATIONS` = 32
+  (défaut 1). Changer sans signaler = bogue dans les consommateurs.
+- **Erreurs** : `InvalidInputError` (sous-classe `RangeError`, `code` 'mesh'|'settings') pour entrées, bornes,
+  dégénérescence. `DrapeTooLargeError` pour maillage. `RangeError` du cœur pour calcul.
+- **Limites** : `MAX_EDGES_PER_GARMENT` 2 000, `MAX_VERTICES_PER_GARMENT` 30 000, `MAX_PANELS_PER_GARMENT` 40,
+  `MAX_SEAMS_PER_GARMENT` 200, `MAX_COORDINATE_MM` 10 000, `MAX_LATTICE_WORK` 5e7.
+- **Pénétration** (0.6.0) : mesurée par parité (`core/inside.ts`, rayon de direction fixe, grille 2D), sans limite de
+  portée ; `vertexEase` en tire son signe. **Tenues** : `ClothMesh.holds?` (sommet, axe unitaire, cible) et
+  `SimulationSettings.holdReleaseSteps?` (0 à 1 000) ; actives pendant la couture, relâchées ensuite ; sans elles, rien ne change.
+- **Corsage et manches** (0.9.0) : un segment d'ancrage raide (centre du devant, milieu du dos) rend `pieceField` indéfini, la pièce garde le repérage du patron ; `placement/shoulder-fold.ts` couche les parties au-dessus de `shoulder` − 40 mm sur le profil sagittal (excédent × 1,05) ; `holds.ts` tient aussi les coutures d'épaule (vertical) et le haut de manche (−axe du bras). Essais à `armAngleDeg` 30.
+- **Pantalon** (0.8.0) : `placement/leg-align.ts` pose chaque pièce `leg` (devant ou dos) autour du tube de sa jambe : sous `crotch`, milieu de l'isoligne sur l'extrême avant ou arrière ; au-dessus de `crotch` + 50 mm, bout côté milieu du corps sur `midlineArc` de la demi-coupe du bassin ; entre les deux, interpolé. `PieceField.span(d)` donne l'étendue en s d'une isoligne.
+- **Mise en place** (0.7.0) : tronc et jambes par la ligne d'ancrage (`anchor-line.ts`, `piece-field.ts`, coordonnées (s, d)) ;
+  `holds.ts` tient les bords `waistline` pendant la couture. Jupe cercle : départ en godets (0.10.0, `placement/godets.ts`, abscisse lissée `PieceField.t`) ; `placeGarmentReport` rend le rapport tour fini / courbe, `settingsFor` prend `DRAPE_SETTINGS.flare` (50 × 1) dès 1,5 ; `solveStitches` deux fois par itération.
+- **Simulation** : petits pas (1/60 s), 10 sous-pas par défaut, jusqu'à 300–600 pas (borne dure 1 000), arrêt au repos
+  (vitesse max sous seuil pendant 10 pas). Réglages par qualité dans `DRAPE_SETTINGS`.
+- **Tests de performance** : budgets relatifs (`costRatio` dans `test/helpers.ts`). Référence fixe ~0,55 s, mesurée
+  dans le même processus. Borne absolue 60 s.
+
+## Commandes et tests
+
+- Lint : `pnpm nx run @atelier/drape:lint`
+- Types : `pnpm nx run @atelier/drape:typecheck`
+- Tests : `pnpm nx run @atelier/drape:test` (déterminisme, chute libre, étirement, flexion, collisions, Cusick,
+  performance, maillage, avatar, placements, drapé jupe, conversions)
+- Cible test-standard : `pnpm nx run @atelier/drape:test-standard` (hors `pnpm check`, cinq vêtements, qualité
+  standard 15 mm à 30°) ; helpers `test/drape-helpers.ts`, critères `test/garment-criteria.ts`
+- Build : `pnpm nx run @atelier/drape:build`
+- Dev : `pnpm nx run @atelier/drape:dev`
+
+Détail fichier par fichier, formules et choix : `docs/composants/drape.md`.

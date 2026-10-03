@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@atelier/design-tokens": "workspace:*",
+    "@atelier/drape": "workspace:*",
     "@atelier/features": "workspace:*",
     "@atelier/kernel": "workspace:*",
     "@atelier/mannequin": "workspace:*",

@@ -1,7 +1,11 @@
-import { jsonSchemas, type GarmentType } from '@atelier/contracts-ts';
+import {
+  garmentRequestJsonSchema,
+  garmentTypeJsonSchema,
+  type GarmentType,
+} from '@atelier/contracts-ts';
 
 /** Types de vêtement du contrat, dans l'ordre du contrat. */
-export const GARMENT_TYPES: readonly GarmentType[] = jsonSchemas.garmentType.enum;
+export const GARMENT_TYPES: readonly GarmentType[] = garmentTypeJsonSchema.enum;
 
 /** Types dont le patron est tracé aujourd'hui ; les autres restent visibles mais désactivés. */
 export const DRAFTED_GARMENT_TYPES = [
@@ -45,7 +49,7 @@ interface ParamsSchema {
   properties: Record<string, RawProperty>;
 }
 
-const defs = jsonSchemas.garmentRequest.$defs;
+const defs = garmentRequestJsonSchema.$defs;
 const SCHEMAS: Record<DraftedGarmentType, ParamsSchema> = {
   'straight-skirt': defs.StraightSkirtParams,
   'circle-skirt': defs.CircleSkirtParams,

@@ -3,7 +3,37 @@ export {
   createDesignsClient,
   type DesignsClient,
   type ExportedFile,
+  type VersionPageQuery,
 } from './api/designs-client.js';
+export {
+  comparePanels,
+  type PanelComparison,
+  type VersionComparison,
+} from './design-history/compare.js';
+export {
+  type ComparisonState,
+  type DesignHistoryActions,
+  type DesignHistoryDeps,
+  type DesignHistoryState,
+  HISTORY_PAGE_SIZE,
+  type HistoryModelRef,
+  type ResumeState,
+} from './design-history/history-state.js';
+export {
+  flattenOutline,
+  measurePanels,
+  type PanelMetrics,
+  polygonArea,
+  polygonPerimeter,
+} from './design-history/panel-metrics.js';
+export { useDesignHistory } from './design-history/use-design-history.js';
+export { versionToForm } from './design-history/version-to-form.js';
+export {
+  useStudioHistory,
+  type ResumeOutcome,
+  type StudioHistoryActions,
+} from './design-history/use-studio-history.js';
+export { GARMENT_PARAM_KEYS, MEASUREMENT_SET_KEYS } from './design-history/contract-keys.js';
 export { exportFileName } from './api/file-name.js';
 export {
   type CutPieceLabel,
@@ -65,3 +95,72 @@ export {
   type StudioStatus,
   usePatternStudio,
 } from './pattern-studio/use-pattern-studio.js';
+export {
+  FABRIC_REPORT_MAX_BYTES,
+  parseFabricValidationReport,
+  type ReportImportError,
+  serializeFabricValidationReport,
+} from './fabric-bench/report-file.js';
+export { checkSchema, type SchemaKey, type SchemaViolation } from './fabric-bench/schema-check.js';
+export {
+  type BenchField,
+  BENCH_TESTS,
+  BENCH_TEST_KEYS,
+  type BenchTest,
+  type BenchTestKey,
+} from './fabric-bench/measurement-fields.js';
+export {
+  type BenchDraft,
+  type BenchError,
+  type BenchErrors,
+  buildMeasurements,
+  type DraftValue,
+  draftFromMeasurements,
+} from './fabric-bench/measurement-draft.js';
+export {
+  COMMENT_MAX_LENGTH,
+  type CorrectedDraft,
+  type CorrectedErrors,
+  FABRIC_BOUNDS,
+  roundToThreeDigits,
+  validateCorrected,
+} from './fabric-bench/fabric-bounds.js';
+export {
+  type DrapeEvidence,
+  suggestVerdict,
+  type Verdict,
+  VERDICTS,
+} from './fabric-bench/verdict.js';
+export {
+  type DrapeComparison,
+  PRESET_NAMES,
+  type PresetBenchState,
+} from './fabric-bench/bench-model.js';
+export {
+  type CusickRun,
+  type CusickRunner,
+  type DrapeTest,
+  type DrapeWhich,
+} from './fabric-bench/cusick-runner.js';
+export {
+  fromReport,
+  type ImportedReport,
+  type ImportNotice,
+  toReport,
+} from './fabric-bench/report-mapping.js';
+export {
+  type FabricBenchActions,
+  type FabricBenchDeps,
+  type FabricBenchState,
+  useFabricBench,
+} from './fabric-bench/use-fabric-bench.js';
+export {
+  DRAPE_ARM_ANGLE_DEG,
+  DRAPE_POLL_MS,
+  type DrapeActions,
+  type DrapeDeps,
+  type DrapeFabric,
+  type DrapeState,
+  drapeRequestBody,
+  useDrape,
+} from './drape/use-drape.js';

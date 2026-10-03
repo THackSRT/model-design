@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { InMemoryDesignRepository } from '../../../src/adapters/persistence/in-memory/in-memory-design-repository.js';
+import { InMemoryDrapeRepository } from '../../../src/adapters/persistence/in-memory/in-memory-drape-repository.js';
 import { nodeHasher } from '../../../src/adapters/platform/node-hasher.js';
 import { type DesignsDeps, designsUseCases } from '../../../src/application/use-cases/index.js';
 import type { DesignId } from '../../../src/domain/design.js';
@@ -16,6 +17,7 @@ import {
   FAKE_FILE_BYTES,
   FakeManufacturingEngine,
 } from '../../doubles/fake-manufacturing-engine.js';
+import { FakeObjectStore } from '../../doubles/fake-object-store.js';
 import { FakePatterningEngine } from '../../doubles/fake-patterning-engine.js';
 
 describe('pièces de coupe et exports d’une version', () => {
@@ -24,8 +26,10 @@ describe('pièces de coupe et exports d’une version', () => {
   const useCases = () => {
     const deps: DesignsDeps = {
       designs,
+      drapes: new InMemoryDrapeRepository(),
       patterning: new FakePatterningEngine(),
       manufacturing,
+      models: new FakeObjectStore(),
       hasher: nodeHasher,
       ids: sequentialIds(),
       clock,

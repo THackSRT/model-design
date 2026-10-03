@@ -65,7 +65,11 @@ def test_impossible_pattern_is_a_problem_response() -> None:
 def test_rejects_measurements_outside_plausible_bounds() -> None:
     request = reference_request()
     request["measurements"] = {**request["measurements"], "waistGirthMm": 10}  # type: ignore[dict-item]
-    assert client.post("/v1/patterns", json=request).status_code == 422
+    response = client.post("/v1/patterns", json=request)
+    assert response.status_code == 422
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.json()["type"] == "/problems/invalid-request"
+    assert response.json()["errors"][0]["path"] == "measurements.waistGirthMm"
 
 
 def _trousers_request(**measurements: object) -> dict[str, object]:
