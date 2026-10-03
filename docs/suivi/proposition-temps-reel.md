@@ -76,7 +76,12 @@ gagne environ 70 modèles cousus par une communauté, une bibliothèque de pièc
 capuche), des options riches, le plan de coupe, les crans et le droit fil. Il reste à écrire une fiche de couture
 par modèle et la correspondance des mesures ; les mesures manquantes se prennent sur le mannequin ajusté. Nos quatre
 vêtements Python, dont les références n'étaient que « candidates », sont remplacés par leurs équivalents FreeSewing
-(Penelope, Sandy, Titan, Bella) et retirés après la porte : le portage Python vers TypeScript n'a plus lieu.
+(Sandy, Titan, Bella) et retirés après la porte ; notre jupe droite est réécrite dans l'API de FreeSewing, Penelope
+étant écartée. Le portage Python vers TypeScript n'a plus lieu.
+
+L'essai du 3 octobre 2026 confirme ce choix, à conditions : tracé en 0,5 à 5 ms dans Chromium (Penelope exceptée),
+fiches valables sur 5 tailles et 2 000 combinaisons d'options, contrôle de chaque tracé, embu déclaré, dépendances
+épinglées. Détails dans [Essai de FreeSewing](essai-freesewing.md).
 
 Premier catalogue d'opérations :
 
@@ -159,15 +164,16 @@ flowchart LR
 
 ### Lot 7 — Socle générique et choix du modèle (4 jours, jalon J1 : étape 1)
 
-| N°    | Tâche                                                                                                                            | Agent      | Dépend de    |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
-| 1.53  | ADR 0019 : boucle dans le navigateur, moteur sans aucun vêtement (lint), preuve de généricité, budgets                           | architecte | validation   |
-| 1.54  | ADR 0020 et contrats : GarmentSpec enrichi et document de modèle                                                                 | architecte | 1.53         |
-| 1.55a | Adaptateur FreeSewing vers GarmentSpec : contour découpé en bords selon la fiche, crans, droit fil, pli, plan de coupe           | dev-moteur | 1.54         |
-| 1.55b | Mesures : correspondance avec FreeSewing, mesures manquantes prises sur le mannequin ajusté                                      | dev-moteur | 1.54         |
-| 1.55c | Fiches de couture des six premiers modèles (Bella et sa manche, Penelope, Sandy, Titan, Teagan, Tiberius), contrôle des coutures | dev-moteur | 1.55a        |
-| 1.55d | Coquille du studio v2 : parcours en six étapes, jetons, composants, tablette et téléphone                                        | dev-front  | 1.53         |
-| 1.55e | Étape 1 : galerie de modèles, mesures, options du modèle, carte du corps 2D en direct, contrôle des coutures                     | dev-front  | 1.55d, 1.55c |
+| N°    | Tâche                                                                                                                                               | Agent      | Dépend de    |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------ |
+| 1.53  | ADR 0019 : boucle dans le navigateur, moteur sans aucun vêtement (lint), preuve de généricité, budgets                                              | architecte | validation   |
+| 1.54  | ADR 0020 et contrats : GarmentSpec enrichi et document de modèle                                                                                    | architecte | 1.53         |
+| 1.55a | Adaptateur FreeSewing vers GarmentSpec (prototype de l'essai) : version épinglée, `packageExtensions`, contrôle de chaque tracé, arrondi à 0,001 mm | dev-moteur | 1.54         |
+| 1.55b | Mesures : `MeasurementSet` étendu de neuf mesures, repères ajoutés au mannequin, mesures manquantes prises sur le corps ajusté                      | dev-moteur | 1.54         |
+| 1.55c | Fiches de couture et banc de validation : Teagan, Titan, Sandy, Tiberius, puis Bella avec garde-fous (épaule, manche, coupe)                        | dev-moteur | 1.55a        |
+| 1.55f | Jupe droite écrite dans l'API de FreeSewing (Penelope écartée), coutures égalisées comme le moteur actuel                                           | dev-moteur | 1.55a        |
+| 1.55d | Coquille du studio v2 : parcours en six étapes, jetons, composants, tablette et téléphone                                                           | dev-front  | 1.53         |
+| 1.55e | Étape 1 : galerie de modèles, mesures, options du modèle, carte du corps 2D en direct, contrôle des coutures                                        | dev-front  | 1.55d, 1.55c |
 
 ### Lot 8 — Édition, matières, patrons finaux (5 jours, jalon J2 : étapes 2 à 4)
 
