@@ -114,6 +114,12 @@ function spanAt(samples: Samples, d: number): readonly [number, number] {
   return [0, 0];
 }
 
+/**
+ * Dernier niveau où l'étendue de l'isoligne se lit : dans le dernier pas avant le bord bas (l'ourlet, coupé en oblique
+ * par les isolignes) elle ne tient qu'à quelques triangles du maillage, qui n'est pas le même pour deux pièces miroirs.
+ */
+const hemEnd = (samples: Samples): number => Math.max(samples.dMin, samples.dMax - ISO_STEP_MM);
+
 /** Part (0 à 1) du segment de s = a à s = b dont l'abscisse est dans l'étendue de la ligne. */
 function insideFraction(a: number, b: number, range: [number, number]): number {
   const lo = range[0] - RANGE_TOLERANCE;
@@ -218,7 +224,8 @@ export function pieceField(
     s,
     d,
     fullLength: (dd) => interpolate(samples.full, samples, dd),
-    span: (dd) => spanAt(samples, dd),
+    span: (dd) =>
+      spanAt(samples, dd > samples.dMax + EDGE_TOLERANCE ? dd : Math.min(dd, hemEnd(samples))),
     t: smooth,
     tSpan(dd) {
       // L'isoligne de la ligne même (d ≈ 0) se confond avec le bord : ses extrémités se prolongent depuis deux niveaux.

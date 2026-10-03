@@ -20,7 +20,7 @@ describe('GET /health', () => {
     const res = await fetch(`${base}/health`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ name: 'drape', version: ENGINE_VERSION });
-    expect(ENGINE_VERSION).toBe('0.10.0');
+    expect(ENGINE_VERSION).toBe('0.11.0');
   });
 
   it('rend 404 ailleurs', async () => {

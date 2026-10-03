@@ -107,7 +107,7 @@ describe('réglage fin et départs', () => {
   it('laisse identiques au bit près les départs des vêtements sans godets', () => {
     const hashes: Record<string, string> = {
       'straight-skirt': 'dbd65ce2406c5e4c',
-      trousers: 'a4909bc3819047fd',
+      trousers: 'ece33e55f598baa4',
     };
     const plain = buildAvatar(MEASUREMENTS, {});
     for (const [name, expected] of Object.entries(hashes)) {

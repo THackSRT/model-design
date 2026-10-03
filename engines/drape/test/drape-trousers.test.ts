@@ -115,6 +115,40 @@ describe('pantalon en brouillon sur l’avatar', () => {
   });
 });
 
+// Départ symétrique (1.48) : le span de l'isoligne d'une pièce ne dépend plus du maillage au dernier pas de l'ourlet.
+describe('pantalon : départ symétrique gauche / droite', () => {
+  const MIRROR_TOLERANCE_MM = 10;
+  const PAIRS = ['side-lower', 'side-middle', 'side-upper', 'inseam-upper', 'inseam-lower'];
+  let gaps: Map<string, number>;
+
+  beforeAll(async () => {
+    await loadAvatarEngine();
+    const m = meshGarment(spec, 'draft');
+    const start = placeGarment(m, spec, buildAvatar(MEASUREMENTS, {}));
+    gaps = new Map();
+    for (const r of m.seams) {
+      let widest = 0;
+      for (let k = r.stitchStart; k < r.stitchStart + r.stitchCount; k++) {
+        const widestHere = seamGaps(start, m.cloth.stitches.subarray(2 * k, 2 * k + 2));
+        widest = Math.max(widest, widestHere);
+      }
+      gaps.set(r.seamId, widest);
+    }
+  });
+
+  it('écarts de couture au départ à moins de 10 mm d’une jambe à l’autre', () => {
+    for (const name of PAIRS) {
+      const left = gaps.get(`${name}-left`) as number;
+      const right = gaps.get(`${name}-right`) as number;
+      expect(Math.abs(left - right), name).toBeLessThanOrEqual(MIRROR_TOLERANCE_MM);
+    }
+  });
+
+  it('le plus grand écart au départ n’excède pas 95 mm (114,4 avant 0.11.0)', () => {
+    expect(Math.max(...gaps.values())).toBeLessThanOrEqual(95);
+  });
+});
+
 describe('pantalon : aides de la pose par jambe', () => {
   it('le poids du bassin passe de 0 à l’entrejambe à 1 cinquante millimètres au-dessus', () => {
     expect(pelvisWeight(700, 770)).toBe(0);
