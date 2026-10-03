@@ -6,6 +6,7 @@ import { instancesOf, type Instance } from './instances.js';
 import { legModes, legPieceOf, type LegPiece, type WrapMode } from './leg-align.js';
 import { LEVEL_STEP_MM, createLevelStack, type LevelCurve, type LevelStack } from './levels.js';
 import { createSectioner, type BodySectioner } from './section.js';
+import { createShoulderFold, type ShoulderFold } from './shoulder-fold.js';
 import { PlacementError, type AvatarShape } from './types.js';
 import { pieceField, type PieceField } from './piece-field.js';
 import { circumferences, type CircumferenceAt } from './widths.js';
@@ -29,6 +30,8 @@ interface Context {
   circumference: CircumferenceAt;
   /** Hauteur de l'entrejambe, mm (le pantalon passe de la jambe au bassin juste au-dessus). */
   crotchMm: number;
+  /** Repli des parties hautes du tronc sur le profil de l'épaule. */
+  fold: ShoulderFold;
   /** Repérage par la ligne d'ancrage des exemplaires du tronc et des jambes (les bras gardent l'ordonnée du patron). */
   fields: ReadonlyMap<Instance, PieceField>;
   out: Float64Array;
@@ -73,24 +76,34 @@ function wrapped(level: LevelCurve, mode: WrapMode, total: number): [number, num
   ];
 }
 
-/** Hauteur au-dessus de l'ancrage et point (a, b) du sommet v : ligne d'ancrage, bras (patron) ou tube d'une jambe. */
+/** Hauteur du sommet v au-dessus de l'ancrage : par la ligne d'ancrage ou l'ordonnée du patron. */
+function heightOf(ctx: Context, inst: Instance, v: number): number {
+  const field = ctx.fields.get(inst);
+  if (field) return -(field.d[v - inst.piece.vertexStart] as number);
+  return (ctx.mesh.cloth.flatMm[2 * v + 1] as number) - inst.anchorV;
+}
+
+/**
+ * Hauteur au-dessus de l'ancrage et point (a, b) du sommet v : ligne d'ancrage, bras (patron) ou tube d'une jambe.
+ * `upMax` : hauteur de la coupe au plus (le repli de l'épaule prend le relais au-dessus).
+ */
 function planarPoint(
   ctx: Context,
   inst: Instance,
   v: number,
-  leg: LegPiece | undefined,
+  how: { leg: LegPiece | undefined; upMax: number },
 ): { up: number; ab: [number, number] } {
   const { stack } = stackOf(ctx, inst);
   const field = ctx.fields.get(inst);
+  const leg = how.leg;
+  const up = Math.min(heightOf(ctx, inst, v), how.upMax);
   if (!field) {
-    const flat = ctx.mesh.cloth.flatMm;
-    const up = (flat[2 * v + 1] as number) - inst.anchorV;
-    const s = (flat[2 * v] as number) - inst.piece.shiftXMm - inst.anchorU;
+    const s = (ctx.mesh.cloth.flatMm[2 * v] as number) - inst.piece.shiftXMm - inst.anchorU;
     const level = stack.curveAt(levelIndex(up));
     return { up, ab: wrapped(level, wholeCurve(level, s), ctx.circumference(inst, up)) };
   }
   const local = v - inst.piece.vertexStart;
-  const [s, d] = [field.s[local] as number, field.d[local] as number];
+  const [s, d] = [field.s[local] as number, -up];
   const level = stack.curveAt(levelIndex(-d));
   const total = ctx.circumference(inst, -d);
   if (!leg) return { up: -d, ab: wrapped(level, wholeCurve(level, field.abscissa(s, d)), total) };
@@ -103,12 +116,30 @@ function planarPoint(
   return { up: -d, ab: [low[0] + w * (high[0] - low[0]), low[1] + w * (high[1] - low[1])] };
 }
 
+/** Point du sommet v : la coupe du corps, puis au-dessus de `shoulder` − 40 mm le repli sur le profil de l'épaule. */
+function pointOf(
+  ctx: Context,
+  inst: Instance,
+  v: number,
+  leg: LegPiece | undefined,
+): { up: number; ab: [number, number] } {
+  const facing = inst.facing;
+  const folds = inst.zone === 'torso' && (facing === 'front' || facing === 'back');
+  const foldUp = ctx.fold.startMm - inst.heightMm;
+  const excess = heightOf(ctx, inst, v) - foldUp;
+  if (!folds || excess <= 0) return planarPoint(ctx, inst, v, { leg, upMax: Infinity });
+  const base = planarPoint(ctx, inst, v, { leg, upMax: foldUp });
+  const moved = ctx.fold.fold(facing, base.ab[0], inst.clearanceMm, excess);
+  if (!moved) return planarPoint(ctx, inst, v, { leg, upMax: Infinity });
+  return { up: moved.y - inst.heightMm, ab: [base.ab[0], base.ab[1] + moved.dz] };
+}
+
 function placeInstance(ctx: Context, inst: Instance): void {
   const { frame } = stackOf(ctx, inst);
   const { vertexStart, vertexCount } = inst.piece;
   const leg = legPieceOf(inst.zone, inst.side, inst.facing);
   for (let v = vertexStart; v < vertexStart + vertexCount; v++) {
-    const { up, ab } = planarPoint(ctx, inst, v, leg);
+    const { up, ab } = pointOf(ctx, inst, v, leg);
     const [a, b] = ab;
     const o = frame.origin(up);
     for (let k = 0; k < 3; k++) {
@@ -146,13 +177,15 @@ export function placeGarment(
 ): Float64Array {
   const instances = instancesOf(mesh, spec, avatar);
   const fields = fieldsOf(mesh, spec, instances);
+  const sectioner = createSectioner(avatar.body);
   const ctx: Context = {
     mesh,
     avatar,
-    sectioner: createSectioner(avatar.body),
+    sectioner,
     stacks: new Map(),
     circumference: circumferences(mesh, instances, fields),
     crotchMm: avatar.landmarksMm.crotch,
+    fold: createShoulderFold(avatar, sectioner),
     fields,
     out: new Float64Array(mesh.cloth.positionsMm.length),
   };

@@ -1,6 +1,6 @@
 {
   "name": "@atelier/drape",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Moteur drape : simulation XPBD du tombé d'un tissu sur un corps, sur CPU, sans dépendance.",
   "type": "module",

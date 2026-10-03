@@ -83,6 +83,16 @@ function chainItems(loop: Loop, anchor: number, rules: Rules): { items: Item[]; 
   return { items: [...before, segmentItem(loop, anchor), ...after], at: before.length };
 }
 
+/**
+ * Segment d'ancrage plus raide que 2 pour 1 (centre du devant sur pliure, milieu du dos) : l'ancre est sur l'axe du
+ * corps, pas sur une ligne de taille ; la pièce garde alors le repérage du patron (x depuis l'ancre, y moins l'ancre).
+ */
+function isSteep(q: readonly number[]): boolean {
+  const dx = Math.abs((q[2] as number) - (q[0] as number));
+  const dy = Math.abs((q[3] as number) - (q[1] as number));
+  return dy > 2 * dx;
+}
+
 /** Orientation : vers les x croissants à l'ancre. */
 function oriented(found: { items: Item[]; at: number }): Item[] {
   const s = (found.items[found.at] as Item).q;
@@ -160,7 +170,7 @@ function rulesOf(panel: Panel, seams: readonly Seam[]): Rules {
 
 /**
  * Ligne d'ancrage de l'exemplaire `piece` de `panel`, dans le repère à plat du maillage. `seams` : coutures du
- * vêtement (celles de la pièce avec elle-même sont des pinces). Rend `undefined` si le contour est vide.
+ * vêtement (celles de la pièce avec elle-même sont des pinces). Rend `undefined` si le contour est vide ou si le segment d'ancrage est raide (repérage du patron).
  */
 export function anchorLine(
   mesh: GarmentMesh,
@@ -173,7 +183,9 @@ export function anchorLine(
   const point = panel.placement.anchor.point;
   const ax = (piece.mirrored ? -point[0] : point[0]) + piece.shiftXMm;
   const anchor = nearestSegment(loop, ax, point[1]);
-  const items = oriented(chainItems(loop, anchor, rulesOf(panel, seams)));
+  const found = chainItems(loop, anchor, rulesOf(panel, seams));
+  if (isSteep((found.items[found.at] as Item).q)) return undefined;
+  const items = oriented(found);
   const line = packLine(items);
   const tables: DartTable[] = [];
   for (const item of items) {

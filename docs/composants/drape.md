@@ -215,6 +215,22 @@ et fourche à 52 mm au plus, le plus grand écart est la couture de côté au ni
 pénétration 0 mm, écart de couture 0,004 mm, ceinture à waist − 30 mm, jambes sans croisement (x signé minimal −0,7 mm), aisance
 minimale ≈ 2 mm, allongement maximal 28 %, `costRatio` 8,5 à 9. Test : `drape-trousers.test.ts`.
 
+**Corsage et manches (0.9.0)** : (1) `anchorLine` rend `undefined` quand le segment d'ancrage est plus raide que 2 pour 1 (devant sur pliure,
+milieu du dos : l'ancre est sur l'axe du corps) ; la pièce garde alors le repérage du patron (x depuis l'ancre, y moins l'ancre) ; avant, la ligne
+verticale tournait la pièce de 90° (coutures à 392 à 636 mm). (2) `shoulder-fold.ts` : au-dessus de `shoulder` − 40 mm, le sommet garde son x de
+la coupe à cette hauteur, puis est couché sur le profil sagittal (coupe x = constante pas de 5 mm, sans les composantes bras, points de
+`shoulder` − 140 mm à `neck`, enveloppe convexe décalée de `clearanceMm`) depuis la face regardée, de l'excédent de hauteur multiplié par 1,1 (le trajet
+par-dessus l'épaule est plus long que le patron : coutures d'épaule à 88 mm sans facteur, 55 à 63 mm avec). Un plan qui ne coupe que des bras
+(bout d'épaule) reprend le profil d'un x plus proche du milieu. (3) `holds.ts` : tenues des coutures d'épaule (couture entre une pièce
+`torso` `front` et une `back` dont tous les points ont une hauteur reportée d'au moins `shoulder` − 30 mm ; axe vertical) et du haut de manche (bords d'une pièce
+`arm` dont une extrémité est l'ancre à 0,5 mm près ; axe = −axe du bras). Le facteur 1,1 et le seuil raide sont des réglages du moteur, pas du contrat.
+Mesuré (brouillon, mesures fictives, popeline, bras à 30°) : corsage `ok`, convergé en 128 pas, pénétration 0, écart 0,02 mm, aisance minimale 2 mm,
+épaules entre 1 366 et 1 395 mm (shoulder 1 312, neck 1 425), ourlet médian à waist − 39,4 mm (limite 40, peu de marge), `costRatio` 4,5 ; coutures
+d'épaule à 63 mm au départ. À 9° : succès non convergé en 400 pas (aisance minimale 0,3 mm). Corsage à manches : `body-penetration` à 9° comme à 30°
+(≈ 28 mm). Cause mesurée : la manche du patron a 188 mm de large à 143 mm sous l'épaule alors que le bras a 232 mm de tour à ce niveau (sans aisance),
+et l'emmanchure (285 mm) est courte ; les sommets du creux du dos (emmanchure et haut de manche) finissent dans le bras. Les tenues de manche ne
+changent pas ce résultat (28 mm avec, 33 mm sans). Garde-fou : succès conforme ou problème typé (`drape-bodice.test.ts`).
+
 Limites : manches posées au mieux (manche = coupe autour de
 l'axe du bras, rayon ≤ 150 mm) ; corsage sans maintien (rien ne le retient aux épaules) : il tombe.
 
