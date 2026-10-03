@@ -45,7 +45,7 @@ function controlPolygonLength(pts: readonly Point[]): number {
   for (let i = 0; i + 1 < pts.length; i++) {
     const a = pts[i] as Point;
     const b = pts[i + 1] as Point;
-    s += Math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2);
+    s += Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
   }
   return s;
 }

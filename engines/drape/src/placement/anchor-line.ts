@@ -112,9 +112,9 @@ function packLine(items: readonly Item[]): AnchorLine {
   let closed = 0;
   items.forEach((item, k) => {
     const q = item.q;
-    const len = Math.sqrt(
-      ((q[2] as number) - (q[0] as number)) ** 2 + ((q[3] as number) - (q[1] as number)) ** 2,
-    );
+    const dx = (q[2] as number) - (q[0] as number);
+    const dy = (q[3] as number) - (q[1] as number);
+    const len = Math.sqrt(dx * dx + dy * dy);
     segments.set(q, 4 * k);
     gap[k] = item.dart ? 1 : 0;
     starts[k] = raw;

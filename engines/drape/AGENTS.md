@@ -1,6 +1,6 @@
 # Moteur drape (TypeScript)
 
-Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU, sans dépendances).
+Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU ; cœur sans dépendance ; adaptateurs : @nats-io/*, aws4fetch).
 Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État : socle du paquet, simulation (1.19b), maillage (1.19d),
 placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; travailleur NATS et S3 (1.19f2).
 

@@ -76,7 +76,8 @@ export function offsetCurve(hull: readonly P2[], clearance: number): Curve {
     const p = points[i] as P2;
     const q = points[(i + 1) % points.length] as P2;
     cumulative[i + 1] =
-      (cumulative[i] as number) + Math.sqrt((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2);
+      (cumulative[i] as number) +
+      Math.sqrt((q[0] - p[0]) * (q[0] - p[0]) + (q[1] - p[1]) * (q[1] - p[1]));
   }
   return { points, cumulative, length: cumulative[points.length] as number };
 }

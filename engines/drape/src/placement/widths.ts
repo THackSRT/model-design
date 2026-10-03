@@ -3,8 +3,8 @@ import type { Instance } from './instances.js';
 import type { PieceField } from './piece-field.js';
 
 // Tour fini d'un vêtement à une hauteur : somme des largeurs des exemplaires du même tube (tronc, ou une jambe, ou
-// un bras). Sert à élargir la courbe d'enroulement d'une pièce évasée (jupe cercle) pour que les exemplaires
-// tiennent côte à côte sans se chevaucher au départ. Tronc et jambes : la largeur d'un exemplaire est la longueur de
+// un bras). Sert à décider si une pièce évasée (jupe cercle) est posée en godets (rapport tour fini / courbe) et à
+// ramener la courbe à l'isoligne pour que les exemplaires tiennent côte à côte au départ. Tronc et jambes : la largeur d'un exemplaire est la longueur de
 // son isoligne (`PieceField`, pinces et creux exclus). Bras : l'étendue en x de son contour à la hauteur.
 
 /** Un tube : le tronc pour toutes les pièces du tronc, sinon la zone et le côté. */

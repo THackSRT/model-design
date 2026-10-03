@@ -56,7 +56,9 @@ export function vertexNormals(positions: Float32Array, indices: Uint32Array): Fl
   const out = new Float32Array(acc.length);
   for (let i = 0; i < acc.length; i += 3) {
     const len = Math.sqrt(
-      (acc[i] as number) ** 2 + (acc[i + 1] as number) ** 2 + (acc[i + 2] as number) ** 2,
+      (acc[i] as number) * (acc[i] as number) +
+        (acc[i + 1] as number) * (acc[i + 1] as number) +
+        (acc[i + 2] as number) * (acc[i + 2] as number),
     );
     if (len > 0) {
       out[i] = (acc[i] as number) / len;

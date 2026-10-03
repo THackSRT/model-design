@@ -17,8 +17,8 @@
 
 `src/core/` : cœur pur et déterministe (ni E/S, ni horloge, ni hasard ; mm, g, s ; axe Y vers le haut). Le lint
 (`eslint.config.mjs`) interdit à `src/core/` d'importer `node:*`, `adapters/`, `output/`, `body/`. Hors du cœur :
-`src/body/` (fait, 1.19e : avatar par `@atelier/mannequin`, cm → mm ici seulement) ; à venir : `src/output/` (glTF,
-mètres ici seulement), `src/adapters/` (NATS, stockage).
+`src/body/` (fait, 1.19e : avatar par `@atelier/mannequin`, cm → mm ici seulement) ; `src/output/` (fait, 1.19f1 : glTF,
+mètres ici seulement), `src/adapters/` (fait, 1.19f2 : NATS, stockage).
 
 - `types.ts` : `Holds`, `ClothMesh`, `BodyMesh`, `FabricPhysics`, `SimulationSettings`, `SimulationResult` (interface partagée
   avec 1.19d : ne pas la changer sans le signaler ; `iterations?` est un ajout facultatif : entier de 1 à
@@ -191,8 +191,7 @@ sous la pointe des pinces, départ identique à 0.5.0 ; à la taille les pinces 
 le dos). `holds.ts` : `garmentHolds(mesh, spec, avatar, startMm)` tient les sommets des bords `waistline` des pièces `torso`
 et `leg` (axe vertical, cible = hauteur de départ) ; `DRAPE_SETTINGS` : `holdReleaseSteps` 30 / 45, 400 pas en brouillon.
 `widths.ts` : tour fini du tube à chaque hauteur (tronc, jambes : somme des longueurs d'isoligne, maximum juste au-dessus et
-juste au-dessous pour ne pas compter deux fois la jonction jupe / ceinture ; bras : étendue en x) ; si le tour fini dépasse la courbe, elle est agrandie (λ, jupe évasée)
-pour que les exemplaires tiennent côte à côte ; sinon les coutures de côté partent écartées (jusqu'à ≈ 100 mm sur la jupe
+juste au-dessous pour ne pas compter deux fois la jonction jupe / ceinture ; bras : étendue en x) ; si le tour fini dépasse la courbe, le tronc évasé (jupe cercle) part en godets (voir plus bas) ; sinon les coutures de côté partent écartées (jusqu'à ≈ 100 mm sur la jupe
 droite). `clearance.ts` : aucun sommet à moins de 3 mm du corps au départ (repoussé le long de la normale, au plus 100 mm
 sinon `placement-failed`). `assertPlacements` : `placement-missing`. `PlacementError` (`code`, `panelId`, jamais de mesure).
 
@@ -210,8 +209,7 @@ La mise en place rend aussi le rapport maximal tour fini / courbe (`placeGarment
 `DRAPE_SETTINGS.flare` (50 sous-pas, 1 itération, le reste de la qualité) : tissu suspendu sans appui, qui charge la ceinture. Double passe de couture
 (`solveStitches` deux fois par itération, avant les tenues) pour tous les vêtements. Mesuré (brouillon, mesures fictives, popeline, bras à 30°) : rapport 3,87 ;
 départ : allongement 5,5 % (médiane) et 24 % (95e centile), coutures à 92 mm ; drapé `ok`, convergé en 244 pas, pénétration 0, écart de couture 0,02 mm, bas de
-ceinture à waist − 38 mm (limite −40), rayon d'ourlet 1,56 fois celui de la hanche (limite 1,5), ourlet à 0,93 fois la longueur sous la ceinture (limite 0,8) ; `costRatio` 29 (limite 30,
-marge mince, machine chargée) ; mise en place 0,4 s. Le résultat varie de quelques millimètres d'une exécution à l'autre selon la machine : les marges sur la ceinture et
+ceinture à waist − 38 mm (limite −40), rayon d'ourlet 1,56 fois celui de la hanche (limite 1,5), ourlet à 0,93 fois la longueur sous la ceinture (limite 0,8) ; `costRatio` 25 au repos, 29 sous charge (limite 40, ADR 0013) ; mise en place 0,4 s. Les marges sur la ceinture et
 l'ourlet sont minces (60 sous-pas × 1 est permis par l'ADR si elles cèdent, avec un budget de 40). À 9° : `body-penetration` (l'avant-bras traverse la jupe ; 14 s).
 Qualité standard (9 756 sommets, 30°) : 51 s, convergé en 300 pas, pénétration 0, écart 0,11 mm, sous la borne de 60 s mais près d'elle (mesurée à la main, non testée).
 Départs de la jupe droite, du pantalon et des corsages inchangés au bit près (test `godets.test.ts`). Tests : `drape-circle-skirt.test.ts`, `godets.test.ts`.
@@ -246,17 +244,17 @@ et l'emmanchure (285 mm) est courte ; les sommets du creux du dos (emmanchure et
 changent pas ce résultat (28 mm avec, 33 mm sans). Garde-fou : succès conforme ou problème typé (`drape-bodice.test.ts`).
 
 Limites : manches posées au mieux (manche = coupe autour de
-l'axe du bras, rayon ≤ 150 mm) ; corsage sans maintien (rien ne le retient aux épaules) : il tombe.
+l'axe du bras, rayon ≤ 150 mm) . Depuis 0.9.0 le corsage est tenu aux épaules (tenues de couture d'épaule), les manches le long du bras.
 
 ### Drape — orchestration
 
 `src/drape/` (1.19e ; tenues de ceinture 0.7.0) : `drapeGarment(job: DrapeJob, { maxSteps? }): DrapeOutcome`. Ordre : placements, `meshGarment`, avatar,
 `placeGarment`, `keepClearOfBody`, `simulate` (réglages `DRAPE_SETTINGS` par qualité : pas de 1/60 s, 10 sous-pas, couture 30
-/ 45 pas, itérations 4 / 6, au plus 300 / 600 pas, borne dure `MAX_STEPS_LIMIT` = 1 000 ; une itération par sous-pas laissait
+/ 45 pas, itérations 4 / 6, au plus 400 / 600 pas, borne dure `MAX_STEPS_LIMIT` = 1 000 ; une itération par sous-pas laissait
 la jupe glisser de 90 mm et s'allonger de 95 %), indicateurs (`metrics.ts`). Succès : `{ ok: true, result: DrapeResultCore,
 positionsMm: Float32Array (0,1 mm), easeMm, strain (fraction, max des arêtes du sommet), mesh: GarmentMesh, diagnostics }` ;
 `DrapeResultCore` = `DrapeResult` sans `modelKey`, `sizeBytes`, `sha256` (1.19f). Aisance = distance signée au corps moins
-l'épaisseur (au-delà de 60 mm : distance au sommet du corps le plus proche) ; `tightAreaMm2` = surface (tiers des triangles)
+l'épaisseur (signe tiré du test de parité, sans limite de portée ; distance exacte à moins de 60 mm de la surface, au-delà dehors celle du sommet du corps le plus proche) ; `tightAreaMm2` = surface (tiers des triangles)
 des sommets d'aisance ≤ 3 mm. Échec : `{ ok: false, problem: { type, panelId? } }`, `type` = `placement-missing`,
 `placement-failed`, `seam-not-closed` (écart de couture plus de 2 mm), `body-penetration` (plus de 3 mm), `drape-too-large`,
 `invalid-input` (patron refusé par le maillage). Une autre erreur est un bogue et se propage.
@@ -354,11 +352,12 @@ sa valeur).
   fil principal garde NATS en vie et envoie un signal de travail (`working()`) toutes les 20 s. Une exception inattendue du
   moteur devient `drape.failed` `drape-internal` (la rejouer échouerait de même).
 - **Publication** : enveloppe CloudEvents (`specversion`, `id`, `source` `/engines/drape`, `type`, `subject` = drapé,
-  `time` UTC, `data`) ; `id` et `Nats-Msg-Id` = `<drapeId>:completed` ou `<drapeId>:failed` (déduplication).
+  `time` UTC, `data`) ; `id` = UUID v8 déterministe tiré de `<drapeId>:<issue>` ; seul `Nats-Msg-Id` garde la chaîne `<drapeId>:completed` ou `<drapeId>:failed` (déduplication).
 - **Message invalide** (hors enveloppe ou contrat) : acquitté, journalisé par sujet et identifiant CloudEvents seulement ;
   `drape.failed` `drape-internal` publié si les quatre identifiants (drapé, dessin, version, organisation) sont lisibles.
   Contrôle de structure seulement (Ajv n'est pas une dépendance du moteur) : le détail des valeurs est validé par le moteur.
 - **Pannes** S3 ou NATS (lecture, écriture, publication) ou fil de calcul perdu : pas d'acquittement, `nak` avec délai.
+  Après 5 livraisons (`max_deliver`) en échec (panne S3 longue), aucun `drape.failed` n'est publié et designs affiche `drape-timeout` après 10 min.
   **SIGTERM** : lecture arrêtée, le message en cours a 25 s pour finir, sinon le calcul est interrompu et le message rendu.
 - **Journaux** : identifiants et noms d'erreur seulement.
 

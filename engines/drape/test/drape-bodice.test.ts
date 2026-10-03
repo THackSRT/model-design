@@ -115,19 +115,17 @@ describe('corsage', () => {
     expect(Math.abs(median - avatar.landmarksMm.waist)).toBeLessThanOrEqual(40);
   });
 
-  it('est déterministe au bit près', () => {
-    const again = drapeGarment(jobOf(spec, { avatar: ARMS }));
-    if (!again.ok || !out.ok) throw new Error('drape failed');
+  // Un seul drapé supplémentaire : budget de coût et, comparé au premier, déterminisme au bit près.
+  it('est déterministe au bit près et coûte peu rapporté à la charge de référence (budget relatif)', () => {
+    let again: DrapeOutcome | undefined;
+    const ratio = costRatio(() => {
+      again = drapeGarment(jobOf(spec, { avatar: ARMS }));
+    });
+    expect(ratio).toBeLessThan(20);
+    if (!again?.ok || !out.ok) throw new Error('drape failed');
     expect(Buffer.from(again.positionsMm.buffer).equals(Buffer.from(out.positionsMm.buffer))).toBe(
       true,
     );
-  });
-
-  it('coûte peu rapporté à la charge de référence (budget relatif)', () => {
-    const ratio = costRatio(() => {
-      drapeGarment(jobOf(spec, { avatar: ARMS }));
-    });
-    expect(ratio).toBeLessThan(20);
   });
 });
 
@@ -213,23 +211,20 @@ describe('corsage à manches', () => {
     expect(Math.abs(top)).toBeLessThan(40);
   });
 
-  it('est déterministe au bit près', () => {
-    const again = drapeGarment(jobOf(spec, { avatar: ARMS }));
-    expect(again.ok).toBe(out.ok);
-    if (!again.ok || !out.ok) {
+  it('est déterministe au bit près et coûte peu rapporté à la charge de référence (budget relatif)', () => {
+    let again: DrapeOutcome | undefined;
+    const ratio = costRatio(() => {
+      again = drapeGarment(jobOf(spec, { avatar: ARMS }));
+    });
+    expect(ratio).toBeLessThan(20);
+    expect(again?.ok).toBe(out.ok);
+    if (!again?.ok || !out.ok) {
       expect(again).toEqual(out);
       return;
     }
     expect(Buffer.from(again.positionsMm.buffer).equals(Buffer.from(out.positionsMm.buffer))).toBe(
       true,
     );
-  });
-
-  it('coûte peu rapporté à la charge de référence (budget relatif)', () => {
-    const ratio = costRatio(() => {
-      drapeGarment(jobOf(spec, { avatar: ARMS }));
-    });
-    expect(ratio).toBeLessThan(20);
   });
 });
 

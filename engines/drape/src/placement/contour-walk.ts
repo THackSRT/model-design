@@ -123,7 +123,8 @@ export function reversedLoop(loop: Loop): Loop {
 
 /** Parmi les segments à moins de ANCHOR_TIE_MM du plus proche, le plus horizontal. */
 function flattestNear(loop: Loop, dist2: Float64Array, nearest: number): number {
-  const limit = (nearest + ANCHOR_TIE_MM) ** 2;
+  const reach = nearest + ANCHOR_TIE_MM;
+  const limit = reach * reach;
   let index = 0;
   let slope = Infinity;
   for (let k = 0; k < dist2.length; k++) {

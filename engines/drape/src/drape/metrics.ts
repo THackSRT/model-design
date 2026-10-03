@@ -53,15 +53,14 @@ export function vertexStrain(cloth: ClothMesh, positionsMm: Float64Array): Float
   const strain = new Float32Array(cloth.flatMm.length / 2).fill(-Infinity);
   const tri = cloth.triangles;
   const edge = (a: number, b: number): void => {
-    const rest = Math.sqrt(
-      ((cloth.flatMm[2 * a] as number) - (cloth.flatMm[2 * b] as number)) ** 2 +
-        ((cloth.flatMm[2 * a + 1] as number) - (cloth.flatMm[2 * b + 1] as number)) ** 2,
-    );
-    const now = Math.sqrt(
-      ((positionsMm[3 * a] as number) - (positionsMm[3 * b] as number)) ** 2 +
-        ((positionsMm[3 * a + 1] as number) - (positionsMm[3 * b + 1] as number)) ** 2 +
-        ((positionsMm[3 * a + 2] as number) - (positionsMm[3 * b + 2] as number)) ** 2,
-    );
+    const flat = cloth.flatMm;
+    const dfx = (flat[2 * a] as number) - (flat[2 * b] as number);
+    const dfy = (flat[2 * a + 1] as number) - (flat[2 * b + 1] as number);
+    const rest = Math.sqrt(dfx * dfx + dfy * dfy);
+    const dx = (positionsMm[3 * a] as number) - (positionsMm[3 * b] as number);
+    const dy = (positionsMm[3 * a + 1] as number) - (positionsMm[3 * b + 1] as number);
+    const dz = (positionsMm[3 * a + 2] as number) - (positionsMm[3 * b + 2] as number);
+    const now = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (rest <= 0) return;
     const s = (now - rest) / rest;
     strain[a] = Math.max(strain[a] as number, s);

@@ -49,7 +49,7 @@ export function keepClearOfBody(positions: Float64Array, body: BodyMesh): Cleara
     let moved = 0;
     for (let k = 0; k < 3; k++) {
       const target = (out[1 + k] as number) + (dir[k] as number) * MIN_START_GAP_MM;
-      moved += (target - (p[k] as number)) ** 2;
+      moved += (target - (p[k] as number)) * (target - (p[k] as number));
       positions[3 * v + k] = target;
     }
     report.pushed++;

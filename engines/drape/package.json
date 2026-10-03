@@ -2,7 +2,7 @@
   "name": "@atelier/drape",
   "version": "0.10.0",
   "private": true,
-  "description": "Moteur drape : simulation XPBD du tombé d'un tissu sur un corps, sur CPU, sans dépendance.",
+  "description": "Moteur drape : simulation XPBD du tombé d'un tissu sur un corps, sur CPU ; cœur sans dépendance ; adaptateurs : @nats-io/*, aws4fetch.",
   "type": "module",
   "exports": {
     ".": {

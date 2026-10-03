@@ -84,7 +84,7 @@ function addIsoline(samples: Samples, k: number, corners: Corner[], range: [numb
   if (c.d === a.d) return;
   const p = cross(a, c, level);
   const q = level < b.d ? cross(a, b, level) : cross(b, c, level);
-  const length = Math.sqrt((p.x - q.x) ** 2 + (p.y - q.y) ** 2);
+  const length = Math.sqrt((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y));
   const i = k - samples.first;
   samples.full[i] = f(samples.full, i) + length;
   samples.inside[i] = f(samples.inside, i) + length * insideFraction(p.s, q.s, range);

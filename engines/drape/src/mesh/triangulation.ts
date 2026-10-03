@@ -32,7 +32,7 @@ export class Triangulation {
     this.pts = new Float64Array(2 * (n + 3));
     this.pts.set(points);
     this.vt = new Int32Array(n + 3).fill(-1);
-    this.incircleTol = 1e-9 * scaleMm ** 4;
+    this.incircleTol = 1e-9 * (scaleMm * scaleMm) * (scaleMm * scaleMm);
     this.addSuperTriangle(points, scaleMm);
   }
 

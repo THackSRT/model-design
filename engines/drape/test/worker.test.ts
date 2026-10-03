@@ -99,6 +99,20 @@ describe('modèle déjà calculé', () => {
     expect(publisher.messages[1]?.msgId).toBe(`${other.drapeId}:completed`);
   });
 
+  it('une autre organisation ne lit pas le cache de la première : recalcul, écritures sous son préfixe', async () => {
+    const { store, runner, deps } = setup();
+    const handler = createTaskHandler(deps);
+    await handler(taskOf(job));
+    const other = { ...job, organizationId: '00000000-0000-4000-8000-0000000000bb' };
+    store.puts.length = 0;
+    await handler(taskOf(other));
+
+    expect(runner.runs).toBe(2);
+    expect(store.puts).toHaveLength(2);
+    expect(store.puts.every((k) => k.startsWith(`drapes/${other.organizationId}/`))).toBe(true);
+    expect(store.puts).toContain(modelKeyOf(other.organizationId, cacheKeyOf(other)));
+  });
+
   it('un résultat stocké illisible ou d’une autre clé est recalculé', async () => {
     const { store, runner, deps } = setup();
     store.objects.set(

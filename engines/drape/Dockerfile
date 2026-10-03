@@ -9,7 +9,7 @@ COPY . .
 RUN --mount=type=secret,id=ca,required=false --mount=type=cache,id=pnpm,target=/pnpm/store \
   sh -c 'if [ -s /run/secrets/ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/ca; fi; corepack enable && pnpm install --frozen-lockfile'
 RUN pnpm --filter "@atelier/drape..." run build
-# Paquet autonome : dist et dépendances de production seulement (aucune aujourd'hui).
+# Paquet autonome : dist et dépendances de production seulement.
 RUN --mount=type=secret,id=ca,required=false --mount=type=cache,id=pnpm,target=/pnpm/store \
   sh -c 'if [ -s /run/secrets/ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/ca; fi; pnpm --filter @atelier/drape deploy --prod --legacy /out'
 

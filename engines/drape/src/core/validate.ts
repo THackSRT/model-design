@@ -73,7 +73,9 @@ function validateHolds(holds: Holds, vertexCount: number): void {
   }
   for (let h = 0; h < count; h++) {
     const [a, b, c] = [holds.axes[3 * h], holds.axes[3 * h + 1], holds.axes[3 * h + 2]] as number[];
-    const norm = Math.sqrt((a as number) ** 2 + (b as number) ** 2 + (c as number) ** 2);
+    const norm = Math.sqrt(
+      (a as number) * (a as number) + (b as number) * (b as number) + (c as number) * (c as number),
+    );
     if (!(Math.abs(norm - 1) <= HOLD_AXIS_TOLERANCE)) {
       throw new InvalidInputError('mesh', `cloth.holds: axis ${h} is not a unit vector`);
     }

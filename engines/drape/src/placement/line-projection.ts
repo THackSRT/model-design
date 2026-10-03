@@ -47,8 +47,8 @@ type Dir = [number, number];
 /** Dérivée en p0 de la parabole passant par p0, p1, p2 (abscisses curvilignes 0, h1, h1 + h2), normalisée. */
 function tangentAt(p: readonly number[], fallback: Dir): Dir {
   const [x0, y0, x1, y1, x2, y2] = p as [number, number, number, number, number, number];
-  const h1 = Math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2);
-  const h2 = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const h1 = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+  const h2 = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
   if (h1 < TINY || h2 < TINY) return fallback;
   const c0 = -(2 * h1 + h2) / (h1 * (h1 + h2));
   const c1 = (h1 + h2) / (h1 * h2);
