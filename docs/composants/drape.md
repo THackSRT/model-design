@@ -215,6 +215,8 @@ Cible test-standard (1.47, `pnpm nx run @atelier/drape:test-standard`, maillage 
 convergence jusqu'à 600 pas, temps réel borné à 60 s, critères du brouillon (pas de `costRatio`), hors `pnpm check` et hook. À 0.11.0 :
 jupe droite et pantalon vert (10 et 18 s) ; jupe cercle rouge (55 s, bas de ceinture −54 mm, rayon ourlet 1,36 fois hanche) ;
 corsage rouge (bas 42 mm de `waist`) ; corsage à manches rouge (`body-penetration`).
+À 0.12.0, bras à 90° (ADR 0018) : mêmes trois vêtements rouges ; jupe cercle : bas de ceinture −54,1 mm, rayon
+d'ourlet 1,36 fois la hanche ; corsage : bas à 51,1 mm de `waist` (pire qu'à 30°) ; corsage à manches : `body-penetration`.
 Départs de la jupe droite, du pantalon et des corsages inchangés au bit près (test `godets.test.ts`). Tests : `drape-circle-skirt.test.ts`, `godets.test.ts`.
 
 **Pantalon jambe par jambe (0.8.0, `leg-align.ts`)** : les pièces `leg` (devant et dos, dessinées vues de dehors : l'abscisse croît dans le
@@ -250,6 +252,14 @@ d'épaule à 71 mm au départ (valeurs de 0.9.0 avec 1,1 : 128 pas, ourlet −39
 (≈ 28 mm). Cause mesurée : la manche du patron a 188 mm de large à 143 mm sous l'épaule alors que le bras a 232 mm de tour à ce niveau (sans aisance),
 et l'emmanchure (285 mm) est courte ; les sommets du creux du dos (emmanchure et haut de manche) finissent dans le bras. Les tenues de manche ne
 changent pas ce résultat (28 mm avec, 33 mm sans). Garde-fou : succès conforme ou problème typé (`drape-bodice.test.ts`).
+
+Bras à 90° (0.12.0, tests brouillon, ADR 0018) : le repère de manche (`placement/frames.ts`) accepte un axe horizontal
+(ancrage à l'épaule quand la pente de l'axe est sous 0,3 ; refus seulement au-dessus de l'horizontale). Jupe cercle :
+bas de ceinture −38,3 mm, départ 92,3 mm, allongement p95 0,241, rayon d'ourlet 1,56 fois la hanche ; pantalon :
+départ 94,3 mm, taille −30,5 mm. Corsage : bas brut à −45,3 mm de `waist` ; le critère des corsages se lit depuis
+l'épaule (`waist` + Δépaule, Δépaule −6,8 mm à 90°, nul à 30°) : −38,5 mm. Corsage à manches : `body-penetration`
+(35,3 mm à 90°, 27,3 mm à 30°) ; la manche du patron reste trop étroite (1.46). Gardes de départ recalées pour le
+corps à poitrine (1.51b) : coutures d'épaule du corsage ≤ 95 mm (89,8 mesurés), pantalon ≤ 100 mm (95,27).
 
 Limites : manches posées au mieux (manche = coupe autour de
 l'axe du bras, rayon ≤ 150 mm) . Depuis 0.9.0 le corsage est tenu aux épaules (tenues de couture d'épaule), les manches le long du bras.

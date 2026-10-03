@@ -1,6 +1,6 @@
 # Moteur mannequin (TypeScript)
 
-Rôle : mesures du contrat (mm) → corps MakeHuman (CC0) ajusté à 6 mm près, visage sans traits, bras abaissés.
+Rôle : mesures du contrat (mm) → corps MakeHuman (CC0) ajusté à 6 mm près, visage sans traits, bras abaissés par défaut ou levés jusqu'à 90° (ADR 0018).
 Tourne à l'identique dans le navigateur et dans Node.
 
 - `src/index.ts` : API typée (`loadMannequinEngine`, `fit`) ; conversion mm → cm ici seulement. `fit` renvoie
@@ -19,7 +19,7 @@ Tourne à l'identique dans le navigateur et dans Node.
   moins de 300 lignes ; toute modification passe par une relecture humaine.
   - `types.ts` : types partagés (mesures, morphologie, modèle, anneaux) ;
   - `mhz-data.ts` : gzip et lecture du binaire (`gunzip`, `parse`) ;
-  - `morph.ts` : cibles, macros (sexe, âge, musculature, corpulence, origine), paires de mensuration ;
+  - `morph.ts` : cibles, macros (sexe, âge, musculature, corpulence, origine), paires de mensuration ; silhouette féminine (1.51b) : 36 cibles `breast/*` (CC0) ajoutées au paquet, bonnet 0,2 et fermeté 0,5 ;
   - `regions.ts` : zones de mesure (sommets et bande du mètre ruban), triangles en sommets de base ;
   - `geometry.ts` : vecteurs, enveloppe convexe (`hullPerimeter`), axe principal (`axisOf`), `bounds` ;
   - `measure.ts` : tour au mètre ruban (`circumference`), entrejambe, `measure`, points d'anneau ;

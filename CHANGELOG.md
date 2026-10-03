@@ -9,10 +9,14 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
+- Contrat `avatar-options` : `armAngleDeg` élargi de 0–45° à 0–90° (1.50a), défaut 9°, sens écrit comme écart du bras à la verticale (ADR 0018).
+- Mannequin : silhouette féminine (1.51b) ajoutée par 36 cibles MakeHuman `breast/` (CC0), bonnet 0,2 et fermeté 0,5 ; écart poitrine − sous-poitrine 108 mm ; `underBustGirthMm` fourni n'est pas ajusté (note : sous-poitrine estimée testée puis retirée, drapé hors critères).
+- Mannequin : bras levés (90°) reconnus par la pose, manches habillées (1.50e1) : tube par bras depuis le patron, rayon tiré du tour fini et ajusté sur le rayon du bras à chaque tranche ; option `sleeveLengthMm` (défaut : ourlet à la couture de dessous de bras).
+- Mesures du vêtement calculées depuis le corps (tours, longueur, manche) et modifiables (1.52) : chaque champ marqué « calculé » ou « modifié » ; boutons « Recalculer » et « Tout recalculer » ; jupes au genou, pantalon à la cheville, manche = longueur de bras (estimées depuis la stature si absentes) ; nouvelles mesures du corps facultatives `waistHeightMm` et `armLengthMm`.
+- Studio : avatar à 90° (bras horizontaux) dans l'onglet Patron, vues du patron et du drapé (1.50d, 1.50e2) ; constante unique `AVATAR_ARM_ANGLE_DEG` = 90 dans `@atelier/features` ; cadrage 3D élargi aux bras écartés.
 - Studio : panneau Drapé dans l'onglet Patron (1.49) : sept préréglages de tissu (popeline par défaut),
-  demande en brouillon avec bras à 30°, interrogation toutes les 2 s, affichage du drapé 3D sur l'avatar
-  (GLB lu par un lecteur minimal, zones à aisance négative teintées), bascule « Montrer le drapé » ; ajustement « de consultation »
-  (`fitForView`) qui ne remplace pas le corps de l'habillage ; paquet d'entrée +2,32 kB gzip.
+  demande en brouillon avec bras à 90°, interrogation toutes les 2 s, affichage du drapé 3D sur l'avatar
+  (GLB lu par un lecteur minimal, zones à aisance négative teintées), bascule « Montrer le drapé » ; paquet d'entrée +2,32 kB gzip.
 - Banc d'essai des tissus (ADR 0015, 1.39) : contrats (`fabric-physics`, `fabric-bench-measurements`,
   `fabric-derived-values`, `fabric-preset-review`, `fabric-validation-report`) et langage commun ; moteur :
   essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement, tolérances, écarts), essai de drapé
@@ -128,6 +132,8 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Modifié
 
+- Moteur mannequin : pose des bras à 90° (pose en T, ADR 0018, 1.50b) : longueur conservée, épaule −7,6 mm sans écrasement.
+- Moteur drapé (ENGINE_VERSION 0.12.0, 1.50c) : tests brouillon à 90°, repère de manche pour bras horizontal, critère du bas des corsages lu depuis l'épaule ; corsage à manches en `body-penetration` car manche du patron trop étroite (voir ADR 0018) ; gardes de départ du drapé recalées (corsage 95 mm, pantalon 100 mm).
 - Moteur drapé : qualité standard en cible de test à part (1.47, `pnpm nx run @atelier/drape:test-standard`) :
   maillage 15 mm, cinq vêtements, convergence jusqu'à 600 pas, temps réel borné à 60 s, critères du brouillon,
   hors `pnpm check` et hook ; jupe droite et pantalon vert, jupe cercle/corsage/corsage à manches rouge.

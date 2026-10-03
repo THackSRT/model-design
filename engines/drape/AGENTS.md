@@ -1,8 +1,8 @@
 # Moteur drape (TypeScript)
 
 Rôle : faire tomber les pièces cousues d'un vêtement sur l'avatar (dynamique XPBD sur CPU ; cœur sans dépendance ; adaptateurs : @nats-io/*, aws4fetch).
-Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État : socle du paquet, simulation (1.19b), maillage (1.19d),
-placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19f1) ; travailleur NATS et S3 (1.19f2).
+Décision : ADR 0013 (exception à l'ADR 0003 : moteur TypeScript, comme le mannequin). État et historique :
+`docs/composants/drape.md`.
 
 ## Entrées et API
 
@@ -66,7 +66,7 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
 - **Pénétration** (0.6.0) : mesurée par parité (`core/inside.ts`, rayon de direction fixe, grille 2D), sans limite de
   portée ; `vertexEase` en tire son signe. **Tenues** : `ClothMesh.holds?` (sommet, axe unitaire, cible) et
   `SimulationSettings.holdReleaseSteps?` (0 à 1 000) ; actives pendant la couture, relâchées ensuite ; sans elles, rien ne change.
-- **Corsage et manches** (0.9.0) : un segment d'ancrage raide (centre du devant, milieu du dos) rend `pieceField` indéfini, la pièce garde le repérage du patron ; `placement/shoulder-fold.ts` couche les parties au-dessus de `shoulder` − 40 mm sur le profil sagittal (excédent × 1,05) ; `holds.ts` tient aussi les coutures d'épaule (vertical) et le haut de manche (−axe du bras). Essais à `armAngleDeg` 30.
+- **Corsage et manches** (0.9.0) : un segment d'ancrage raide (centre du devant, milieu du dos) rend `pieceField` indéfini, la pièce garde le repérage du patron ; `placement/shoulder-fold.ts` couche les parties au-dessus de `shoulder` − 40 mm sur le profil sagittal (excédent × 1,05) ; `holds.ts` tient aussi les coutures d'épaule (vertical) et le haut de manche (−axe du bras). Essais à `armAngleDeg` 90 (0.12.0).
 - **Pantalon** (0.8.0) : `placement/leg-align.ts` pose chaque pièce `leg` (devant ou dos) autour du tube de sa jambe : sous `crotch`, milieu de l'isoligne sur l'extrême avant ou arrière ; au-dessus de `crotch` + 50 mm, bout côté milieu du corps sur `midlineArc` de la demi-coupe du bassin ; entre les deux, interpolé. `PieceField.span(d)` donne l'étendue en s d'une isoligne.
 - **Mise en place** (0.7.0) : tronc et jambes par la ligne d'ancrage (`anchor-line.ts`, `piece-field.ts`, coordonnées (s, d)) ;
   `holds.ts` tient les bords `waistline` pendant la couture. Jupe cercle : départ en godets (0.10.0, `placement/godets.ts`, abscisse lissée `PieceField.t`) ; `placeGarmentReport` rend le rapport tour fini / courbe, `settingsFor` prend `DRAPE_SETTINGS.flare` (50 × 1) dès 1,5 ; `solveStitches` deux fois par itération.
@@ -74,6 +74,7 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
   (vitesse max sous seuil pendant 10 pas). Réglages par qualité dans `DRAPE_SETTINGS`.
 - **Tests de performance** : budgets relatifs (`costRatio` dans `test/helpers.ts`). Référence fixe ~0,55 s, mesurée
   dans le même processus. Borne absolue 60 s.
+- **Cache et mannequin** : tout changement du corps (mannequin) oblige à relever l'`ENGINE_VERSION` du drapé (la clé du cache n'a pas de version du mannequin).
 
 ## Commandes et tests
 
@@ -82,7 +83,7 @@ placements et drapé complet (1.19e) ; glTF, clé de cache et événements (1.19
 - Tests : `pnpm nx run @atelier/drape:test` (déterminisme, chute libre, étirement, flexion, collisions, Cusick,
   performance, maillage, avatar, placements, drapé jupe, conversions)
 - Cible test-standard : `pnpm nx run @atelier/drape:test-standard` (hors `pnpm check`, cinq vêtements, qualité
-  standard 15 mm à 30°) ; helpers `test/drape-helpers.ts`, critères `test/garment-criteria.ts`
+  standard 15 mm à 90°, ENGINE_VERSION 0.12.0) ; helpers `test/drape-helpers.ts`, critères `test/garment-criteria.ts`
 - Build : `pnpm nx run @atelier/drape:build`
 - Dev : `pnpm nx run @atelier/drape:dev`
 
