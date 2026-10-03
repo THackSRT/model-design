@@ -154,3 +154,13 @@ export {
   type FabricBenchState,
   useFabricBench,
 } from './fabric-bench/use-fabric-bench.js';
+export {
+  DRAPE_ARM_ANGLE_DEG,
+  DRAPE_POLL_MS,
+  type DrapeActions,
+  type DrapeDeps,
+  type DrapeFabric,
+  type DrapeState,
+  drapeRequestBody,
+  useDrape,
+} from './drape/use-drape.js';

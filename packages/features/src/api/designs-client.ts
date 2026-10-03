@@ -8,6 +8,8 @@ import type {
   DesignVersion,
   DesignVersionChanges,
   DesignVersionPage,
+  Drape,
+  DrapeRequest,
 } from '@atelier/contracts-ts';
 import { err, ok, type Result } from '@atelier/kernel';
 import { exportFileName } from './file-name.js';
@@ -51,6 +53,24 @@ export interface DesignsClient {
     versionNumber: number,
     request: DesignExportRequest,
   ): Promise<Result<ExportedFile, ApiProblem>>;
+  /** Demande le drapé d'une version (200 : drapé existant, 202 : nouveau, traités pareil). */
+  requestDrape(
+    designId: string,
+    versionNumber: number,
+    body: DrapeRequest,
+  ): Promise<Result<Drape, ApiProblem>>;
+  /** État d'un drapé (à interroger tant que `status` vaut `pending`). */
+  getDrape(
+    designId: string,
+    versionNumber: number,
+    drapeId: string,
+  ): Promise<Result<Drape, ApiProblem>>;
+  /** Modèle glTF binaire d'un drapé `completed` (silhouette du client : jamais gardé en cache). */
+  getDrapeModel(
+    designId: string,
+    versionNumber: number,
+    drapeId: string,
+  ): Promise<Result<ArrayBuffer, ApiProblem>>;
 }
 
 /** Page demandée : `limit` de 1 à 100 (20 par défaut côté service), `cursor` opaque. */
@@ -103,9 +123,10 @@ function pageQuery(page: VersionPageQuery = {}): string {
   return text === '' ? '' : `?${text}`;
 }
 
-/** Client du service designs, typé par les contrats (contracts/openapi/designs.yaml). */
-export function createDesignsClient(baseUrl: string, fetchFn: typeof fetch = fetch): DesignsClient {
-  const post = <T>(path: string, body: unknown, read: (response: Response) => Promise<T>) =>
+/** Envoi JSON (POST). */
+const poster =
+  (fetchFn: typeof fetch, baseUrl: string) =>
+  <T>(path: string, body: unknown, read: (response: Response) => Promise<T>) =>
     call(
       fetchFn,
       `${baseUrl}${path}`,
@@ -116,14 +137,28 @@ export function createDesignsClient(baseUrl: string, fetchFn: typeof fetch = fet
       },
       read,
     );
-  /** Lecture : `no-store`, car une version porte les mesures d'un client. */
-  const get = <T>(path: string) =>
+
+/** Lecture : `no-store`, car une version porte les mesures d'un client. */
+const getter =
+  (fetchFn: typeof fetch, baseUrl: string) =>
+  <T>(
+    path: string,
+    accept = 'application/json',
+    read: (response: Response) => Promise<T> = json<T>(),
+  ) =>
     call(
       fetchFn,
       `${baseUrl}${path}`,
-      { method: 'GET', headers: { accept: 'application/json' }, cache: 'no-store' },
-      json<T>(),
+      { method: 'GET', headers: { accept }, cache: 'no-store' },
+      read,
     );
+
+/** Client du service designs, typé par les contrats (contracts/openapi/designs.yaml). */
+export function createDesignsClient(baseUrl: string, fetchFn: typeof fetch = fetch): DesignsClient {
+  const post = poster(fetchFn, baseUrl);
+  const get = getter(fetchFn, baseUrl);
+  const drapePath = (designId: string, versionNumber: number, drapeId: string) =>
+    `${versionPath(designId, versionNumber)}/drapes/${drapeId}`;
   return {
     listVersions: (designId, page) => get(`/v1/designs/${designId}/versions${pageQuery(page)}`),
     getVersion: (designId, versionNumber) => get(versionPath(designId, versionNumber)),
@@ -139,5 +174,13 @@ export function createDesignsClient(baseUrl: string, fetchFn: typeof fetch = fet
         blob: await response.blob(),
         fileName: exportFileName(response.headers.get('content-disposition'), request.format),
       })),
+    requestDrape: (designId, versionNumber, body) =>
+      post(`${versionPath(designId, versionNumber)}/drapes`, body, json<Drape>()),
+    getDrape: (designId, versionNumber, drapeId) =>
+      get(drapePath(designId, versionNumber, drapeId)),
+    getDrapeModel: (designId, versionNumber, drapeId) =>
+      get(`${drapePath(designId, versionNumber, drapeId)}/model`, 'model/gltf-binary', (response) =>
+        response.arrayBuffer(),
+      ),
   };
 }

@@ -73,6 +73,9 @@ export function fakeDesigns(problem?: ApiProblem): FakeDesigns {
     getVersionChanges: async () => err(unused),
     cutPattern: async () => err(unused),
     exportFile: async () => err(unused),
+    requestDrape: async () => err(unused),
+    getDrape: async () => err(unused),
+    getDrapeModel: async () => err(unused),
     createVersion: async (id: string, body: Pick<DesignVersion, 'measurements' | 'garment'>) => {
       if (problem) return err(problem);
       client.versions += 1;

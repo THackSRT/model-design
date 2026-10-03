@@ -123,3 +123,57 @@ describe('client : export', () => {
     expect(exportFileName(null, 'pdf-a4-tiled')).toBe('patron.pdf');
   });
 });
+
+describe('client : drapé', () => {
+  const drapeUrl = `/api/designs/v1/designs/${ID}/versions/3/drapes`;
+  const drape = { id: 'dr1', status: 'pending', createdAt: '2026-10-03T10:00:00.000Z' };
+
+  it('requestDrape poste la demande et rend le drapé (200 comme 202)', async () => {
+    const body = { fabric: { preset: 'linen' as const }, quality: 'draft' as const };
+    for (const status of [200, 202]) {
+      const fetchFn = vi.fn<typeof fetch>(async () => json(drape, status));
+      const result = await createDesignsClient('/api/designs', fetchFn).requestDrape(ID, 3, body);
+      expect(result.isOk() && result.value).toEqual(drape);
+      expect(fetchFn).toHaveBeenCalledWith(drapeUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    }
+  });
+
+  it('getDrape lit l’état, sans cache', async () => {
+    const fetchFn = vi.fn<typeof fetch>(async () => json(drape));
+    const result = await createDesignsClient('/api/designs', fetchFn).getDrape(ID, 3, 'dr1');
+    expect(result.isOk() && result.value).toEqual(drape);
+    expect(fetchFn).toHaveBeenCalledWith(`${drapeUrl}/dr1`, readInit);
+  });
+
+  it('getDrapeModel lit le glb en ArrayBuffer, sans cache', async () => {
+    const bytes = Uint8Array.of(1, 2, 3);
+    const fetchFn = vi.fn<typeof fetch>(
+      async () => new Response(bytes, { headers: { 'content-type': 'model/gltf-binary' } }),
+    );
+    const result = await createDesignsClient('/api/designs', fetchFn).getDrapeModel(ID, 3, 'dr1');
+    expect(result.isOk() && [...new Uint8Array(result.value)]).toEqual([1, 2, 3]);
+    expect(fetchFn).toHaveBeenCalledWith(`${drapeUrl}/dr1/model`, {
+      method: 'GET',
+      headers: { accept: 'model/gltf-binary' },
+      cache: 'no-store',
+    });
+  });
+
+  it('un 409 application/problem+json devient un ApiProblem', async () => {
+    const problem = { type: '/problems/drape-not-completed', title: 'x', status: 409 };
+    const client = createDesignsClient(
+      '/api',
+      async () =>
+        new Response(JSON.stringify(problem), {
+          status: 409,
+          headers: { 'content-type': 'application/problem+json' },
+        }),
+    );
+    const result = await client.getDrapeModel(ID, 3, 'dr1');
+    expect(result.isErr() && result.error).toEqual(problem);
+  });
+});
