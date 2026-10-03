@@ -1,4 +1,9 @@
-import { initialForm, type PatternStudioActions, type PatternStudioState } from '@atelier/features';
+import {
+  finishedFields,
+  initialForm,
+  type PatternStudioActions,
+  type PatternStudioState,
+} from '@atelier/features';
 import type { FittedMannequin } from '@atelier/mannequin';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -62,10 +67,13 @@ const actions = (): PatternStudioActions => ({
   setSleeveParam: vi.fn(),
   generate: vi.fn(),
   applyForm: vi.fn(),
+  setFinished: vi.fn(),
+  recalculateFinished: vi.fn(),
 });
 
 const base: PatternStudioState = {
   form: initialForm,
+  finished: finishedFields(initialForm, {}),
   errors: {},
   status: 'idle',
   mannequinStatus: 'idle',
@@ -152,7 +160,7 @@ describe('vue de l’atelier de patron', () => {
       expect(screen.getByRole('button', { name }).hasAttribute('disabled')).toBe(false);
     }
     expect(screen.getByLabelText('Tour de bassin').hasAttribute('disabled')).toBe(false);
-    expect(screen.getByLabelText('Longueur').hasAttribute('disabled')).toBe(false);
+    expect(screen.getByLabelText('Longueur finie').hasAttribute('disabled')).toBe(false);
   });
 
   it('ajustement échoué : message traduit et bouton de calcul de nouveau actif', () => {
@@ -211,24 +219,34 @@ describe('vue de l’atelier de patron', () => {
   it('corsage : mesures de buste, champs du corsage, manches en option', async () => {
     const a = actions();
     const form = { ...initialForm, garmentType: 'bodice' as const };
-    const { rerender } = render(<PatternStudioView state={{ ...base, form }} actions={a} />);
+    const { rerender } = render(
+      <PatternStudioView
+        state={{ ...base, form, finished: finishedFields(form, {}) }}
+        actions={a}
+      />,
+    );
     expect(screen.getByLabelText('Tour de buste')).toBeTruthy();
     expect(screen.getByLabelText('Longueur taille dos')).toBeTruthy();
-    expect(screen.getByLabelText('Aisance poitrine')).toBeTruthy();
-    expect(screen.queryByLabelText('Longueur de manche')).toBeNull();
+    expect(screen.getByLabelText('Tour de buste fini')).toBeTruthy();
+    expect(screen.queryByLabelText('Aisance poitrine')).toBeNull();
+    expect(screen.queryByLabelText('Longueur de manche finie')).toBeNull();
     await userEvent.click(screen.getByLabelText('Avec manches'));
     expect(a.setWithSleeve).toHaveBeenCalledWith(true);
+    const sleeveErrors = { 'sleeve.lengthMm': { code: 'range', minMm: 100, maxMm: 900 } } as const;
     rerender(
       <PatternStudioView
         state={{
           ...base,
           form: { ...form, withSleeve: true },
-          errors: { 'sleeve.lengthMm': { code: 'range', minMm: 100, maxMm: 900 } },
+          finished: finishedFields({ ...form, withSleeve: true }, sleeveErrors),
+          errors: sleeveErrors,
         }}
         actions={a}
       />,
     );
-    expect(screen.getByLabelText('Longueur de manche').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByLabelText('Longueur de manche finie').getAttribute('aria-invalid')).toBe(
+      'true',
+    );
     expect(screen.getByLabelText('Embu de la tête de manche')).toBeTruthy();
     expect(screen.getByLabelText('Tour du bas de manche')).toBeTruthy();
   });

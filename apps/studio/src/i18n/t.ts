@@ -83,6 +83,8 @@ export function fieldErrorMessage(error: FieldError, unit: FieldUnit): string {
       return t('error.unavailable');
     case 'ratioRange':
       return t('error.ratioRange', { min: error.min, max: error.max });
+    case 'easeRange':
+      return t('error.easeRange', { unit, min: error.minMm / divisor, max: error.maxMm / divisor });
     case 'zeroOrRange':
       return t('error.zeroOrRange', {
         unit,

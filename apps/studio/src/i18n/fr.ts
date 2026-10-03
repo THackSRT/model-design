@@ -91,6 +91,19 @@ export const fr = {
   'error.required': 'Valeur obligatoire',
   'error.range':
     '{unit, select, cm {Entre {min, number, ::unit/centimeter} et {max, number, ::unit/centimeter}} other {Entre {min, number, ::unit/millimeter} et {max, number, ::unit/millimeter}}}',
+  'error.easeRange':
+    '{unit, select, cm {Aisance attendue entre {min, number, ::unit/centimeter} et {max, number, ::unit/centimeter}} other {Aisance attendue entre {min, number, ::unit/millimeter} et {max, number, ::unit/millimeter}}}',
+  'finished.waistGirthMm': 'Tour de taille fini',
+  'finished.hipGirthMm': 'Tour de bassin fini',
+  'finished.bustGirthMm': 'Tour de buste fini',
+  'finished.lengthMm': 'Longueur finie',
+  'finished.sleeveLengthMm': 'Longueur de manche finie',
+  'finished.source.auto': 'calculé',
+  'finished.source.manual': 'modifié',
+  'finished.ease': 'aisance : {easeCm, number, ::sign-always unit/centimeter}',
+  'finished.recalculate': 'Recalculer',
+  'finished.recalculateField': 'Recalculer {name}',
+  'finished.recalculateAll': 'Tout recalculer',
   'error.unavailable': 'Type de vêtement pas encore disponible',
   'error.zeroOrRange':
     '{unit, select, cm {0 ou entre {min, number, ::unit/centimeter} et {max, number, ::unit/centimeter}} other {0 ou entre {min, number, ::unit/millimeter} et {max, number, ::unit/millimeter}}}',
