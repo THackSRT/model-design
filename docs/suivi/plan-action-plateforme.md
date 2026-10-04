@@ -109,6 +109,12 @@ Six principes (ADR 0022) :
 | Habillage | Voit le vêtement porté de face et de dos                  | Dessin sur la silhouette du mannequin         | —                               |
 | 3D        | Tourne autour, lit l'aisance et la tension                | Vêtement qui se coud puis tombe               | —                               |
 
+**Maquette interactive** : le canevas « Studio Atelier v2 » (lien remis avec ce plan, privé jusqu'à son partage)
+montre l'écran principal sur les cinq tuniques de l'essai (zones tirées de la géométrie, anneau d'actions par rôle,
+palette de commandes filtrée, annuler et rétablir, dialogues Mesures, Tissu et Export, vue Dessin + 3D), la version
+téléphone et la feuille des jetons et composants. Elle sert de référence aux tâches 1.62 à 1.69 ; les tests d'usage
+décident des écarts.
+
 ## Prêt pour l'IA
 
 - **Interface unique** : le catalogue des commandes, avec schémas et descriptions, exporté comme outils (ADR 0023).
