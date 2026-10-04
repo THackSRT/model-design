@@ -1,0 +1,13 @@
+{
+  "name": "essai-tuniques",
+  "private": true,
+  "description": "Essai des tuniques : tracé FreeSewing, opérations génériques, patrons prêts à couper, drapé 3D",
+  "dependencies": {
+    "@freesewing/brian": "4.10.2",
+    "@freesewing/core": "4.10.2",
+    "@freesewing/models": "4.10.2"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

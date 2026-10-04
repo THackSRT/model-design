@@ -1,0 +1,241 @@
+{
+  "format": "fiche-couture/1",
+  "design": "titan",
+  "label": "Titan (pantalon, bloc de base)",
+  "garmentType": "trousers",
+  "freesewing": "4.10.2",
+  "unit": "mm",
+  "contour": "paths.seam",
+  "conventions": {
+    "edgeOrder": "bords dans le sens du contour paths.seam (sens trigonométrique à l'écran, y vers le bas) ; la fin d'un bord est le début du suivant",
+    "pointNames": "noms de points FreeSewing (part.points) ; un point est un sommet du contour s'il coïncide à 0,01 mm près avec la fin d'une opération du tracé",
+    "roles": "côté, épaule, emmanchure, encolure, ourlet, milieu devant, milieu dos, tête de manche, dessous de bras, poignet, taille, entrejambe, montant, pli",
+    "specRole": "rôle du contrat GarmentSpec (seam, fold, hem, waistline, opening)",
+    "netLength": "longueur nette d'un bord = longueur du tracé moins les jambes des pinces qu'il porte",
+    "pairDiff": "écart = longueur de a moins longueur de b (mm) ; pour une tête de manche, a = tête et l'écart est l'embu",
+    "pairWalk": "a et b sont des listes de bords parcourus bout à bout ; un préfixe « ~ » parcourt le bord à l'envers ; align = same : le début du parcours de a se coud au début du parcours de b ; opposite : à sa fin"
+  },
+  "parts": [
+    {
+      "part": "titan.back",
+      "panel": "back",
+      "label": "Dos (jambe)",
+      "cut": {
+        "mode": "double",
+        "quantity": 2,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au pli de jambe"
+      },
+      "edges": [
+        {
+          "id": "inseam",
+          "role": "entrejambe",
+          "specRole": "seam",
+          "from": "fork",
+          "to": "floorIn",
+          "via": [
+            "kneeIn"
+          ]
+        },
+        {
+          "id": "hem",
+          "role": "ourlet",
+          "specRole": "hem",
+          "from": "floorIn",
+          "to": "floorOut"
+        },
+        {
+          "id": "outseam",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "floorOut",
+          "to": "styleWaistOut",
+          "via": [
+            "kneeOut",
+            "seatOut"
+          ]
+        },
+        {
+          "id": "waist",
+          "role": "taille",
+          "specRole": "waistline",
+          "from": "styleWaistOut",
+          "to": "styleWaistIn"
+        },
+        {
+          "id": "rise",
+          "role": "montant",
+          "specRole": "seam",
+          "from": "styleWaistIn",
+          "to": "fork",
+          "via": [
+            "crossSeamCurveStart"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "edge": "rise",
+          "measurement": "crossSeamBack",
+          "tolMm": 2,
+          "adjust": [
+            {
+              "minus": [
+                "crossSeamCurveStart",
+                "styleWaistIn"
+              ]
+            },
+            {
+              "plus": [
+                "crossSeamCurveStart",
+                "waistIn"
+              ]
+            }
+          ]
+        },
+        {
+          "edge": "inseam",
+          "storeKey": "inseamBack",
+          "tolMm": 1
+        }
+      ]
+    },
+    {
+      "part": "titan.front",
+      "panel": "front",
+      "label": "Devant (jambe)",
+      "cut": {
+        "mode": "double",
+        "quantity": 2,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au pli de jambe"
+      },
+      "edges": [
+        {
+          "id": "outseam",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "styleWaistOut",
+          "to": "floorOut",
+          "via": [
+            "seatOut",
+            "kneeOut"
+          ]
+        },
+        {
+          "id": "hem",
+          "role": "ourlet",
+          "specRole": "hem",
+          "from": "floorOut",
+          "to": "floorIn"
+        },
+        {
+          "id": "inseam",
+          "role": "entrejambe",
+          "specRole": "seam",
+          "from": "floorIn",
+          "to": "fork",
+          "via": [
+            "kneeIn"
+          ]
+        },
+        {
+          "id": "rise",
+          "role": "montant",
+          "specRole": "seam",
+          "from": "fork",
+          "to": "styleWaistIn",
+          "via": [
+            "crotchSeamCurveStart"
+          ]
+        },
+        {
+          "id": "waist",
+          "role": "taille",
+          "specRole": "waistline",
+          "from": "styleWaistIn",
+          "to": "styleWaistOut"
+        }
+      ],
+      "targets": [
+        {
+          "edge": "rise",
+          "measurement": "crossSeamFront",
+          "tolMm": 2,
+          "adjust": [
+            {
+              "minus": [
+                "crotchSeamCurveStart",
+                "styleWaistIn"
+              ]
+            },
+            {
+              "plus": [
+                "crotchSeamCurveStart",
+                "waistIn"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "id": "cote",
+      "role": "côté",
+      "label": "Côté (couture extérieure) devant / dos",
+      "a": [
+        "titan.front#outseam"
+      ],
+      "b": [
+        "titan.back#outseam"
+      ],
+      "align": "opposite"
+    },
+    {
+      "id": "entrejambe",
+      "role": "entrejambe",
+      "label": "Entrejambe (couture intérieure) devant / dos",
+      "a": [
+        "titan.front#inseam"
+      ],
+      "b": [
+        "titan.back#inseam"
+      ],
+      "align": "opposite"
+    },
+    {
+      "id": "montant-dos",
+      "role": "montant",
+      "kind": "miroir",
+      "label": "Montant dos (cousu à la jambe opposée)",
+      "a": [
+        "titan.back#rise"
+      ],
+      "b": [
+        "titan.back#rise"
+      ],
+      "align": "same"
+    },
+    {
+      "id": "montant-devant",
+      "role": "montant",
+      "kind": "miroir",
+      "label": "Montant devant (cousu à la jambe opposée)",
+      "a": [
+        "titan.front#rise"
+      ],
+      "b": [
+        "titan.front#rise"
+      ],
+      "align": "same"
+    }
+  ]
+}

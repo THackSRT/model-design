@@ -1,0 +1,276 @@
+{
+  "format": "fiche-couture/1",
+  "design": "teagan",
+  "label": "Teagan (T-shirt, issu de Brian)",
+  "garmentType": "tshirt",
+  "freesewing": "4.10.2",
+  "unit": "mm",
+  "contour": "paths.seam",
+  "conventions": {
+    "edgeOrder": "bords dans le sens du contour paths.seam (sens trigonométrique à l'écran, y vers le bas) ; la fin d'un bord est le début du suivant",
+    "pointNames": "noms de points FreeSewing (part.points) ; un point est un sommet du contour s'il coïncide à 0,01 mm près avec la fin d'une opération du tracé",
+    "roles": "côté, épaule, emmanchure, encolure, ourlet, milieu devant, milieu dos, tête de manche, dessous de bras, poignet, taille, entrejambe, montant, pli",
+    "specRole": "rôle du contrat GarmentSpec (seam, fold, hem, waistline, opening)",
+    "netLength": "longueur nette d'un bord = longueur du tracé moins les jambes des pinces qu'il porte",
+    "pairDiff": "écart = longueur de a moins longueur de b (mm) ; pour une tête de manche, a = tête et l'écart est l'embu",
+    "pairWalk": "a et b sont des listes de bords parcourus bout à bout ; un préfixe « ~ » parcourt le bord à l'envers ; align = same : le début du parcours de a se coud au début du parcours de b ; opposite : à sa fin"
+  },
+  "parts": [
+    {
+      "part": "teagan.front",
+      "panel": "front",
+      "label": "Devant",
+      "cut": {
+        "mode": "pli",
+        "quantity": 1,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au pli"
+      },
+      "targets": [
+        {
+          "edge": "armhole",
+          "storeKey": "library.sleeve.frontArmholeLength",
+          "tolMm": 0.5
+        }
+      ],
+      "edges": [
+        {
+          "id": "hem",
+          "role": "ourlet",
+          "specRole": "hem",
+          "from": "cfHem",
+          "to": "hem"
+        },
+        {
+          "id": "side",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "hem",
+          "to": "armhole",
+          "via": [
+            "waist"
+          ]
+        },
+        {
+          "id": "armhole",
+          "role": "emmanchure",
+          "specRole": "seam",
+          "from": "armhole",
+          "to": "shoulder",
+          "via": [
+            "armholeHollow"
+          ]
+        },
+        {
+          "id": "shoulder",
+          "role": "épaule",
+          "specRole": "seam",
+          "from": "shoulder",
+          "to": "neck"
+        },
+        {
+          "id": "neckline",
+          "role": "encolure",
+          "specRole": "opening",
+          "from": "neck",
+          "to": "cfNeck"
+        },
+        {
+          "id": "fold",
+          "role": "pli",
+          "specRole": "fold",
+          "from": "cfNeck",
+          "to": "cfHem",
+          "position": "milieu devant"
+        }
+      ]
+    },
+    {
+      "part": "teagan.back",
+      "panel": "back",
+      "label": "Dos",
+      "cut": {
+        "mode": "pli",
+        "quantity": 1,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au pli"
+      },
+      "targets": [
+        {
+          "edge": "armhole",
+          "storeKey": "library.sleeve.backArmholeLength",
+          "tolMm": 0.5
+        }
+      ],
+      "edges": [
+        {
+          "id": "hem",
+          "role": "ourlet",
+          "specRole": "hem",
+          "from": "cbHem",
+          "to": "hem"
+        },
+        {
+          "id": "side",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "hem",
+          "to": "armhole",
+          "via": [
+            "waist"
+          ]
+        },
+        {
+          "id": "armhole",
+          "role": "emmanchure",
+          "specRole": "seam",
+          "from": "armhole",
+          "to": "shoulder",
+          "via": [
+            "armholeHollow"
+          ]
+        },
+        {
+          "id": "shoulder",
+          "role": "épaule",
+          "specRole": "seam",
+          "from": "shoulder",
+          "to": "neck"
+        },
+        {
+          "id": "neckline",
+          "role": "encolure",
+          "specRole": "opening",
+          "from": "neck",
+          "to": "cbNeck"
+        },
+        {
+          "id": "fold",
+          "role": "pli",
+          "specRole": "fold",
+          "from": "cbNeck",
+          "to": "cbHem",
+          "position": "milieu dos"
+        }
+      ]
+    },
+    {
+      "part": "teagan.sleeve",
+      "panel": "sleeve",
+      "label": "Manche",
+      "cut": {
+        "mode": "double",
+        "quantity": 2,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "du bas de manche vers le sommet de la tête"
+      },
+      "edges": [
+        {
+          "id": "hem",
+          "role": "ourlet",
+          "specRole": "hem",
+          "from": "hemLeft",
+          "to": "hemRight"
+        },
+        {
+          "id": "underarmRight",
+          "role": "dessous de bras",
+          "specRole": "seam",
+          "from": "hemRight",
+          "to": "bicepsRight"
+        },
+        {
+          "id": "cap",
+          "role": "tête de manche",
+          "specRole": "seam",
+          "from": "bicepsRight",
+          "to": "bicepsLeft",
+          "via": [
+            "capQ1",
+            "capQ2",
+            "capQ3",
+            "capQ4"
+          ]
+        },
+        {
+          "id": "underarmLeft",
+          "role": "dessous de bras",
+          "specRole": "seam",
+          "from": "bicepsLeft",
+          "to": "hemLeft"
+        }
+      ],
+      "targets": [
+        {
+          "edge": "cap",
+          "storeKey": "library.sleeve.sleevecapLength",
+          "tolMm": 0.5
+        }
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "id": "cote",
+      "role": "côté",
+      "label": "Côté devant / dos",
+      "a": [
+        "teagan.front#side"
+      ],
+      "b": [
+        "teagan.back#side"
+      ],
+      "align": "same"
+    },
+    {
+      "id": "epaule",
+      "role": "épaule",
+      "label": "Épaule devant / dos",
+      "a": [
+        "teagan.front#shoulder"
+      ],
+      "b": [
+        "teagan.back#shoulder"
+      ],
+      "align": "same"
+    },
+    {
+      "id": "emmanchure",
+      "role": "tête de manche",
+      "kind": "embu",
+      "label": "Tête de manche / emmanchures devant + dos",
+      "a": [
+        "teagan.sleeve#cap"
+      ],
+      "b": [
+        "teagan.front#armhole",
+        "~teagan.back#armhole"
+      ],
+      "align": "same",
+      "expected": {
+        "easeStoreKey": "library.sleeve.sleevecapEase"
+      }
+    },
+    {
+      "id": "dessous-de-bras",
+      "role": "dessous de bras",
+      "label": "Dessous de bras (gauche / droite de la manche)",
+      "a": [
+        "teagan.sleeve#underarmLeft"
+      ],
+      "b": [
+        "teagan.sleeve#underarmRight"
+      ],
+      "align": "opposite"
+    }
+  ]
+}

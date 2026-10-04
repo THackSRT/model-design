@@ -4,7 +4,9 @@
 galons, tunique blanche à plastron bogolan, tunique noire à plastron en pointe, caftan blanc brodé, tunique marine à
 empiècement). Il fonde le [plan d'action](plan-action-plateforme.md) et les ADR 0019 à 0023. Les scripts, les
 documents des cinq tuniques et les sorties (dessins, planches, PDF, DXF) sont dans l'archive
-`essai-tuniques-sources.tar.gz` remise avec le plan.
+`essai-tuniques-sources.tar.gz` remise avec le plan ; les scripts et le métrage de référence sont versés, figés, dans
+`docs/suivi/essais/tuniques/` (mode d'emploi : `LISEZMOI.txt`). Ce code sert de référence aux lots 7 à 9 et n'est plus
+modifié.
 
 ## Verdict
 

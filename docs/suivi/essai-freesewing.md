@@ -3,7 +3,8 @@
 **Essai du 3 octobre 2026**, mené hors du dépôt sur six modèles (Bella, Penelope, Sandy, Titan, Teagan, Tiberius),
 dans Node 22.22 et Chromium 141 sans écran. Il fonde la recommandation de la
 [proposition : studio temps réel](proposition-temps-reel.md). Les scripts, les fiches de couture d'essai, les mesures
-brutes et la page de test interactive sont dans l'archive `essai-freesewing.tar.gz` remise avec la proposition.
+brutes et la page de test interactive sont dans l'archive `essai-freesewing.tar.gz` remise avec la proposition ;
+l'adaptateur, la conversion en GarmentSpec, les fiches et les mesures sont versés, figés, dans `docs/suivi/essais/freesewing/`.
 
 ## Verdict : oui, à conditions
 

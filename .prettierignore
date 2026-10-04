@@ -14,3 +14,5 @@ engines/drape/test/fixtures/
 # Gabarits des générateurs : remplis par tools/generators, pas du code valide tel quel.
 tools/generators/templates/
 .import_linter_cache/
+# Code des essais FreeSewing et des tuniques, figé : référence des lots 7 à 9, jamais modifié.
+docs/suivi/essais/

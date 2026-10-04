@@ -1,0 +1,62 @@
+# Essai : cinq tuniques par opérations génériques
+
+Preuve de concept des 3 et 4 octobre 2026 (rapport : `docs/suivi/essai-tuniques.md` du dépôt). Base : Brian,
+bloc homme de FreeSewing 4.10.2, taille `cisMaleAdult42` (poitrine 110,5 cm). Chaque tunique est un document de
+modèle (`garments.mjs`) : options de la base, matières et liste d'opérations. Les opérations ne lisent que des
+rôles de bords et des repères ; aucun nom de vêtement dans le code.
+
+## Installation
+
+    npm install                     # FreeSewing 4.10.2 (brian, core, models), ajv, playwright
+    export CHROMIUM_PATH=…          # facultatif : Chromium déjà installé, sinon `npx playwright install chromium`
+
+## Les fichiers
+
+| Fichier                                  | Rôle                                                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `base.mjs`                               | Tracé de Brian, contour découpé en bords par rôle (fiche de couture)                                   |
+| `ops.mjs`                                | 11 opérations, rejeu d'un document (`build`), `regions()` qui coupe les pièces selon les découpes       |
+| `garments.mjs`                           | Les cinq tuniques, en données (mm)                                                                     |
+| `geom.mjs`, `motifs.mjs`                 | Géométrie plane ; motifs (bogolan, rayures, grecque, broderie) et thèmes trait et couleur              |
+| `flat.mjs`                               | Dessin technique assemblé, face et dos, au trait ou en couleurs                                        |
+| `sheet.mjs`                              | Planche de patrons (couture et coupe, pli, droit fil, crans, marques de pose), thèmes écran et papier  |
+| `cut.mjs`                                | Pièces prêtes à couper : valeur de couture par bord (1 cm, ourlets 2,5 cm, pli 0), crans, marques      |
+| `marker.mjs`                             | Plan de coupe par tissu (laize 150 cm pliée, rangement « skyline ») et métrage                         |
+| `exports.mjs`                            | SVG à l'échelle 1, PDF A4 à assembler (couverture et carré témoin de 10 cm), DXF de type AAMA          |
+| `compose.mjs`, `zoom.mjs`, `dump.mjs`    | Composition d'images, agrandissement pour relecture, relevé de la géométrie de Brian                   |
+| `run-views.mjs`, `run-flats.mjs`         | Dessins face et dos (trait, couleur) en SVG et PNG                                                      |
+| `run-sheets.mjs`, `run-board.mjs`        | Planches de patrons ; planche d'ensemble des cinq tuniques                                             |
+| `run-cut.mjs`, `shot-a4.mjs`             | Patrons prêts à couper : plans de coupe, métrage, PDF A4, DXF, SVG ; capture d'une page du PDF          |
+| `spec3d.mjs`                             | Tunique rejouée → GarmentSpec 1.0 du dépôt (devant et dos au pli, manche en paire)                     |
+| `drape-run.mjs`, `drape-debug.mjs`       | Drapé par le moteur du dépôt ; reprise pas à pas pour localiser une pénétration                        |
+| `web/render.html`, `shot3d.mjs`          | Rendu three.js du drapé (face, trois quarts, dos)                                                      |
+| `gen-maquette*.mjs`, `zones.mjs`         | Images de la maquette du studio v2 et zones cliquables (boîtes en % du dessin)                         |
+
+## Lancer
+
+Depuis le dossier parent de `tuniques/` :
+
+    node tuniques/run-views.mjs     # out/vues-*-N.svg|png
+    node tuniques/run-sheets.mjs    # out/patrons-N.svg|png
+    node tuniques/run-cut.mjs       # out/plan-coupe-N.png, patron-N-A4.pdf, patron-N.dxf, patron-N-echelle-1.svg, metrage.json
+    node tuniques/run-board.mjs     # out/ensemble*.svg|png
+
+3D, avec le dépôt `model-design` compilé (`pnpm install --ignore-scripts`, puis `tsc` dans `engines/drape`,
+`engines/mannequin`, `packages/kernel`, `packages/contracts-ts`) :
+
+    export ATELIER_REPO=/chemin/vers/model-design
+    node tuniques/drape-run.mjs     # out3d/spec-1.json, mannequin.json, résumé
+    node tuniques/drape-debug.mjs   # out3d/debug-1.json (positions), diagnostic par pièce
+    cp tuniques/out3d/debug-1.json tuniques/web/
+    cp $ATELIER_REPO/node_modules/three/build/three.module.js $ATELIER_REPO/node_modules/three/build/three.core.js tuniques/web/
+    (cd tuniques/web && python3 -m http.server 8765) & node tuniques/shot3d.mjs   # out3d/drape-*.png
+
+## Temps mesurés (Node 22, à chaud)
+
+Tracé de Brian 4 à 7 ms ; opérations moins de 0,1 ms ; dessin 1 à 2 ms ; planche 1 à 2 ms ; plan de coupe
+quelques millisecondes ; drapé brouillon de la tunique 1 : 8,7 s sur le processeur (2 940 sommets, 163 pas).
+
+## Contenu de l'archive
+
+Scripts, `package.json`, et les sorties : dessins et planches (SVG), PDF A4, DXF, SVG à l'échelle 1, métrage,
+GarmentSpec de la tunique 1 et ses trois rendus 3D. Les PNG de prévisualisation et les maillages se régénèrent.

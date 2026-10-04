@@ -51,5 +51,6 @@ Le calcul local (ADR 0021) permet maintenant de tout montrer en direct.
   comparées dans les deux thèmes (ADR 0016).
 - Jetons v2 en deux jeux de mêmes noms (clair, sombre), contrastes vérifiés par un test pour chacun.
 - L'ancien studio reste derrière un drapeau jusqu'à la parité du nouveau, puis il est retiré.
-- Une maquette interactive sert de référence de conception ; les écrans réels peuvent s'en écarter si les tests
+- Une maquette interactive sert de référence pour les parcours (l'identité visuelle suit cette ADR et les jetons v2) ;
+  les écrans réels peuvent s'en écarter si les tests
   d'usage le demandent.

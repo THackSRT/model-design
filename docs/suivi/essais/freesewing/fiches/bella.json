@@ -1,0 +1,321 @@
+{
+  "format": "fiche-couture/1",
+  "design": "bella",
+  "label": "Bella (corsage ajusté, pinces de taille et de poitrine)",
+  "garmentType": "bodice",
+  "freesewing": "4.10.2",
+  "unit": "mm",
+  "contour": "paths.seam",
+  "conventions": {
+    "edgeOrder": "bords dans le sens du contour paths.seam (sens trigonométrique à l'écran, y vers le bas) ; la fin d'un bord est le début du suivant",
+    "pointNames": "noms de points FreeSewing (part.points) ; un point est un sommet du contour s'il coïncide à 0,01 mm près avec la fin d'une opération du tracé",
+    "roles": "côté, épaule, emmanchure, encolure, ourlet, milieu devant, milieu dos, tête de manche, dessous de bras, poignet, taille, entrejambe, montant, pli",
+    "specRole": "rôle du contrat GarmentSpec (seam, fold, hem, waistline, opening)",
+    "netLength": "longueur nette d'un bord = longueur du tracé moins les jambes des pinces qu'il porte",
+    "pairDiff": "écart = longueur de a moins longueur de b (mm) ; pour une tête de manche, a = tête et l'écart est l'embu",
+    "pairWalk": "a et b sont des listes de bords parcourus bout à bout ; un préfixe « ~ » parcourt le bord à l'envers ; align = same : le début du parcours de a se coud au début du parcours de b ; opposite : à sa fin"
+  },
+  "parts": [
+    {
+      "part": "bella.back",
+      "panel": "back",
+      "label": "Dos",
+      "cut": {
+        "mode": "double",
+        "quantity": 2,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au milieu dos"
+      },
+      "note": "store.cutlist annonce onFold:true avec cut:2 ; le milieu dos est une courbe (waistCenter.x > 0) donc une couture, pas un pli : la fiche fait foi",
+      "edges": [
+        {
+          "id": "centerBack",
+          "role": "milieu dos",
+          "specRole": "seam",
+          "from": "cbNeck",
+          "to": "waistCenter"
+        },
+        {
+          "id": "hem",
+          "role": "taille",
+          "specRole": "waistline",
+          "from": "waistCenter",
+          "to": "waistSide",
+          "darts": [
+            "waist"
+          ]
+        },
+        {
+          "id": "side",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "waistSide",
+          "to": "armhole"
+        },
+        {
+          "id": "armhole",
+          "role": "emmanchure",
+          "specRole": "seam",
+          "from": "armhole",
+          "to": "shoulder",
+          "via": [
+            "armholePitch"
+          ]
+        },
+        {
+          "id": "shoulder",
+          "role": "épaule",
+          "specRole": "seam",
+          "from": "shoulder",
+          "to": "hps"
+        },
+        {
+          "id": "neckline",
+          "role": "encolure",
+          "specRole": "opening",
+          "from": "hps",
+          "to": "cbNeck"
+        }
+      ],
+      "targets": [
+        {
+          "edge": "armhole",
+          "storeKey": "library.sleeve.backArmholeLength",
+          "tolMm": 0.5
+        }
+      ],
+      "darts": {
+        "waist": {
+          "host": "hem",
+          "from": "dartBottomLeft",
+          "apex": "dartTip",
+          "to": "dartBottomRight",
+          "optional": true,
+          "label": "Pince de taille dos"
+        }
+      }
+    },
+    {
+      "part": "bella.frontSideDart",
+      "panel": "front",
+      "label": "Devant",
+      "cut": {
+        "mode": "pli",
+        "quantity": 1,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "parallèle au pli"
+      },
+      "edges": [
+        {
+          "id": "hem",
+          "role": "taille",
+          "specRole": "waistline",
+          "from": "cfHem",
+          "to": "sideHem",
+          "darts": [
+            "waist"
+          ]
+        },
+        {
+          "id": "side",
+          "role": "côté",
+          "specRole": "seam",
+          "from": "sideHem",
+          "to": "armhole",
+          "darts": [
+            "bust"
+          ]
+        },
+        {
+          "id": "armhole",
+          "role": "emmanchure",
+          "specRole": "seam",
+          "from": "armhole",
+          "to": "shoulder",
+          "via": [
+            "armholePitch"
+          ]
+        },
+        {
+          "id": "shoulder",
+          "role": "épaule",
+          "specRole": "seam",
+          "from": "shoulder",
+          "to": "hps"
+        },
+        {
+          "id": "neckline",
+          "role": "encolure",
+          "specRole": "opening",
+          "from": "hps",
+          "to": "cfNeck"
+        },
+        {
+          "id": "fold",
+          "role": "pli",
+          "specRole": "fold",
+          "from": "cfNeck",
+          "to": "cfHem",
+          "position": "milieu devant"
+        }
+      ],
+      "targets": [
+        {
+          "edge": "armhole",
+          "storeKey": "library.sleeve.frontArmholeLength",
+          "tolMm": 0.5
+        }
+      ],
+      "darts": {
+        "waist": {
+          "host": "hem",
+          "from": "waistDartLeft",
+          "apex": "waistDartTip",
+          "to": "waistDartRight",
+          "optional": true,
+          "label": "Pince de taille devant"
+        },
+        "bust": {
+          "host": "side",
+          "from": "bustDartBottom",
+          "apex": "bustDartTip",
+          "to": "bustDartTop",
+          "optional": false,
+          "label": "Pince de poitrine (côté)"
+        }
+      }
+    },
+    {
+      "part": "bella.sleeve",
+      "panel": "sleeve",
+      "label": "Manche",
+      "optionalPart": "bellaSleeve",
+      "cut": {
+        "mode": "double",
+        "quantity": 2,
+        "fabric": "fabric"
+      },
+      "grain": {
+        "axis": "y",
+        "note": "du poignet vers le sommet de la tête"
+      },
+      "edges": [
+        {
+          "id": "underarmLeft",
+          "role": "dessous de bras",
+          "specRole": "seam",
+          "from": "bicepsLeft",
+          "to": "wristLeft"
+        },
+        {
+          "id": "cuff",
+          "role": "poignet",
+          "specRole": "hem",
+          "from": "wristLeft",
+          "to": "wristRight"
+        },
+        {
+          "id": "underarmRight",
+          "role": "dessous de bras",
+          "specRole": "seam",
+          "from": "wristRight",
+          "to": "bicepsRight"
+        },
+        {
+          "id": "cap",
+          "role": "tête de manche",
+          "specRole": "seam",
+          "from": "bicepsRight",
+          "to": "bicepsLeft",
+          "via": [
+            "capQ1",
+            "capQ2",
+            "capQ3",
+            "capQ4"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "edge": "cap",
+          "storeKey": "library.sleeve.sleevecapLength",
+          "tolMm": 0.5
+        }
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "id": "cote",
+      "role": "côté",
+      "label": "Côté dos / devant (hors pince de poitrine)",
+      "a": [
+        "bella.back#side"
+      ],
+      "b": [
+        "bella.frontSideDart#side"
+      ],
+      "align": "same"
+    },
+    {
+      "id": "epaule",
+      "role": "épaule",
+      "label": "Épaule dos / devant",
+      "a": [
+        "bella.back#shoulder"
+      ],
+      "b": [
+        "bella.frontSideDart#shoulder"
+      ],
+      "align": "same"
+    },
+    {
+      "id": "emmanchure",
+      "role": "tête de manche",
+      "kind": "embu",
+      "label": "Tête de manche / emmanchures devant + dos",
+      "a": [
+        "bella.sleeve#cap"
+      ],
+      "b": [
+        "bella.frontSideDart#armhole",
+        "~bella.back#armhole"
+      ],
+      "align": "same",
+      "expected": {
+        "easeStoreKey": "library.sleeve.sleevecapEase"
+      }
+    },
+    {
+      "id": "dessous-de-bras",
+      "role": "dessous de bras",
+      "label": "Dessous de bras (gauche / droite de la manche)",
+      "a": [
+        "bella.sleeve#underarmLeft"
+      ],
+      "b": [
+        "bella.sleeve#underarmRight"
+      ],
+      "align": "opposite"
+    },
+    {
+      "id": "milieu-dos",
+      "role": "milieu dos",
+      "kind": "miroir",
+      "label": "Milieu dos (cousu à sa copie en miroir)",
+      "a": [
+        "bella.back#centerBack"
+      ],
+      "b": [
+        "bella.back#centerBack"
+      ],
+      "align": "same"
+    }
+  ]
+}

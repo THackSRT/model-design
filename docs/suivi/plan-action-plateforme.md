@@ -118,8 +118,10 @@ Sept principes (ADR 0022) :
 **Maquette interactive** : le canevas « Studio Atelier v2 » (lien remis avec ce plan, privé jusqu'à son partage)
 montre l'écran principal sur les cinq tuniques de l'essai (zones tirées de la géométrie, anneau d'actions par rôle,
 palette de commandes filtrée, annuler et rétablir, dialogues Mesures, Tissu et Export, vue Dessin + 3D), la version
-téléphone et la feuille des jetons et composants. Elle sert de référence aux tâches 1.62 à 1.69 ; les tests d'usage
-décident des écarts.
+téléphone et la feuille des jetons et composants. Elle sert de référence pour les parcours et les interactions des
+tâches 1.62 à 1.69, pas pour l'identité visuelle : celle-ci suit l'ADR 0022 (deux thèmes, sans codes « IA ») et prend
+forme dans les jetons v2 et Storybook (1.62). La maquette et le code d'essai ne sont plus modifiés ; les tests
+d'usage décident des écarts.
 
 ## Prêt pour l'IA
 
@@ -152,6 +154,12 @@ appliquée sans formalisme inutile.
 | 1.61 | Mannequin : mesures FreeSewing, repères (encolure, acromion, aisselle, crête iliaque), parties du corps          | dev-moteur    | 1.54       |
 
 Porte J1 : les cinq tuniques de l'essai rejouées dans les nouveaux moteurs, testées, en moins de 10 ms.
+
+Découpage en tâches d'une demande de fusion chacune : 1.54a à 1.61b dans le tableau des travaux, fiches complètes dans
+[Lot 7, fiches des tâches](lot-7.md). Le générateur de moteur TypeScript (1.54c) passe avant la création de `drafting`,
+`cutting` et `flats` ; l'ADR 0024 (1.54d) fixe leurs dépendances, et la géométrie plane vit dans `drafting` ; `cutting`
+reproduit d'abord les références de `manufacturing` (jupe droite). Les sources figées des essais, dans
+`docs/suivi/essais/`, servent de référence aux tâches.
 
 ### Lot 8 — Studio v2, parcours 2D (8 à 10 jours)
 

@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "pieces": 11,
+    "metrage": {
+      "Gris anthracite": 2.8
+    }
+  },
+  {
+    "id": 2,
+    "pieces": 10,
+    "metrage": {
+      "Coton blanc": 2.1,
+      "Bogolan noir et blanc": 0.7
+    }
+  },
+  {
+    "id": 3,
+    "pieces": 10,
+    "metrage": {
+      "Coton noir": 2.1,
+      "Imprimé géométrique orange": 0.7
+    }
+  },
+  {
+    "id": 4,
+    "pieces": 7,
+    "metrage": {
+      "Lin blanc cassé": 2.6
+    }
+  },
+  {
+    "id": 5,
+    "pieces": 11,
+    "metrage": {
+      "Bleu marine": 2.7,
+      "Bleu ciel": 0.4
+    }
+  }
+]
