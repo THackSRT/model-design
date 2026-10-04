@@ -7,7 +7,6 @@ const TEMPLATES = join(dirname(fileURLToPath(import.meta.url)), 'templates');
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 const pascal = (kebab) => kebab.replace(/(^|-)(\w)/g, (_, __, c) => c.toUpperCase());
-const snake = (kebab) => kebab.replace(/-/g, '_');
 /** Chemin relatif en séparateurs `/` : il finit dans des contrats et des messages, quel que soit le poste. */
 const relativePosix = (from, to) => relative(from, to).split(sep).join('/');
 
@@ -23,11 +22,10 @@ function listFiles(dir) {
   });
 }
 
-/** Copie un gabarit et remplace les noms (__name__, __Name__, __nameCamel__, __name_snake__). */
+/** Copie un gabarit et remplace les noms (__name__, __Name__, __nameCamel__). */
 function instantiate(root, template, target, name) {
   const camel = pascal(name).replace(/^\w/, (c) => c.toLowerCase());
   const vars = {
-    __name_snake__: snake(name),
     __nameCamel__: camel,
     __Name__: pascal(name),
     __name__: name,
@@ -56,16 +54,47 @@ export function generateService(root, name) {
   return [...created, ...instantiate(root, 'service-contract', 'contracts/openapi', name)];
 }
 
+const LIST_ITEM = /^(\s*)-\s+(.*?)\s*$/;
+
+/** Première ligne, indentation et entrées (sans guillemets) de la liste qui suit `packages:`. */
+function packageEntries(lines) {
+  const head = lines.findIndex((line) => /^packages:\s*$/.test(line));
+  const tail = head < 0 ? [] : lines.slice(head + 1);
+  const end = tail.findIndex((line) => !LIST_ITEM.test(line));
+  const matches = (end < 0 ? tail : tail.slice(0, end)).map((line) => LIST_ITEM.exec(line));
+  if (matches.length === 0)
+    throw new Error('pnpm-workspace.yaml : liste « packages: » introuvable ou vide.');
+  const unquote = (item) => item.replace(/^(['"])(.*)\1$/, '$2');
+  return { first: head + 1, indent: matches[0][1], items: matches.map((m) => unquote(m[2])) };
+}
+
+/**
+ * Ajoute `engines/<nom>` à la liste `packages:` de pnpm-workspace.yaml, après le dernier moteur déjà listé : la
+ * liste des moteurs est explicite, car des moteurs Python vivent aussi sous `engines/`. Rend le texte tel quel si
+ * le moteur est déjà couvert (même entrée, ou `engines/*`).
+ */
+function registerEngine(text, name) {
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const lines = text.split(eol);
+  const { first, indent, items } = packageEntries(lines);
+  if (items.includes(`engines/${name}`) || items.includes('engines/*')) return text;
+  const lastEngine = items.findLastIndex((item) => item.startsWith('engines/'));
+  const at = first + (lastEngine < 0 ? items.length : lastEngine + 1);
+  lines.splice(at, 0, `${indent}- engines/${name}`);
+  return lines.join(eol);
+}
+
+/** Moteur TypeScript sur le modèle de engines/drape (ADR 0021), inscrit à l'espace de travail pnpm. */
 export function generateEngine(root, name) {
   assertName(name, 'moteur');
+  const workspace = join(root, 'pnpm-workspace.yaml');
+  const text = readFileSync(workspace, 'utf8');
+  // Calculé avant toute écriture : un espace de travail inexploitable ne laisse rien derrière lui.
+  const registered = registerEngine(text, name);
   const created = instantiate(root, 'engine', `engines/${name}`, name);
-  const pyproject = join(root, 'pyproject.toml');
-  const text = readFileSync(pyproject, 'utf8');
-  writeFileSync(
-    pyproject,
-    text.replace(/members = \[([^\]]*)\]/, (_, list) => `members = [${list}, "engines/${name}"]`),
-  );
-  return [...created, 'pyproject.toml (membre ajouté)'];
+  if (registered === text) return created;
+  writeFileSync(workspace, registered);
+  return [...created, 'pnpm-workspace.yaml (moteur inscrit)'];
 }
 
 export function generateEvent(root, eventName, producer = 'à-renseigner') {

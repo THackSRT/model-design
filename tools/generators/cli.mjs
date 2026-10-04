@@ -28,9 +28,7 @@ if (!run || !args[0]) {
 try {
   const created = run();
   console.log(`Créé :\n${created.map((f) => `  ${f}`).join('\n')}`);
-  console.log(
-    'Ensuite : pnpm install (ou uv sync --all-packages --all-groups), pnpm contracts:gen, puis pnpm check.',
-  );
+  console.log('Ensuite : pnpm install, pnpm contracts:gen, puis pnpm check.');
 } catch (error) {
   console.error(error.message);
   process.exit(1);
