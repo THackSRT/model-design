@@ -136,13 +136,48 @@ points ouverts), quinze lignes au plus.
     l'épaule, soit `path` libre avec prolongement ; partie retenue = repère ou « la plus petite »), patte, poche, galon,
     broderie, fentes de côté, déformation d'ourlet (évasement, arrondi).
   - Les longueur et aisance générales sont des options de la base, pas des opérations.
+  - Mesures complètes pour la base : `drafting` n'importe aucun moteur et `designs` ne déduit rien (ADR 0024) ; le
+    mannequin complète les mesures dans le studio avant l'enregistrement.
+  - Sécurité (ADR 0024) : le document est une entrée non sûre, rejouée par `designs` sous Node ; le schéma borne le
+    nombre d'opérations, de points d'un chemin, de matières et la longueur des textes.
 - **Critères d'acceptation** :
   - Six documents valides dans `contracts/examples/design-documents/` : tunique neutre (Brian, toile écrue, aucune
     opération) et les cinq tuniques de l'essai converties de `garments.mjs` ; un test les valide contre le schéma.
-  - Un document invalide (opération inconnue, paramètre hors bornes, identifiant en double) est refusé avec un message
-    clair (test).
+  - Un document invalide (opération inconnue, paramètre hors bornes, identifiant en double, bornes de taille
+    dépassées) est refusé avec un message clair (test).
   - `pnpm contracts:check` vert ; chaque opération et chaque paramètre a une description en français.
 - **Hors périmètre** : OpenAPI de `designs` (1.60a), implémentation des opérations (1.57), GarmentSpec (1.54a).
+- **Vérification** : `pnpm contracts:gen && pnpm contracts:check && pnpm check:affected`.
+- **Compte rendu attendu** : format « Compte rendu », quinze lignes au plus.
+
+## 1.54e — Contrat de fabrication : matière, marques de pose et plan par matière
+
+Tâche ajoutée le 4 octobre après l'ADR 0024 : le contrat `CutPattern` porte les crans mais pas les marques de pose
+qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tuniques se coupent dans deux matières.
+
+- **Tâche** : 1.54e — Les pièces de coupe portent leur matière et leurs marques de pose ; un plan de coupe par matière.
+- **Objectif** : le contrat de fabrication accepte, par élargissement compatible, ce que `cutting` produira à partir
+  d'une GarmentSpec 1.1 (matière et marques de pose de chaque pièce, pièce au pli dépliée, plan et métrage par
+  matière), et tout ce que produit `manufacturing` aujourd'hui reste valide et identique.
+- **Périmètre** : `contracts/schemas/manufacturing/*.schema.json`, code généré par `pnpm contracts:gen`,
+  `docs/composants/contrats.md`, `docs/directives/langage-commun.md` (nouveaux termes).
+- **Contexte** : `docs/adr/0024-dependances-des-moteurs-typescript.md` ; `docs/adr/0009-moteur-de-fabrication.md` ;
+  `docs/adr/0012-fabrication-via-designs.md` ; `contracts/README.md` ; `contracts/schemas/manufacturing/` (surtout
+  `cut-pattern`, `cutting-plan`, `cutting-plan-request`, `cut-pattern-request`, `export-request`) ;
+  `contracts/schemas/garment-spec.schema.json` (1.1 : matières, marques de pose, rôles sémantiques, d'après 1.54a) ;
+  `engines/manufacturing/tests/golden/straight-skirt-cut-pattern.json` ; `docs/suivi/essais/tuniques/cut.mjs` (marques
+  par pièce, dépliage) ; `docs/suivi/essais/tuniques/marker.mjs` et `metrage.json` (plan et métrage par matière).
+- **Décisions déjà prises** :
+  - Champs facultatifs seulement, pas de nouvelle version d'URL ; une pièce sans matière ni marque garde exactement ses
+    champs actuels (parité de 1.58a avec la jupe droite, champs et ordre compris).
+  - Les marques de pose d'une pièce reprennent les genres de la GarmentSpec 1.1 (ligne, contour, bouton, fente, zone),
+    en coordonnées de la pièce coupée ; la matière est la clé de la table des matières de la GarmentSpec.
+  - Un plan de coupe par matière : clé de matière facultative sur le plan, et une laize par matière dans la requête ;
+    le métrage conseillé (marge de 10 cm, arrondi au décimètre) figure sur le plan s'il n'y est pas déjà.
+- **Critères d'acceptation** : la référence de la jupe droite reste valide ; une pièce avec matière, marques et
+  dépliage, et deux plans de deux matières sont valides (test là où le dépôt teste déjà les schémas) ; descriptions en
+  français ; `pnpm contracts:check` vert ; `engines/manufacturing` reste vert sans modification.
+- **Hors périmètre** : code de `cutting` (1.58) et de `manufacturing` ; OpenAPI de `designs` (1.60a, qui suit).
 - **Vérification** : `pnpm contracts:gen && pnpm contracts:check && pnpm check:affected`.
 - **Compte rendu attendu** : format « Compte rendu », quinze lignes au plus.
 
@@ -230,11 +265,15 @@ points ouverts), quinze lignes au plus.
   `docs/adr/0024-dependances-des-moteurs-typescript.md`, tâche 1.54d).
 - **Périmètre** : `engines/drafting/**`.
 - **Contexte** : `docs/suivi/essais/tuniques/geom.mjs` (toutes ces fonctions, à reprendre proprement en TypeScript) ;
-  `docs/suivi/essais/tuniques/cut.mjs` (`offsetVar`) ; `eslint.config.mjs` racine (40 lignes par fonction, complexité
-  10).
+  `docs/suivi/essais/tuniques/cut.mjs` (`offsetVar`) ; `eslint.config.mjs` racine (40 lignes par fonction, complexité 10) ; `docs/adr/0024-dependances-des-moteurs-typescript.md`.
+- **Décisions déjà prises** (ADR 0024) : code dans `src/core/geometry/`, entrée `src/geometry.ts`, export `"./geometry"`
+  avec les conditions `source`, `types` et `default` comme `.` et `./node` ; l'entrée est une feuille : elle n'atteint
+  aucun paquet (ni FreeSewing, ni `@atelier/*`, ni `node:*`) ni aucun fichier de `drafting` hors de
+  `src/core/geometry/`.
 - **Critères d'acceptation** : chaque fonction testée ; tests de propriétés : la découpe d'un polygone par une ligne qui
   le traverse donne deux polygones dont la somme des aires vaut l'aire initiale (1e-6 près) ; `pointAt(length)` donne le
-  dernier point ; aucun import `node:*` ni DOM.
+  dernier point ; aucun import `node:*` ni DOM ; un test sur le modèle de `test/browser-entry.test.ts` prouve que
+  l'entrée `./geometry` est une feuille.
 - **Hors périmètre** : opérations.
 - **Vérification** : `pnpm nx run-many -t lint typecheck test -p @atelier/drafting`.
 - **Compte rendu attendu** : format « Compte rendu », quinze lignes au plus.
@@ -247,7 +286,8 @@ points ouverts), quinze lignes au plus.
   restent compatibles (ADR 0014).
 - **Périmètre** : `contracts/openapi/designs.yaml`, `contracts/schemas/designs/*.json`, code généré,
   `docs/composants/designs.md`, une ADR si une décision nouvelle apparaît.
-- **Contexte** : `contracts/openapi/designs.yaml` ; `contracts/schemas/designs/` ;
+- **Contexte** : `contracts/openapi/designs.yaml` ; `contracts/schemas/designs/` ; `contracts/schemas/manufacturing/`
+  (matière, marques de pose et plan par matière depuis 1.54e) ; `docs/adr/0024-dependances-des-moteurs-typescript.md` ;
   `docs/adr/0012-fabrication-via-designs.md` ; `docs/adr/0014-versions-et-erreurs-relayees.md` ;
   `docs/adr/0020-document-de-modele-et-operations.md` ; `docs/adr/0021-studio-local-et-refonte-des-moteurs.md` ;
   `docs/composants/designs.md`.
@@ -302,12 +342,14 @@ points ouverts), quinze lignes au plus.
   `engines/manufacturing`.
 - **Périmètre** : `engines/cutting/**` ; `pnpm-workspace.yaml` et `pnpm-lock.yaml` (inscription par le générateur,
   `pnpm install`) ; dépendance à `@atelier/drafting` (géométrie) avec l'exception étroite de
-  `docs/adr/0024-dependances-des-moteurs-typescript.md`, déclarée dans `engines/cutting/eslint.config.mjs`.
+  `docs/adr/0024-dependances-des-moteurs-typescript.md`, déclarée dans `engines/cutting/eslint.config.mjs` sous la forme
+  que donne l'ADR (entrées ancrées : `src/**` n'importe que `^@atelier/drafting/geometry$` ; `test/**` aussi
+  `^@atelier/drafting$`, pour tracer Brian) ; `"@atelier/drafting": "workspace:*"` dans `dependencies`.
 - **Contexte** : `engines/manufacturing/src/manufacturing/core/offset.py`, `.../core/allowances.py`,
   `.../core/notches.py`, `.../core/finishing.py`, `.../spec/cut_patterns.py` ;
   `engines/manufacturing/tests/golden/straight-skirt-cut-pattern.json` et `test_reference_patterns.py` ; entrée :
   `engines/patterning/tests/golden/straight-skirt-reference.json` ; `contracts/schemas/manufacturing/` (format des
-  pièces) ; `docs/adr/0009-moteur-de-fabrication.md` ; `docs/suivi/essais/tuniques/cut.mjs` (valeurs par bord, crans de
+  pièces, matière et marques de pose depuis 1.54e) ; `docs/adr/0009-moteur-de-fabrication.md` ; `docs/suivi/essais/tuniques/cut.mjs` (valeurs par bord, crans de
   tête de manche par longueur d'arc et embu, dépliage) ; géométrie `@atelier/drafting/geometry` (1.57a).
 - **Décisions déjà prises** :
   - Mêmes règles que `manufacturing` pour la parité ; les cas nouveaux (crans de tête de manche, dépliage) suivent
@@ -368,7 +410,7 @@ points ouverts), quinze lignes au plus.
 - **Périmètre** : `engines/cutting/**`, y compris une nouvelle référence golden de plan de coupe dans
   `engines/cutting/tests/golden/` (autorisée par cette fiche).
 - **Contexte** : `engines/manufacturing/src/manufacturing/core/nesting.py`, `.../core/cutting_plan.py`,
-  `.../spec/cutting_plans.py` ; `contracts/schemas/manufacturing/` ; `docs/suivi/essais/tuniques/marker.mjs` ;
+  `.../spec/cutting_plans.py` ; `contracts/schemas/manufacturing/` (plan et métrage par matière depuis 1.54e) ; `docs/suivi/essais/tuniques/marker.mjs` ;
   `docs/suivi/essais/tuniques/metrage.json`.
 - **Décisions déjà prises** : la référence du plan de coupe de la jupe droite est produite une fois par le moteur Python
   actuel (commande notée dans le test), versée telle quelle, puis exigée à l'identique ; si la parité est impossible
@@ -447,6 +489,10 @@ points ouverts), quinze lignes au plus.
 - **Tâche** : 1.57d — Patte, poche, galon, broderie ; marques de pose ; GarmentSpec 1.1 du document rejoué.
 - **Objectif** : les opérations d'ornement et leurs pièces ajoutées existent ; le document rejoué donne une GarmentSpec
   1.1 (un panneau par région, matière, marques, crans) et un état lisible par `flats` (traits, ornements, repères).
+- **Décisions déjà prises** (ADR 0024) : `flats` lit l'état rejoué comme une donnée, par `import type`, sans appeler
+  aucune fonction de `drafting` hors de `./geometry` ; l'état porte donc lui-même les régions, coutures, ornements et
+  repères (dans l'essai, `flat.mjs` appelait `regions()` de `ops.mjs`), et son type est une interface exportée par
+  `drafting`.
 - **Périmètre** : `engines/drafting/**`.
 - **Contexte** : `docs/suivi/essais/tuniques/ops.mjs` (`placket`, `pocket`, `trim`, `embroidery`, marques) ;
   `docs/suivi/essais/tuniques/cut.mjs` (`marksFor`) ; `docs/suivi/essais/tuniques/flat.mjs` (ce que le dessin lit dans
@@ -482,7 +528,10 @@ points ouverts), quinze lignes au plus.
   pour le studio.
 - **Périmètre** : `engines/flats/**` ; `pnpm-workspace.yaml` et `pnpm-lock.yaml` (inscription par le générateur,
   `pnpm install`) ; dépendance à `@atelier/drafting` avec l'exception étroite de
-  `docs/adr/0024-dependances-des-moteurs-typescript.md`, déclarée dans `engines/flats/eslint.config.mjs`.
+  `docs/adr/0024-dependances-des-moteurs-typescript.md`, déclarée dans `engines/flats/eslint.config.mjs` sous la forme
+  que donne l'ADR : `src/**` importe `@atelier/drafting/geometry` et `@atelier/drafting` en `import type` seulement
+  (`@typescript-eslint/no-restricted-imports`, `allowTypeImports`) ; `"@atelier/drafting": "workspace:*"` dans
+  `dependencies`.
 - **Contexte** : `docs/suivi/essais/tuniques/flat.mjs`, `docs/suivi/essais/tuniques/motifs.mjs` ; `engines/drafting`
   (état rejoué, 1.57d) ; `docs/adr/0022-interface-du-studio-v2.md` (deux thèmes, trait du dessin technique comme
   signature).
@@ -519,7 +568,8 @@ points ouverts), quinze lignes au plus.
 - **Objectif** : planche de patrons (pièces de `cutting` : coupe, couture, pli, droit fil, crans, marques, liste de
   coupe, fournitures) ; une texture par panneau (motif posé dans les coordonnées à plat) pour le lot 9.
 - **Périmètre** : `engines/flats/**` ; `pnpm-lock.yaml` ; dépendance à `@atelier/cutting` avec l'exception étroite de
-  `docs/adr/0024-dependances-des-moteurs-typescript.md`.
+  `docs/adr/0024-dependances-des-moteurs-typescript.md` : `@atelier/cutting` s'importe depuis `src/sheet/**` et les
+  tests seulement ; `"@atelier/cutting": "workspace:*"` dans `dependencies`.
 - **Contexte** : `docs/suivi/essais/tuniques/sheet.mjs` ; `engines/cutting` (1.58a) ; `engines/flats` (1.59a).
 - **Critères d'acceptation** : planches des six documents de référence ; une texture par panneau, alignée sur la boîte
   du panneau en mm ; tests.
@@ -533,8 +583,10 @@ points ouverts), quinze lignes au plus.
 - **Objectif** : `designs` accepte un document de modèle, le valide (schéma et rejeu par `@atelier/drafting`), le stocke
   en JSONB et dérive la GarmentSpec, mise en cache par empreinte du document et des versions des moteurs.
 - **Périmètre** : `services/designs/**` (migration additive `0004`) ; `pnpm-lock.yaml` ; dépendance à
-  `@atelier/drafting`, importé seulement dans `src/adapters/engines/`, déclarée selon
-  `docs/adr/0024-dependances-des-moteurs-typescript.md`.
+  `@atelier/drafting` par son entrée `@atelier/drafting/node`, importée seulement dans `src/adapters/engines/` et les
+  tests, `"workspace:*"` dans `dependencies` ; `eslint.config.mjs` racine, par exception accordée pour cette tâche :
+  bloc de `designs` donné par `docs/adr/0024-dependances-des-moteurs-typescript.md` (pas de
+  `services/designs/eslint.config.mjs`, qui perdrait les règles des couches ; tous les projets deviennent « touchés »).
 - **Contexte** : `services/designs/AGENTS.md` ; `services/designs/src/domain/` ; `services/designs/src/application/` ;
   `services/designs/migrations/0001_init.sql` (`design_versions`) ;
   `services/designs/src/adapters/engines/http-patterning-engine.ts` (port actuel du moteur de patronage) ;
@@ -553,8 +605,11 @@ points ouverts), quinze lignes au plus.
 - **Tâche** : 1.60c — Pièces, plan de coupe, PDF, DXF et SVG calculés par `@atelier/cutting` sous Node.
 - **Objectif** : pour une version portant un document, la route de fabrication (ADR 0012) calcule avec
   `@atelier/cutting` ; l'ancien relais vers `engines/manufacturing` reste pour les versions sans document.
-- **Périmètre** : `services/designs/**` ; `pnpm-lock.yaml` ; dépendance à `@atelier/cutting`, importé seulement dans
-  `src/adapters/engines/`, selon `docs/adr/0024-dependances-des-moteurs-typescript.md`.
+- **Périmètre** : `services/designs/**` ; `pnpm-lock.yaml` ; dépendance à `@atelier/cutting` par son entrée
+  `@atelier/cutting/node`, importée seulement dans `src/adapters/engines/` et les tests, `"workspace:*"` dans
+  `dependencies` ; `eslint.config.mjs` racine (ajout de `^@atelier/cutting/node$` au bloc de `designs` posé par 1.60b),
+  selon `docs/adr/0024-dependances-des-moteurs-typescript.md`. Un calcul qui dépasse son budget passe dans un fil de
+  travail : décision à prendre ici, sur mesures (ADR 0024).
 - **Contexte** : `services/designs/src/adapters/engines/http-manufacturing-engine.ts` ; routes de fabrication de
   `contracts/openapi/designs.yaml` ; `docs/adr/0012-fabrication-via-designs.md` (erreurs relayées, liste blanche) ;
   `engines/cutting` (1.58d) ; `services/designs/test/http/`.
