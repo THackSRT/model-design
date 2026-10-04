@@ -15,7 +15,8 @@ qu'un assistant fera : décomposer cinq photos en une base et une liste d'opéra
 - **Emplacements préparés dès la phase 1, derrière un drapeau** : la palette de commandes accepte du texte libre
   (recherche de commandes aujourd'hui, assistant demain) ; un panneau Assistant affiche des suggestions déterministes
   (par exemple « une bande d'ourlet assortie au plastron ») et, plus tard, les propositions de l'IA ; l'étape Modèle
-  prévoit une entrée « Partir d'une photo ».
+  prévoit une entrée « Partir d'une photo ». Ces emplacements utilisent les composants ordinaires du studio, sans
+  marque visuelle propre à l'IA (ni étincelle, ni violet, ni halo) : une proposition s'appelle une proposition.
 - **Passerelle future `assistant`** sur le serveur : indépendante du fournisseur (Claude par défaut), sans état,
   reçoit le résumé du document et la liste des outils permis, n'écrit jamais dans les données. Les mesures et les
   photos de client ne partent qu'avec un consentement explicite (ADR à venir sur les données envoyées). Consignes

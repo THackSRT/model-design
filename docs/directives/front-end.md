@@ -58,6 +58,14 @@ plus des quatre couches ci-dessus.
 - **Dialogues** : seulement pour une tâche ciblée (Mesures, Tissu, Export, Partage, Comparaison) ; Échap ferme, le
   focus est piégé puis rendu, le titre est annoncé ; plein écran sur téléphone. Une action réversible ne demande
   jamais de confirmation : un bandeau « Annuler » reste quelques secondes.
+- **Deux thèmes, jamais mélangés** : chaque jeton de couleur existe en clair et en sombre sous le même nom ; un écran
+  utilise un seul thème à la fois (pas de panneau clair dans un écran sombre) ; le thème suit la préférence du
+  système jusqu'à ce que l'utilisateur le choisisse. Contraste AA vérifié par un test dans les deux thèmes.
+- **Sobre, sans allure « IA »** : gris neutres et un seul accent ; pas de dégradé, de halo, de flou, d'étincelle ni de
+  violet ; filets fins, chiffres en chasse fixe ; polices du système. L'assistant et les propositions utilisent les
+  composants ordinaires.
+- **Partir du neutre** : une création démarre d'une base unie ; les outils Découper, Déformer, Ajouter et Matière
+  émettent des opérations qui restent réglables, masquables et supprimables dans l'historique.
 - **Mouvement** : durées et courbes viennent des jetons ; pas d'animation sans utilité ; `prefers-reduced-motion`
   les supprime.
 - **Budgets vérifiés** : mise à jour 2D en moins de 16 ms, réponse à un geste en moins de 100 ms, paquet d'entrée

@@ -9,7 +9,7 @@ Les changements visibles de la plateforme, du plus récent au plus ancien. Forma
 
 ### Ajouté
 
-- Documentation (1.53) : plan d'action de la plateforme (studio local d'abord, le 2D puis la 3D, IA préparée), ADR 0019 à 0023 (tracé FreeSewing, document de modèle et opérations, studio local et refonte des moteurs, interface du studio v2, préparation à l'IA), essai des tuniques, maquette interactive du studio v2 ; architecture, directives, phase 1 et tableau des travaux mis à jour.
+- Documentation (1.53) : plan d'action de la plateforme (studio local d'abord, le 2D puis la 3D, IA préparée), ADR 0019 à 0023 (tracé FreeSewing, document de modèle et opérations, studio local et refonte des moteurs, interface du studio v2, préparation à l'IA), essai des tuniques, maquette interactive du studio v2 ; décisions du 4 octobre (FreeSewing, thèmes clair et sombre au choix sans allure « IA », départ neutre et opérations libres, panel de tests d'usage) ; architecture, directives, phase 1 et tableau des travaux mis à jour.
 - Contrat `avatar-options` : `armAngleDeg` élargi de 0–45° à 0–90° (1.50a), défaut 9°, sens écrit comme écart du bras à la verticale (ADR 0018).
 - Mannequin : silhouette féminine (1.51b) ajoutée par 36 cibles MakeHuman `breast/` (CC0), bonnet 0,2 et fermeté 0,5 ; écart poitrine − sous-poitrine 108 mm ; `underBustGirthMm` fourni n'est pas ajusté (note : sous-poitrine estimée testée puis retirée, drapé hors critères).
 - Mannequin : bras levés (90°) reconnus par la pose, manches habillées (1.50e1) : tube par bras depuis le patron, rayon tiré du tour fini et ajusté sur le rayon du bras à chaque tranche ; option `sleeveLengthMm` (défaut : ourlet à la couture de dessous de bras).

@@ -16,8 +16,10 @@ sur cinq décisions : [0019](../adr/0019-trace-freesewing.md) (tracé),
    (poche, bande, découpe, galon, broderie…), des matières par pièce. Aucun code par vêtement.
 3. **Les moteurs sont refaits là où c'est utile** : patronage Python remplacé, fabrication portée en TypeScript,
    rendu 2D nouveau, cœur du drapé gardé et rendu interactif, mannequin gardé et étendu.
-4. **Le studio v2 tient sur une scène** : le vêtement au centre, un fil de six étapes, on touche le vêtement pour
-   le modifier, tout est commande, les dialogues ne servent que les tâches ciblées.
+4. **Le studio v2 tient sur une scène** : le vêtement au centre, un fil de six étapes ; on part d'un vêtement
+   neutre et on le modifie librement (découper, déformer, ajouter, poser une matière), chaque réglage restant
+   ajustable ; tout est commande ; les dialogues ne servent que les tâches ciblées ; deux thèmes, clair et sombre,
+   au choix.
 5. **L'IA viendra par les commandes** : elle proposera des lots de commandes, prévisualisés puis acceptés ; les
    emplacements d'interface sont préparés dès maintenant.
 6. **Ordre : le 2D d'abord, puis la 3D**, la préparation de l'IA en parallèle. Environ cinq semaines jusqu'à la porte
@@ -87,27 +89,31 @@ flowchart LR
 
 ## Le studio v2 : simple, moderne, futuriste
 
-Six principes (ADR 0022) :
+Sept principes (ADR 0022) :
 
 1. **Une scène** : le vêtement reste au centre ; Dessin, Patron et 3D se remplacent sur place, ou se partagent
    l'écran.
 2. **Un fil** : les six étapes se suivent sans jamais bloquer ; on revient à n'importe laquelle, la scène suit.
 3. **On touche le vêtement** : une zone s'éclaire au survol ; un clic ouvre l'anneau des actions qui lui
-   conviennent ; des poignées règlent longueurs et courbes, en direct.
+   conviennent ; des poignées règlent longueurs et courbes, en direct. Outils libres : Découper, Déformer, Ajouter,
+   Matière.
 4. **Tout est commande** : palette (⌘K ou « / »), raccourcis, historique, annuler et rétablir partout.
 5. **Dialogues utiles seulement** : Mesures, Tissu, Export, Partage, Comparaison ; jamais de confirmation pour une
    action réversible, un bandeau « Annuler » suffit.
-6. **Futuriste mais sobre** : thème sombre « atelier de nuit » et thème clair, un accent lumineux, le trait du dessin
-   technique comme signature, mouvements courts, accessibilité WCAG 2.2 AA.
+6. **Moderne, épuré, sans allure « IA »** : deux thèmes complets, clair et sombre, au choix et jamais mélangés ;
+   gris neutres et un seul accent terre cuite ; filets fins, chiffres en chasse fixe, le trait du dessin technique
+   comme signature ; ni dégradé, ni halo, ni étincelle, ni violet ; accessibilité WCAG 2.2 AA dans les deux thèmes.
+7. **Partir du neutre, ajuster jusqu'au résultat** : la création part d'une base unie, sans motif ni bande ; toute
+   opération reste réglable, masquable ou supprimable, et deux versions se comparent.
 
-| Étape     | L'utilisateur                                             | La scène                                      | Dialogue                        |
-| --------- | --------------------------------------------------------- | --------------------------------------------- | ------------------------------- |
-| Modèle    | Choisit une base dans la galerie, une taille ou un client | Dessins vivants du catalogue                  | Mesures                         |
-| Édition   | Touche une zone, choisit une action, règle par poignée    | Dessin face et dos, mis à jour à chaque geste | —                               |
-| Matières  | Pose un tissu sur une zone, importe une photo de tissu    | Dessin en couleurs, motifs posés par pièce    | Tissu (échelle, sens, centrage) |
-| Patrons   | Vérifie la planche, le plan de coupe et le métrage        | Planche prête à couper                        | Export (PDF, DXF, SVG)          |
-| Habillage | Voit le vêtement porté de face et de dos                  | Dessin sur la silhouette du mannequin         | —                               |
-| 3D        | Tourne autour, lit l'aisance et la tension                | Vêtement qui se coud puis tombe               | —                               |
+| Étape     | L'utilisateur                                            | La scène                                      | Dialogue                        |
+| --------- | -------------------------------------------------------- | --------------------------------------------- | ------------------------------- |
+| Modèle    | Part du neutre ou d'un exemple ; une taille ou un client | Dessins vivants du catalogue                  | Mesures                         |
+| Édition   | Touche une zone, découpe, déforme, ajoute, règle         | Dessin face et dos, mis à jour à chaque geste | —                               |
+| Matières  | Pose un tissu sur une zone, importe une photo de tissu   | Dessin en couleurs, motifs posés par pièce    | Tissu (échelle, sens, centrage) |
+| Patrons   | Vérifie la planche, le plan de coupe et le métrage       | Planche prête à couper                        | Export (PDF, DXF, SVG)          |
+| Habillage | Voit le vêtement porté de face et de dos                 | Dessin sur la silhouette du mannequin         | —                               |
+| 3D        | Tourne autour, lit l'aisance et la tension               | Vêtement qui se coud puis tombe               | —                               |
 
 **Maquette interactive** : le canevas « Studio Atelier v2 » (lien remis avec ce plan, privé jusqu'à son partage)
 montre l'écran principal sur les cinq tuniques de l'essai (zones tirées de la géométrie, anneau d'actions par rôle,
@@ -133,17 +139,17 @@ appliquée sans formalisme inutile.
 
 ### Lot 7 — Fondations 2D : contrats et moteurs (6 à 7 jours)
 
-| #    | Travail                                                                                                              | Agent         | Dépend de  |
-| ---- | -------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- |
-| 1.53 | ADR 0019 à 0023, plan d'action, essai des tuniques, documentation adaptée                                            | orchestrateur | —          |
-| 1.54 | Contrats : `design-document`, `design-operation` (11 opérations), GarmentSpec 1.1, `MeasurementSet` (+9)             | architecte    | 1.53       |
-| 1.55 | `engines/drafting` : adaptateur FreeSewing 4.10.2 épinglé, fiches de couture, contrôle de chaque tracé               | dev-moteur    | 1.54       |
-| 1.56 | Catalogue 1 (Brian, Teagan, Titan, Sandy, Bella avec garde-fous, jupe droite) et banc de validation                  | dev-moteur    | 1.55       |
-| 1.57 | Moteur d'opérations : registre, 11 opérations, régions, rejeu, règle « aucun nom de vêtement », preuve de généricité | dev-moteur    | 1.55       |
-| 1.58 | `engines/cutting` : pièces de coupe, crans, plan de coupe et métrage, exports SVG, PDF A4, DXF ; parité golden       | dev-moteur    | 1.57       |
-| 1.59 | `engines/flats` : dessins face et dos (trait, couleur), planches, textures par pièce                                 | dev-moteur    | 1.57       |
-| 1.60 | `designs` : versions du document, validation par les moteurs sous Node, exports à la demande                         | dev-service   | 1.54, 1.58 |
-| 1.61 | Mannequin : mesures FreeSewing, repères (encolure, acromion, aisselle, crête iliaque), parties du corps              | dev-moteur    | 1.54       |
+| #    | Travail                                                                                                          | Agent         | Dépend de  |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------- | ---------- |
+| 1.53 | ADR 0019 à 0023, plan d'action, essai des tuniques, documentation adaptée                                        | orchestrateur | —          |
+| 1.54 | Contrats : `design-document`, `design-operation` (11 + libres, masquage), GarmentSpec 1.1, `MeasurementSet` (+9) | architecte    | 1.53       |
+| 1.55 | `engines/drafting` : adaptateur FreeSewing 4.10.2 épinglé, fiches de couture, contrôle de chaque tracé           | dev-moteur    | 1.54       |
+| 1.56 | Catalogue 1 (Brian, Teagan, Titan, Sandy, Bella avec garde-fous, jupe droite) et banc de validation              | dev-moteur    | 1.55       |
+| 1.57 | Moteur d'opérations : 11 opérations et libres, régions, rejeu non destructif, « aucun nom de vêtement »          | dev-moteur    | 1.55       |
+| 1.58 | `engines/cutting` : pièces de coupe, crans, plan de coupe et métrage, exports SVG, PDF A4, DXF ; parité golden   | dev-moteur    | 1.57       |
+| 1.59 | `engines/flats` : dessins face et dos (trait, couleur), planches, textures par pièce                             | dev-moteur    | 1.57       |
+| 1.60 | `designs` : versions du document, validation par les moteurs sous Node, exports à la demande                     | dev-service   | 1.54, 1.58 |
+| 1.61 | Mannequin : mesures FreeSewing, repères (encolure, acromion, aisselle, crête iliaque), parties du corps          | dev-moteur    | 1.54       |
 
 Porte J1 : les cinq tuniques de l'essai rejouées dans les nouveaux moteurs, testées, en moins de 10 ms.
 
@@ -151,17 +157,18 @@ Porte J1 : les cinq tuniques de l'essai rejouées dans les nouveaux moteurs, tes
 
 | #    | Travail                                                                                                 | Agent         | Dépend de  |
 | ---- | ------------------------------------------------------------------------------------------------------- | ------------- | ---------- |
-| 1.62 | Jetons v2 (sombre, clair, accent, mouvement, élévation, focus) et composants de base                    | dev-front     | 1.53       |
+| 1.62 | Jetons v2 : thèmes clair et sombre, bascule, accent terre cuite, contrastes testés ; composants         | dev-front     | 1.53       |
 | 1.63 | Magasin du document et bus de commandes : annuler, rétablir, historique, enregistrement différé, Worker | dev-front     | 1.57       |
 | 1.64 | Coquille : scène unique, fil des six étapes, inspecteur, palette de commandes, raccourcis               | dev-front     | 1.62, 1.63 |
-| 1.65 | Étape Modèle : galerie du catalogue, dialogue Mesures                                                   | dev-front     | 1.64, 1.56 |
-| 1.66 | Étape Édition : zones cliquables, anneau d'actions, poignées, liste des opérations                      | dev-front     | 1.64, 1.59 |
+| 1.65 | Étape Modèle : départ neutre par défaut, exemples, galerie du catalogue, dialogue Mesures               | dev-front     | 1.64, 1.56 |
+| 1.66 | Étape Édition : zones, anneau, outils Découper, Déformer et Ajouter, poignées, historique réglable      | dev-front     | 1.64, 1.59 |
 | 1.67 | Étape Matières : bibliothèque, import de photo (échelle, sens, centrage), affectation par zone          | dev-front     | 1.66       |
 | 1.68 | Étape Patrons : planche, plan de coupe et métrage, dialogue Export                                      | dev-front     | 1.58, 1.64 |
 | 1.69 | Étape Habillage : dessin porté sur la silhouette face et dos, thèmes trait et couleur                   | dev-front     | 1.59, 1.61 |
-| 1.70 | Tests d'usage (cinq tailleurs ou stylistes, tâche : refaire une tunique de l'essai), corrections        | orchestrateur | 1.65–1.69  |
+| 1.70 | Tests d'usage (panel confirmé : cinq tailleurs ou stylistes ; partir du neutre), corrections            | orchestrateur | 1.65–1.69  |
 
-Porte J2 : une tunique de l'essai refaite par un utilisateur sans aide, en moins de dix minutes, patrons exportés.
+Porte J2 : une tunique de l'essai refaite à partir du neutre par un utilisateur sans aide, en moins de dix minutes,
+patrons exportés, dans les deux thèmes.
 
 ### Lot 9 — 3D interactive (8 à 10 jours)
 
@@ -240,8 +247,14 @@ Le lot 9 commence pendant le lot 8 : son moteur ne dépend que des contrats et d
 | Retrait des moteurs Python trop tôt      | Parité golden exigée avant tout retrait                                                  |
 | Périmètre qui gonfle                     | Ordre fixé : 2D, puis 3D, IA préparée seulement                                          |
 
-## À confirmer
+## Décisions et points ouverts
+
+Confirmé le 4 octobre 2026 :
 
 1. FreeSewing comme moteur de tracé (ADR 0019) et retrait des moteurs Python à la parité (ADR 0021).
-2. L'identité visuelle du studio v2, sur la maquette.
-3. Le panel de tests d'usage (cinq tailleurs ou stylistes) et la date des toiles avec un modéliste.
+2. L'identité visuelle : deux thèmes complets, clair et sombre, au choix et jamais mélangés ; moderne, épuré,
+   sans allure « IA » (ADR 0022).
+3. L'édition : partir d'un vêtement neutre et pouvoir tout modifier, jusqu'au résultat voulu (ADR 0020, 0022).
+4. Le panel de tests d'usage : cinq tailleurs ou stylistes, à chaque porte de lot.
+
+Reste à fixer : la date des toiles avec un modéliste (1.81).
