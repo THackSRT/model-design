@@ -215,8 +215,8 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
 ## 1.61a — Mannequin : mesures FreeSewing déduites et repères
 
 - **Tâche** : 1.61a — Le mannequin fournit les mesures FreeSewing manquantes et de nouveaux repères.
-- **Objectif** : à partir du corps ajusté, le mannequin déduit les neuf nouvelles mesures de `MeasurementSet` quand
-  elles manquent, et expose les repères point d'encolure (côté du cou), acromion, aisselle et crête iliaque, à gauche et
+- **Objectif** : à partir du corps ajusté, le mannequin déduit les onze nouvelles mesures de `MeasurementSet` (les neuf
+  de l'ADR 0019, plus `highBustGirthMm` et `kneeHeightMm`, ajoutées par 1.54a pour Bella et Titan) quand elles manquent, et expose les repères point d'encolure (côté du cou), acromion, aisselle et crête iliaque, à gauche et
   à droite, en mm.
 - **Périmètre** : `engines/mannequin/**`.
 - **Contexte** : `engines/mannequin/src/index.ts` (`fit`, `LandmarksMm`, `toMakeHumanMeasures`),
@@ -326,7 +326,9 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
 - **Contexte** : `docs/suivi/essais/freesewing/fiches/teagan.json`, `docs/suivi/essais/freesewing/fiches/titan.json` ;
   `docs/suivi/essais/freesewing/make-fiches.mjs` ; `docs/suivi/essais/freesewing/lib/scenarios.mjs`,
   `docs/suivi/essais/freesewing/lib/bench-lib.mjs` (scénarios d'options) ; `docs/suivi/essai-freesewing.md` (résultats
-  et défauts par modèle) ; `docs/adr/0019-trace-freesewing.md` (un modèle n'entre au catalogue que si son banc passe).
+  et défauts par modèle) ; `docs/adr/0019-trace-freesewing.md` (un modèle n'entre au catalogue que si son banc passe) ;
+  `docs/composants/contrats.md` (correspondance des mesures : `waistToKnee` = `waistHeightMm` − `kneeHeightMm` pour
+  Titan).
 - **Critères d'acceptation** : banc vert pour Teagan et Titan (combinaisons sans erreur, ou combinaisons interdites
   listées et refusées proprement) ; GarmentSpec valides ; moins de 15 s par modèle.
 - **Hors périmètre** : autres modèles.
@@ -369,7 +371,8 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
 - **Tâche** : 1.56b — Sandy (jupe cercle), Bella (corsage avec garde-fous), jupe droite écrite sur l'API de FreeSewing.
 - **Objectif** : le catalogue 1 est complet (Penelope reste écartée) ; même banc que 1.56a.
 - **Périmètre** : `engines/drafting/**` (dépendances `@freesewing/sandy`, `@freesewing/bella` en 4.10.2 exacte).
-- **Contexte** : `docs/suivi/essais/freesewing/fiches/bella.json` ; `docs/suivi/essai-freesewing.md` (garde-fous de
+- **Contexte** : `docs/suivi/essais/freesewing/fiches/bella.json` ; `docs/composants/contrats.md` (`highBust` =
+  `highBustGirthMm`, requis par Bella) ; `docs/suivi/essai-freesewing.md` (garde-fous de
   Bella, raisons du rejet de Penelope) ; `docs/suivi/essais/freesewing/lib/designs.mjs` ;
   `engines/patterning/tests/golden/straight-skirt-reference.json` (forme attendue d'une jupe droite).
 - **Critères d'acceptation** : banc vert pour les trois modèles ; la jupe droite est comparable à la jupe droite de
@@ -430,7 +433,8 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
 - **Contexte** : `engines/manufacturing/src/manufacturing/export/svg.py`, `.../export/sheet.py`, `.../export/labels.py`,
   `.../export/dxf_writer.py`, `.../export/dxf_aama.py` ; `engines/manufacturing/tests/golden/straight-skirt.svg`,
   `straight-skirt.dxf` ; `docs/suivi/essais/tuniques/exports.mjs` (DXF de l'essai).
-- **Décisions déjà prises** : les nombres s'écrivent comme en Python (`f"{v:.2f}"` pour SVG et DXF, `.3f` pour le PDF, «
+- **Décisions déjà prises** : les textes écrits dans les exports (noms de pièces, étiquettes, marques) sont échappés
+  comme le fait `manufacturing` (`labels.py`) ; les nombres s'écrivent comme en Python (`f"{v:.2f}"` pour SVG et DXF, `.3f` pour le PDF, «
   -0.00 » ramené à « 0.00 ») ; Python arrondit au pair une égalité exacte (`f"{0.125:.2f}"` donne `0.12`) là où
   `toFixed` arrondit vers le haut : écrire un formateur commun qui reproduit Python, testé sur ces cas, réutilisé par
   1.58d.
@@ -479,7 +483,8 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
   `engines/manufacturing/tests/golden/straight-skirt.pdf` ; `docs/adr/0009-moteur-de-fabrication.md` ;
   `docs/suivi/essais/tuniques/exports.mjs` (couverture avec plan d'assemblage et carré témoin de 10 cm, pages vides
   sautées : améliorations à proposer en point ouvert, pas à appliquer).
-- **Critères d'acceptation** : PDF de la jupe droite identique octet pour octet au golden ; tests.
+- **Critères d'acceptation** : PDF de la jupe droite identique octet pour octet au golden ; textes échappés comme dans
+  `manufacturing` (test avec parenthèses et barre oblique inverse) ; tests.
 - **Hors périmètre** : changement de mise en page (décision à part).
 - **Vérification** : `pnpm nx run-many -t lint typecheck test -p @atelier/cutting`.
 - **Compte rendu attendu** : format « Compte rendu », quinze lignes au plus.
