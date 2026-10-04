@@ -15,8 +15,13 @@ const FRAMEWORKS = [
 ];
 
 /**
- * Contraintes de dépendance entre projets (tags Nx). `allow` : chemins d'import exemptés ; la seule exception est
- * celle de engines/drape (ADR 0013), déclarée dans son eslint.config.mjs pour src/body et ses tests.
+ * Contraintes de dépendance entre projets (tags Nx). Toute exception est étroite et décidée par une ADR : la règle est
+ * redéclarée avec `boundaries(allow)` pour quelques dossiers. Une entrée de `allow` est une expression régulière à
+ * ancrer ('^@atelier/drafting/geometry$' ; sans ^…$, tout chemin qui contient le texte passe), et une importation
+ * permise échappe à tout contrôle, cycles compris. Exceptions : engines/drape → @atelier/mannequin, src/body et tests
+ * (ADR 0013) ; ADR 0024 : cutting → drafting/geometry, flats → drafting (types, géométrie) et cutting, déclarées dans
+ * leur eslint.config.mjs ; designs → drafting/node et cutting/node, depuis ses adaptateurs de moteurs, déclarée dans
+ * ce fichier (une configuration de service qui reprend celle-ci perdrait les règles de ses couches).
  */
 const DEP_CONSTRAINTS = [
   { sourceTag: 'type:kernel', onlyDependOnLibsWithTags: [] },

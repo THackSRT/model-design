@@ -30,3 +30,4 @@ Format : **Contexte** (ce qui oblige à décider), **Décision**, **Conséquence
 | [0021](0021-studio-local-et-refonte-des-moteurs.md) | Studio local d'abord, refonte des moteurs                                  | Acceptée                              |
 | [0022](0022-interface-du-studio-v2.md)              | Interface du studio v2 : une scène, un fil, des commandes                  | Acceptée                              |
 | [0023](0023-preparation-ia.md)                      | Préparation à l'IA : les commandes comme seuls outils                      | Acceptée                              |
+| [0024](0024-dependances-des-moteurs-typescript.md)  | Dépendances entre moteurs TypeScript, et moteurs appelés par un service    | Acceptée                              |

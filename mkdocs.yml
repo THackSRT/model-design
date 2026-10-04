@@ -145,6 +145,7 @@ nav:
       - 0021 Studio local et moteurs: adr/0021-studio-local-et-refonte-des-moteurs.md
       - 0022 Interface du studio v2: adr/0022-interface-du-studio-v2.md
       - 0023 Préparation à l'IA: adr/0023-preparation-ia.md
+      - 0024 Dépendances des moteurs: adr/0024-dependances-des-moteurs-typescript.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md
