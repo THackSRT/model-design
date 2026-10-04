@@ -4,7 +4,7 @@ La première phase livre l'objectif immédiat : une interface simple pour obteni
 
 ![Mise en œuvre : 4 phases, 3 portes](../assets/diagrams/feuille-de-route.png)
 
-La phase 1 réutilise le mannequin déjà prototypé et la bibliothèque GarmentCode ; la phase 2 rejoint le niveau des applications de gestion déjà présentes sur le marché ; la phase 3 ouvre la plateforme aux vendeurs de tissus et aux prestataires (catalogue, stock, commandes au mètre, sous-traitance) et ferme la boucle de la filière ; les phases 3 et 4 portent la différence.
+La phase 1 réutilise le mannequin déjà prototypé et s'appuie désormais sur FreeSewing et sur un document de modèle rejoué dans le navigateur ([plan d'action](../suivi/plan-action-plateforme.md) : le 2D d'abord, puis la 3D) ; la phase 2 rejoint le niveau des applications de gestion déjà présentes sur le marché ; la phase 3 ouvre la plateforme aux vendeurs de tissus et aux prestataires (catalogue, stock, commandes au mètre, sous-traitance) et ferme la boucle de la filière ; les phases 3 et 4 portent la différence.
 
 **Risques principaux**
 
@@ -20,3 +20,6 @@ La phase 1 réutilise le mannequin déjà prototypé et la bibliothèque Garment
 | Adoption par les vendeurs de tissus  | Catalogue vide, boucle ouverte                     | Fiche tissu par photo et note vocale, import de tableur, stock simplifié (métrage par rouleau), commandes reçues sur WhatsApp, premières commandes apportées par les ateliers pilotes |
 | Stock affiché faux                   | Commandes impossibles à servir, perte de confiance | Réservation limitée dans le temps, confirmation de coupe par le vendeur, ajustement du stock en un geste, fiabilité du vendeur visible                                                |
 | Qualité des fiches tissus            | Couleur ou tombé trompeurs, litiges                | Mire obligatoire, validation par le vendeur, mention « estimé », avis sur le tissu reçu                                                                                               |
+| Dépendance à FreeSewing              | Tracés figés ou cassés par une mise à jour         | Version épinglée, adaptateur unique, fiches testées sur 5 tailles et les bornes des options (ADR 0019)                                                                                |
+| Appareils modestes et 3D locale      | Studio lent, batterie                              | Maillage grossier, niveaux de qualité, 2D toujours disponible, budgets vérifiés (ADR 0021)                                                                                            |
+| Interface jugée complexe             | Faible adoption du studio                          | Une scène, un fil, tout annulable, tests d'usage à chaque porte (ADR 0022)                                                                                                            |

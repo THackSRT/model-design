@@ -1,5 +1,9 @@
 # Proposition : studio temps réel (phase 1, lots 7 à 11)
 
+!!! warning "Remplacée"
+Cette proposition est remplacée par le [plan d'action de la plateforme](plan-action-plateforme.md) du
+4 octobre 2026 (ADR 0019 à 0023). Elle reste ici pour l'historique.
+
 **Statut : proposition à valider, version 3 (3 octobre 2026).** Elle suit le flux demandé par l'utilisateur et
 l'exigence d'un moteur générique et dynamique, sans aucun réglage par vêtement. Rien n'est inscrit au
 [tableau des travaux](travaux.md) avant la validation ; ensuite, `/planifier` inscrit les lots et `/livrer` lance le

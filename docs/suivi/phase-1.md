@@ -3,6 +3,15 @@
 Objectif : une interface simple pour **obtenir les patrons, les modifier et les voir sur un mannequin 2D et 3D**.
 Porte de sortie : des patrons validés sur toile par un modéliste.
 
+## Direction depuis le 4 octobre 2026
+
+La phase 1 se termine avec le studio v2 : FreeSewing et document de modèle ([ADR 0019](../adr/0019-trace-freesewing.md),
+[ADR 0020](../adr/0020-document-de-modele-et-operations.md)), calcul local et moteurs TypeScript
+([ADR 0021](../adr/0021-studio-local-et-refonte-des-moteurs.md)), interface v2
+([ADR 0022](../adr/0022-interface-du-studio-v2.md)), IA préparée ([ADR 0023](../adr/0023-preparation-ia.md)). Le 2D
+d'abord, puis la 3D. Feuille de route : lots 7 à 12 du [plan d'action](plan-action-plateforme.md) ; preuve : [essai
+des tuniques](essai-tuniques.md).
+
 ## Ce qui est prêt
 
 - **Historique et comparaison des versions** : chaque calcul d'un patron crée une nouvelle version stockée au
@@ -98,5 +107,16 @@ Chaque ligne est dimensionnée pour une demande de fusion (humain ou agent).
     essais d'atelier (pesée, épaisseur, allongement, rigidité, frottement), essai de Cusick simulé ;
     features : modèle de vue, import/export du rapport ; studio : onglets Patron | Tissus et écran du banc
     avec Worker de Cusick.
-14. **Plateforme** : construction des images en CI, charts Helm, environnement de recette.
-15. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées.
+14. **Plateforme** : construction des images en CI, charts Helm, environnement de recette (reporté en phase 2).
+15. **Porte** : toiles d'essai coupées depuis les exports, écarts notés et corrigés, références golden figées (lot 12).
+16. ⬜ **Lot 7 — Fondations 2D** : contrats du document de modèle, `engines/drafting` (FreeSewing, fiches,
+    opérations), `engines/cutting`, `engines/flats`, versions du document dans `designs`, mannequin étendu
+    (1.53–1.61).
+17. ⬜ **Lot 8 — Studio v2, parcours 2D** : jetons et composants v2, magasin du document et commandes, scène et
+    fil, étapes Modèle, Édition, Matières, Patrons, Habillage, tests d'usage (1.62–1.70).
+18. ⬜ **Lot 9 — 3D interactive** : drapé pas à pas en Worker, manche sous l'aisselle, vue 3D texturée,
+    budgets (1.71–1.75).
+19. ⬜ **Lot 10 — Préparation de l'IA** : commandes exportées en outils, panneau Assistant, contrat de la
+    passerelle, jeu d'évaluation (1.76–1.78).
+20. ⬜ **Lot 11 — Nettoyage** : retrait des moteurs Python et de l'ancien studio, budgets vérifiés (1.79–1.80).
+21. ⬜ **Lot 12 — Porte** : toiles des cinq tuniques et du catalogue 1, revue de la phase (1.81–1.82).

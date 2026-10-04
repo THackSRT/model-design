@@ -15,7 +15,7 @@ des tâches entre sous-agents (`docs/demarrer/orchestration.md`).
 | `contracts/` | Source de vérité des échanges : JSON Schema, OpenAPI, AsyncAPI                                                         | `contracts/README.md` |
 | `apps/`      | Applications (studio web ; mobile à venir)                                                                             | `apps/studio`         |
 | `services/`  | Microservices TypeScript (NestJS), un contexte métier chacun                                                           | `services/designs`    |
-| `engines/`   | Moteurs de calcul : Python (patronage, production) et TypeScript (mannequin, drapé)                                    | `engines/patterning`  |
+| `engines/`   | Moteurs de calcul TypeScript (mannequin, drapé ; à venir : `drafting`, `cutting`, `flats`) ; Python gelé (ADR 0021)    | `engines/drape`       |
 | `packages/`  | Bibliothèques TS : `kernel`, `contracts-ts` (généré), `service-kit`, `design-tokens`, `ui-web`, `features`, `viewer3d` | —                     |
 | `py/`        | Bibliothèques Python : `contracts` (généré), `engine-kit`                                                              | —                     |
 | `tools/`     | Générateurs (`tools/generators`) et génération des contrats (`tools/contracts`)                                        | —                     |
@@ -60,6 +60,9 @@ pnpm nx run @atelier/studio:dev                                     # studio, ht
 8. **Tout comportement est testé** ; un bogue corrigé laisse un test qui l'aurait vu.
 9. **`pnpm check` doit passer** avant toute demande de fusion.
 10. **Les décisions sont écrites** : nouvelle dépendance ou exception → une ADR dans `docs/adr/`.
+11. **Le studio calcule dans le navigateur** (ADR 0021) : un moteur de la boucle d'édition est en TypeScript, sans
+    DOM ni `node:*` dans son cœur, avec une entrée Worker et une entrée Node ; toute action du studio est une
+    commande typée (ADR 0022, 0023). Feuille de route : `docs/suivi/plan-action-plateforme.md`.
 
 ## Façon de travailler
 

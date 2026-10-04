@@ -9,6 +9,9 @@ fonctionne de bout en bout : le studio web envoie les mesures au service `design
 patron par le moteur de patronage ; le mannequin MakeHuman est ajusté aux mesures dans le navigateur et
 affiché en 3D. Détail et prochaines étapes : [Phase 1](suivi/phase-1.md) · reste à faire : [Tableau des travaux](suivi/travaux.md) · historique : [Changelog](suivi/changelog.md).
 
+**Octobre 2026** : la preuve de concept des [cinq tuniques](suivi/essai-tuniques.md) recentre la phase 1 sur le
+studio, calculé dans le navigateur : le 2D d'abord, puis la 3D. Voir le [plan d'action](suivi/plan-action-plateforme.md).
+
 ## Par où commencer
 
 | Vous voulez…                                     | Lisez                                            |

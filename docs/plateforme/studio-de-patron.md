@@ -5,6 +5,11 @@ ajusté aux mêmes mesures. C'est l'écran de la phase 1. Deux onglets : **Patro
 pour valider et paramétrer les préréglages des tissus. Quatre types de vêtement sont proposés : jupe droite, jupe
 cercle, pantalon et corsage (avec ou sans manches) ; les tracés de GarmentCode sont validés par référence.
 
+!!! info "Studio v2 en préparation"
+Le studio est refait autour d'une scène unique et d'un fil de six étapes (modèle, édition, matières, patrons,
+habillage, 3D), calculé dans le navigateur : voir le [plan d'action](../suivi/plan-action-plateforme.md) et
+l'[ADR 0022](../adr/0022-interface-du-studio-v2.md). Cette page décrit le studio actuel.
+
 ![Studio de patron : mesures à gauche, patron devant et dos au centre, mannequin 3D à droite](../assets/ecrans/studio-phase-1.png)
 
 ## Utiliser le studio

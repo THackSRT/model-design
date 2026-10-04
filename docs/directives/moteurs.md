@@ -3,7 +3,10 @@
 Un moteur est un cœur de calcul pur entouré d'adaptateurs minces : une API pour les appels rapides, un worker pour
 les tâches de la file. Il ne possède pas de base de données et ne connaît aucun service : il reçoit
 des entrées, rend un résultat. Les moteurs de référence sont `engines/patterning` (patronage) et
-`engines/manufacturing` (fabrication) en Python ; `engines/drape` (drapé) est en TypeScript (ADR 0013).
+`engines/manufacturing` (fabrication) en Python ; `engines/drape` (drapé) est en TypeScript (ADR 0013). Depuis
+l'[ADR 0021](../adr/0021-studio-local-et-refonte-des-moteurs.md), les moteurs de la boucle d'édition sont en
+TypeScript (`engines/drafting`, `engines/cutting`, `engines/flats`, sur le modèle de `engines/drape` et
+`engines/mannequin`) ; les deux moteurs Python sont gelés jusqu'à leur retrait.
 
 ```text
 engines/patterning/
@@ -41,3 +44,18 @@ engines/patterning/
   deux bords cousus ensemble de même longueur, sortie conforme au contrat.
 - **Budget de temps** _(à venir)_ : un test échoue si le patronage d'un modèle de référence dépasse le temps
   visé (moins d'une seconde).
+
+## Moteurs TypeScript du studio
+
+- **Cœur pur** : ni DOM ni `node:*` dans le cœur ; deux entrées minces, `worker.ts` pour le navigateur et `node.ts`
+  pour le serveur, qui rendent le même résultat octet pour octet.
+- **Budget en test** : chaque moteur a un test de temps sur ses références (tracé et opérations moins de 10 ms,
+  dessin moins de 4 ms, première image 3D moins de 1 s) ; dépasser fait échouer `pnpm check`.
+- **FreeSewing** ([ADR 0019](../adr/0019-trace-freesewing.md)) : seul l'adaptateur de `engines/drafting` l'importe ;
+  version épinglée, tracé en métrique, sorties arrondies à 0,001 mm ; une fiche de couture par modèle, testée sur
+  5 tailles et aux bornes des options ; l'embu se déclare dans la fiche.
+- **Opérations** ([ADR 0020](../adr/0020-document-de-modele-et-operations.md)) : aucune ne lit un nom de vêtement
+  (règle de lint) ; chacune a son schéma dans `contracts/` et des tests de propriétés sur des compositions tirées au
+  hasard (coutures appariées, contours simples, régions couvrantes).
+- **Références golden** : les sorties de `drafting`, `cutting` et `flats` (GarmentSpec, SVG, DXF) ont leurs
+  références ; même règle qu'ailleurs, un modéliste valide toute mise à jour.

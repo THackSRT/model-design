@@ -140,9 +140,16 @@ nav:
       - 0016 Storybook et captures comparées: adr/0016-storybook-et-captures.md
       - 0017 Tests de bout en bout: adr/0017-tests-de-bout-en-bout.md
       - 0018 Bras à l'horizontale: adr/0018-bras-a-l-horizontale.md
+      - 0019 Tracé FreeSewing: adr/0019-trace-freesewing.md
+      - 0020 Document de modèle et opérations: adr/0020-document-de-modele-et-operations.md
+      - 0021 Studio local et moteurs: adr/0021-studio-local-et-refonte-des-moteurs.md
+      - 0022 Interface du studio v2: adr/0022-interface-du-studio-v2.md
+      - 0023 Préparation à l'IA: adr/0023-preparation-ia.md
   - Suivi:
       - Tableau des travaux: suivi/travaux.md
       - Phase 1: suivi/phase-1.md
+      - Plan d'action plateforme: suivi/plan-action-plateforme.md
+      - Essai des tuniques: suivi/essai-tuniques.md
       - Proposition temps réel: suivi/proposition-temps-reel.md
       - Recherche temps réel: suivi/recherche-temps-reel.md
       - Essai de FreeSewing: suivi/essai-freesewing.md
