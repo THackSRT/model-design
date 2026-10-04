@@ -33,6 +33,14 @@
   },
   "nx": {
     "targets": {
+      "test": {
+        "inputs": [
+          "default",
+          "^production",
+          "{workspaceRoot}/contracts/examples/**/*",
+          "{workspaceRoot}/engines/patterning/tests/golden/**/*"
+        ]
+      },
       "test:integration": {
         "dependsOn": [
           "^build"

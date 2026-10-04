@@ -5,13 +5,16 @@ export const garmentSpecJsonSchema = {
   $id: 'https://atelier.example/schemas/garment-spec.schema.json',
   title: 'GarmentSpec',
   description:
-    'Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique.',
+    'Spécification de patron, format pivot de la plateforme (inspiré de GarmentCode). Coordonnées en millimètres, y vers le haut, pièces à plat, vues côté endroit du tissu, contour dans le sens trigonométrique. La version 1.1 (ADR 0020) ajoute, tous facultatifs, le rôle sémantique des bords, les matières, les pièces entoilées et les marques de pose : une spécification 1.0 reste valide.',
   type: 'object',
   additionalProperties: false,
   required: ['specVersion', 'unit', 'engine', 'garment', 'panels', 'seams'],
   properties: {
     specVersion: {
-      const: '1.0',
+      type: 'string',
+      enum: ['1.0', '1.1'],
+      description:
+        "Version du format. Un producteur écrit 1.1 dès qu'il remplit un champ de la version 1.1 (materials, Panel.material, Panel.interfaced, Panel.marks, Edge.semanticRole), 1.0 sinon ; un lecteur 1.1 lit les deux.",
     },
     unit: {
       const: 'mm',
@@ -61,6 +64,15 @@ export const garmentSpecJsonSchema = {
         type: 'string',
       },
     },
+    materials: {
+      type: 'object',
+      description:
+        'Table des matières du vêtement (1.1), par clé au format MaterialKey : Panel.material et LineMark.material y renvoient, et toute clé citée y figure. Absente : matière unique, non nommée.',
+      maxProperties: 50,
+      additionalProperties: {
+        $ref: '#/$defs/Material',
+      },
+    },
   },
   $defs: {
     Point: {
@@ -100,9 +112,37 @@ export const garmentSpecJsonSchema = {
         },
         role: {
           type: 'string',
+          description:
+            "Rôle structurel : comment le bord se coupe et se finit (valeur de couture par rôle, pliure). seam : couture ; fold : pliure de coupe d'une pièce cutOnFold ; hem : ourlet ; waistline : bord de taille ; opening : bord laissé libre (ex. encolure). Absent : seam. Où se trouve le bord sur le vêtement : semanticRole.",
           enum: ['seam', 'fold', 'hem', 'waistline', 'opening'],
         },
+        semanticRole: {
+          $ref: '#/$defs/EdgeSemanticRole',
+        },
       },
+    },
+    EdgeSemanticRole: {
+      type: 'string',
+      description:
+        "Rôle sémantique d'un bord (1.1) : où il se trouve sur le vêtement. Les opérations du document de modèle (ADR 0020) ne lisent que ces rôles et des repères ; la coupe et les crans s'en servent aussi. Indépendant du rôle structurel (role). neckline : encolure ; shoulder : épaule ; armhole : emmanchure ; side : côté (couture de côté du corps ou de la jupe) ; hem : bas du vêtement (corps, jupe ou jambe) ; centerFront : milieu devant ; centerBack : milieu dos ; sleeveCap : tête de manche ; underarm : dessous de bras (couture de la manche) ; sleeveHem : bas de manche (ourlet ou montage du poignet) ; waist : taille ; inseam : entrejambe ; outseam : côté extérieur de jambe ; rise : montant (couture de fourche, de la taille à l'entrejambe) ; dart : jambe de pince ; styleLine : découpe (couture entre deux régions d'une même face : plastron, empiècement, bande rapportée, bloc de couleur). Un bord coupé en sous-bords garde son rôle sur chacun. Absent : bord sans rôle connu (pièce ajoutée : poche, patte…).",
+      enum: [
+        'neckline',
+        'shoulder',
+        'armhole',
+        'side',
+        'hem',
+        'centerFront',
+        'centerBack',
+        'sleeveCap',
+        'underarm',
+        'sleeveHem',
+        'waist',
+        'inseam',
+        'outseam',
+        'rise',
+        'dart',
+        'styleLine',
+      ],
     },
     Panel: {
       type: 'object',
@@ -145,7 +185,7 @@ export const garmentSpecJsonSchema = {
         notches: {
           type: 'array',
           description:
-            'Crans posés par le moteur de patronage (tête de manche, ligne des hanches, milieux).',
+            "Crans posés par le moteur (tête de manche et emmanchures, milieux, ligne des hanches, arrêt de fente). Sur un bord cousu avec embu (Seam.easeMm), le cran se place le long de ce bord, embu compris : le cran qui lui répond sur l'autre bord n'est pas à la même distance.",
           maxItems: 200,
           items: {
             $ref: '#/$defs/Notch',
@@ -153,6 +193,25 @@ export const garmentSpecJsonSchema = {
         },
         placement: {
           $ref: '#/$defs/PanelPlacement',
+        },
+        material: {
+          $ref: '#/$defs/MaterialKey',
+          description:
+            'Matière de la pièce (1.1) : clé de GarmentSpec.materials. Absente : matière non précisée ; la coupe regroupe ces pièces dans une même matière.',
+        },
+        interfaced: {
+          type: 'boolean',
+          description:
+            "Pièce entoilée (1.1) : elle se coupe aussi dans l'entoilage, même forme et même nombre. Absent : pièce non entoilée.",
+        },
+        marks: {
+          type: 'array',
+          description:
+            'Marques de pose de la pièce (1.1, ADR 0020) : poche, galon, boutons, fentes, zone de broderie, plis. Absent ou vide : aucune marque.',
+          maxItems: 100,
+          items: {
+            $ref: '#/$defs/PlacementMark',
+          },
         },
       },
     },
@@ -290,6 +349,245 @@ export const garmentSpecJsonSchema = {
         },
       ],
       unevaluatedProperties: false,
+    },
+    MaterialKey: {
+      type: 'string',
+      description:
+        "Clé d'une matière dans GarmentSpec.materials (ex. main, contrast, bogolan) : un identifiant, jamais affiché.",
+      pattern: '^[a-z][A-Za-z0-9-]{0,63}$',
+    },
+    Material: {
+      type: 'object',
+      description:
+        "Matière d'une pièce ou d'une marque (tissu principal, tissu de contraste, galon…), reprise du document de modèle (ADR 0020).",
+      additionalProperties: false,
+      required: ['name'],
+      properties: {
+        name: {
+          type: 'string',
+          description:
+            "Nom affiché sur le plan de coupe, la liste de coupe et les fournitures (ex. Coton blanc). Texte d'une ligne, jamais de donnée de client.",
+          minLength: 1,
+          maxLength: 80,
+          pattern: '^[^\\x00-\\x1F\\x7F]+$',
+        },
+      },
+    },
+    MarkLabel: {
+      type: 'string',
+      description:
+        'Texte court écrit près de la marque sur les patrons (ex. poche, galon rayé) : une ligne, jamais de donnée de client.',
+      minLength: 1,
+      maxLength: 80,
+      pattern: '^[^\\x00-\\x1F\\x7F]+$',
+    },
+    MarkCopy: {
+      type: 'string',
+      description:
+        "Exemplaire de la pièce qui porte la marque, pour une pièce au pli ou en double (quantity: 2) : drawn, la pièce telle que dessinée (la moitié dessinée d'une pièce au pli) ; mirrored, sa copie retournée (l'autre moitié d'une pièce au pli, le second exemplaire d'une pièce en double). Les points restent donnés dans le repère de la pièce dessinée et se retournent avec la copie. Absent : tous les exemplaires (marque symétrique). Le côté du porteur de chaque exemplaire suit PanelPlacement. Une pièce au pli dont une marque n'est que sur un exemplaire se coupe dépliée.",
+      enum: ['drawn', 'mirrored'],
+    },
+    PlacementMark: {
+      description:
+        "Marque de pose d'une pièce (1.1, ADR 0020), dans le repère de la pièce dessinée (mm, y vers le haut, vue côté endroit, comme ses bords), selon kind : line (ligne ouverte), outline (contour fermé), button (bouton), slit (fente à couper), zone (zone fermée à orner), fold (ligne de pli intérieure). Un contour fermé ne répète pas son premier point.",
+      oneOf: [
+        {
+          $ref: '#/$defs/LineMark',
+        },
+        {
+          $ref: '#/$defs/OutlineMark',
+        },
+        {
+          $ref: '#/$defs/ButtonMark',
+        },
+        {
+          $ref: '#/$defs/SlitMark',
+        },
+        {
+          $ref: '#/$defs/ZoneMark',
+        },
+        {
+          $ref: '#/$defs/FoldMark',
+        },
+      ],
+    },
+    LineMark: {
+      type: 'object',
+      description:
+        "Ligne de pose ouverte (polyligne), par exemple l'axe d'un galon cousu en surface.",
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'line',
+        },
+        points: {
+          type: 'array',
+          description: "Points de la ligne, dans l'ordre.",
+          minItems: 2,
+          maxItems: 1000,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        material: {
+          $ref: '#/$defs/MaterialKey',
+          description:
+            'Matière posée sur la ligne (ex. galon) : clé de GarmentSpec.materials. Absente : simple repère.',
+        },
+        widthMm: {
+          type: 'number',
+          description:
+            "Largeur de ce qui se pose sur la ligne (ex. galon), en millimètres ; la ligne en est l'axe.",
+          exclusiveMinimum: 0,
+          maximum: 300,
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
+    },
+    OutlineMark: {
+      type: 'object',
+      description: "Contour de pose fermé, par exemple l'emplacement d'une poche plaquée.",
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'outline',
+        },
+        points: {
+          type: 'array',
+          description: "Sommets du contour, dans l'ordre ; le dernier rejoint le premier.",
+          minItems: 3,
+          maxItems: 1000,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
+    },
+    ButtonMark: {
+      type: 'object',
+      description: "Emplacement d'un bouton.",
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'button',
+        },
+        points: {
+          type: 'array',
+          description: 'Centre du bouton (un point).',
+          minItems: 1,
+          maxItems: 1,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        diameterMm: {
+          type: 'number',
+          description: 'Diamètre du bouton, en millimètres.',
+          minimum: 3,
+          maximum: 80,
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
+    },
+    SlitMark: {
+      type: 'object',
+      description:
+        "Fente à couper dans la pièce (segment), par exemple une fente d'encolure, de patte ou de poignet.",
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'slit',
+        },
+        points: {
+          type: 'array',
+          description: 'Début et fin de la fente.',
+          minItems: 2,
+          maxItems: 2,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
+    },
+    ZoneMark: {
+      type: 'object',
+      description: "Zone fermée à orner, par exemple une zone de broderie le long de l'encolure.",
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'zone',
+        },
+        points: {
+          type: 'array',
+          description:
+            "Sommets du contour de la zone, dans l'ordre ; le dernier rejoint le premier.",
+          minItems: 3,
+          maxItems: 1000,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
+    },
+    FoldMark: {
+      type: 'object',
+      description:
+        'Ligne de pli intérieure (segment) : la pièce se plie sur cette ligne (poignet, rabat de poche, patte).',
+      additionalProperties: false,
+      required: ['kind', 'points'],
+      properties: {
+        kind: {
+          const: 'fold',
+        },
+        points: {
+          type: 'array',
+          description: 'Extrémités de la ligne de pli.',
+          minItems: 2,
+          maxItems: 2,
+          items: {
+            $ref: '#/$defs/Point',
+          },
+        },
+        label: {
+          $ref: '#/$defs/MarkLabel',
+        },
+        copy: {
+          $ref: '#/$defs/MarkCopy',
+        },
+      },
     },
   },
 } as const;

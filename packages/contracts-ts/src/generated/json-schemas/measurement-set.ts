@@ -5,7 +5,7 @@ export const measurementSetJsonSchema = {
   $id: 'https://atelier.example/schemas/measurement-set.schema.json',
   title: 'MeasurementSet',
   description:
-    "Mesures du corps d'un client (ISO 8559-1), en millimètres entiers. Une mesure facultative absente est estimée par le moteur de patronage, qui la liste dans GarmentSpec.estimatedMeasurements.",
+    "Mesures du corps d'un client (ISO 8559-1, complétées des mesures de FreeSewing qu'elle n'a pas), en millimètres entiers (suffixe Mm) ; la pente d'épaule en degrés entiers (suffixe Deg). Données personnelles sensibles : jamais journalisées. Une mesure facultative absente est estimée par le moteur (patronage, tracé ou mannequin) ; le patronage la liste dans GarmentSpec.estimatedMeasurements. Correspondance avec les noms FreeSewing : docs/composants/contrats.md.",
   type: 'object',
   additionalProperties: false,
   required: ['sex', 'statureMm', 'chestGirthMm', 'waistGirthMm', 'hipGirthMm'],
@@ -102,6 +102,83 @@ export const measurementSetJsonSchema = {
         "Longueur de bras : du point d'épaule au poignet, coude légèrement plié (ISO 8559-1 : arm length).",
       minimum: 400,
       maximum: 900,
+    },
+    upperHipGirthMm: {
+      type: 'integer',
+      description:
+        'Tour de hanches hautes, horizontal, à la hauteur du sommet des crêtes iliaques, entre la taille et le tour de bassin (FreeSewing : hips). Distinct de hipGirthMm, le tour le plus fort (FreeSewing : seat).',
+      minimum: 500,
+      maximum: 1900,
+    },
+    waistGirthBackMm: {
+      type: 'integer',
+      description:
+        "Part dos du tour de taille : d'un point de côté à l'autre en passant par le dos, le long du corps (FreeSewing : waistBack ; son waistBackArc en est la moitié).",
+      minimum: 200,
+      maximum: 1000,
+    },
+    hipGirthBackMm: {
+      type: 'integer',
+      description:
+        "Part dos du tour de bassin (hipGirthMm) : d'un point de côté à l'autre en passant par le dos, le long du corps (FreeSewing : seatBack ; son seatBackArc en est la moitié).",
+      minimum: 300,
+      maximum: 1100,
+    },
+    shoulderSlopeDeg: {
+      type: 'integer',
+      description:
+        "Pente d'épaule, en degrés sous l'horizontale : angle de la droite qui va du point d'encolure à l'épaule (côté du cou) au point d'épaule, vue de face (FreeSewing : shoulderSlope).",
+      minimum: 0,
+      maximum: 45,
+    },
+    waistToArmpitMm: {
+      type: 'integer',
+      description:
+        "De la taille au creux de l'aisselle, verticalement, sur le côté du corps (FreeSewing : waistToArmpit).",
+      minimum: 80,
+      maximum: 450,
+    },
+    waistToUpperHipMm: {
+      type: 'integer',
+      description:
+        'De la taille au niveau des hanches hautes (upperHipGirthMm), verticalement, sur le côté du corps (FreeSewing : waistToHips).',
+      minimum: 20,
+      maximum: 300,
+    },
+    crotchLengthMm: {
+      type: 'integer',
+      description:
+        "Longueur de fourche (montant total) : de la taille au milieu devant, entre les jambes, jusqu'à la taille au milieu dos, le long du corps (ISO 8559-1 : crotch length ; FreeSewing : crossSeam).",
+      minimum: 400,
+      maximum: 1500,
+    },
+    frontCrotchLengthMm: {
+      type: 'integer',
+      description:
+        "Part devant de la longueur de fourche : de la taille au milieu devant jusqu'au point de fourche, le plus bas du tronc entre les jambes, le long du corps ; la part dos vaut crotchLengthMm moins cette mesure (FreeSewing : crossSeamFront).",
+      minimum: 150,
+      maximum: 750,
+    },
+    waistToThighMm: {
+      type: 'integer',
+      description:
+        "De la taille au niveau du tour de cuisse (thighGirthMm, juste sous l'entrejambe), verticalement, sur le côté du corps (FreeSewing : waistToUpperLeg).",
+      minimum: 100,
+      maximum: 600,
+    },
+    highBustGirthMm: {
+      type: 'integer',
+      description:
+        'Tour de poitrine haute, horizontal, sous les bras et au-dessus de la poitrine (FreeSewing : highBust).',
+      minimum: 500,
+      maximum: 1800,
+    },
+    kneeHeightMm: {
+      type: 'integer',
+      description:
+        'Hauteur du genou depuis le sol, verticalement (ISO 8559-1 : knee height). Le waistToKnee de FreeSewing vaut waistHeightMm moins cette hauteur.',
+      minimum: 200,
+      maximum: 700,
     },
   },
 } as const;

@@ -10,10 +10,16 @@ terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'i
 | Membre                                                                        | `Member`                                                                   | organizations                  |
 | Fiche client                                                                  | `CustomerProfile`                                                          | customers                      |
 | Jeu de mesures                                                                | `MeasurementSet`                                                           | customers                      |
+| Tour de bassin (le plus fort), tour de hanches hautes (crêtes iliaques)       | `hipGirthMm`, `upperHipGirthMm`                                            | customers                      |
+| Part dos d'un tour, longueur de fourche (montant), pente d'épaule             | `waistGirthBackMm`, `hipGirthBackMm`, `crotchLengthMm`, `shoulderSlopeDeg` | customers                      |
+| Tour de poitrine haute (sous les bras), hauteur du genou (depuis le sol)      | `highBustGirthMm`, `kneeHeightMm`                                          | customers                      |
 | Avatar                                                                        | `Avatar`                                                                   | avatars                        |
 | Modèle, version de modèle                                                     | `Design`, `DesignVersion`                                                  | designs                        |
 | Patron (spécification), pièce, bord, couture, cran, emplacement de cran       | `GarmentSpec`, `Panel`, `Edge`, `Seam`, `Notch`, `NotchPlacement`          | designs                        |
 | Placement d'une pièce autour du corps                                         | `Panel.placement` : zone, côté, sens, ancrage, aisance                     | designs, moteur patronage      |
+| Rôle d'un bord : structurel (coupe, finition), sémantique (place)             | `Edge.role`, `Edge.semanticRole` (`EdgeSemanticRole`)                      | designs, moteur de tracé       |
+| Matière, table des matières, pièce entoilée                                   | `Material`, `GarmentSpec.materials`, `Panel.material`, `Panel.interfaced`  | designs, tracé, coupe          |
+| Marque de pose (ligne, contour, bouton, fente, zone, pli), exemplaire marqué  | `PlacementMark` (`kind`), `MarkCopy` : `drawn`, `mirrored`                 | designs, tracé, coupe          |
 | Habillage (vêtement sur le corps, géométrique)                                | `GarmentMesh`, `dressMannequin()`                                          | mannequin                      |
 | Drapé (vêtement simulé avec dynamique physique)                               | `Drape` : spécification, avatar, tissu, résultat glTF                      | designs, moteur drapé          |
 | Zone trop juste (lieu où le vêtement est serré)                               | `tightZones`, perte d'aisance                                              | mannequin, drapé               |
@@ -52,8 +58,8 @@ terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'i
   se fait dans l'adaptateur du moteur, nulle part ailleurs (`engines/mannequin/src/index.ts`,
   `engines/patterning/src/patterning/spec/`).
 - **Autres grandeurs physiques** : l'unité est le suffixe du nom : `G` (grammes), `Mm2`, `GPerM2`, `Percent`,
-  `Deg` (degrés, `armAngleDeg`, `slideAnglesDeg`), `MicroNm` (µN·m) ; une grandeur sans unité le dit dans sa
-  description (`frictionCoefficient`, `drapeCoefficient`).
+  `Deg` (degrés, `armAngleDeg`, `slideAnglesDeg`, `shoulderSlopeDeg`), `MicroNm` (µN·m) ; une grandeur sans unité
+  le dit dans sa description (`frictionCoefficient`, `drapeCoefficient`).
 - **Montants** : entier dans la plus petite unité de la devise + code ISO 4217
   (`{ amountMinor: 15000, currency: "XOF" }`, type `Money` de `@atelier/kernel`) ; jamais de nombre à virgule.
 - **Dates** : ISO 8601 en UTC dans le code, les contrats et la base ; conversion au fuseau de l'utilisateur à
@@ -63,5 +69,8 @@ terme s'ajoute à ce tableau dans la même demande de fusion que le code qui l'i
 - **Crans** : emplacement sur un bord (`NotchPlacement`) : identifiant du bord, distance en mm depuis le début du
   bord, nombre de crans (1–3) et source (`requested` : demandé par la requête ou fourni par la spécification du patron ; `auto` : posé par le
   moteur à une jonction de coutures ou aux extrémités d'une pince).
-  `Notch` et `NotchRequest` l'étendent, selon le contexte.
+  `Notch` et `NotchRequest` l'étendent, selon le contexte. Sur un bord cousu avec embu (`Seam.easeMm`, tête de
+  manche), la distance se mesure le long de ce bord, embu compris.
+- **Versions de GarmentSpec** : `specVersion` 1.0 ou 1.1 ; la 1.1 ajoute des champs facultatifs (rôle sémantique,
+  matières, pièces entoilées, marques de pose) et un producteur ne la déclare que s'il en remplit un.
 - **Événements** : `<entité>.<verbe au passé>` en minuscules (`design.versioned`, `stock.reserved`).

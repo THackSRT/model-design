@@ -101,3 +101,69 @@ class MeasurementSet(BaseModel):
         ge=400,
         le=900,
     )
+    upperHipGirthMm: int | None = Field(
+        None,
+        description="Tour de hanches hautes, horizontal, à la hauteur du sommet des crêtes iliaques, entre la taille et le tour de bassin (FreeSewing : hips). Distinct de hipGirthMm, le tour le plus fort (FreeSewing : seat).",
+        ge=500,
+        le=1900,
+    )
+    waistGirthBackMm: int | None = Field(
+        None,
+        description="Part dos du tour de taille : d'un point de côté à l'autre en passant par le dos, le long du corps (FreeSewing : waistBack ; son waistBackArc en est la moitié).",
+        ge=200,
+        le=1000,
+    )
+    hipGirthBackMm: int | None = Field(
+        None,
+        description="Part dos du tour de bassin (hipGirthMm) : d'un point de côté à l'autre en passant par le dos, le long du corps (FreeSewing : seatBack ; son seatBackArc en est la moitié).",
+        ge=300,
+        le=1100,
+    )
+    shoulderSlopeDeg: int | None = Field(
+        None,
+        description="Pente d'épaule, en degrés sous l'horizontale : angle de la droite qui va du point d'encolure à l'épaule (côté du cou) au point d'épaule, vue de face (FreeSewing : shoulderSlope).",
+        ge=0,
+        le=45,
+    )
+    waistToArmpitMm: int | None = Field(
+        None,
+        description="De la taille au creux de l'aisselle, verticalement, sur le côté du corps (FreeSewing : waistToArmpit).",
+        ge=80,
+        le=450,
+    )
+    waistToUpperHipMm: int | None = Field(
+        None,
+        description="De la taille au niveau des hanches hautes (upperHipGirthMm), verticalement, sur le côté du corps (FreeSewing : waistToHips).",
+        ge=20,
+        le=300,
+    )
+    crotchLengthMm: int | None = Field(
+        None,
+        description="Longueur de fourche (montant total) : de la taille au milieu devant, entre les jambes, jusqu'à la taille au milieu dos, le long du corps (ISO 8559-1 : crotch length ; FreeSewing : crossSeam).",
+        ge=400,
+        le=1500,
+    )
+    frontCrotchLengthMm: int | None = Field(
+        None,
+        description="Part devant de la longueur de fourche : de la taille au milieu devant jusqu'au point de fourche, le plus bas du tronc entre les jambes, le long du corps ; la part dos vaut crotchLengthMm moins cette mesure (FreeSewing : crossSeamFront).",
+        ge=150,
+        le=750,
+    )
+    waistToThighMm: int | None = Field(
+        None,
+        description="De la taille au niveau du tour de cuisse (thighGirthMm, juste sous l'entrejambe), verticalement, sur le côté du corps (FreeSewing : waistToUpperLeg).",
+        ge=100,
+        le=600,
+    )
+    highBustGirthMm: int | None = Field(
+        None,
+        description="Tour de poitrine haute, horizontal, sous les bras et au-dessus de la poitrine (FreeSewing : highBust).",
+        ge=500,
+        le=1800,
+    )
+    kneeHeightMm: int | None = Field(
+        None,
+        description="Hauteur du genou depuis le sol, verticalement (ISO 8559-1 : knee height). Le waistToKnee de FreeSewing vaut waistHeightMm moins cette hauteur.",
+        ge=200,
+        le=700,
+    )

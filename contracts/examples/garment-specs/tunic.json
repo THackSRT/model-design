@@ -1,0 +1,462 @@
+{
+  "specVersion": "1.1",
+  "unit": "mm",
+  "engine": {
+    "name": "contract-example",
+    "version": "1"
+  },
+  "garment": {
+    "type": "tunic"
+  },
+  "materials": {
+    "main": {
+      "name": "Coton blanc"
+    },
+    "contrast": {
+      "name": "Bogolan noir et blanc"
+    },
+    "galon": {
+      "name": "Galon rayé noir et blanc"
+    }
+  },
+  "panels": [
+    {
+      "id": "front",
+      "name": "Devant",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [0, 0],
+          "to": [300, 0],
+          "role": "hem",
+          "semanticRole": "hem"
+        },
+        {
+          "id": "side",
+          "from": [300, 0],
+          "to": [300, 450],
+          "role": "seam",
+          "semanticRole": "side"
+        },
+        {
+          "id": "armhole",
+          "from": [300, 450],
+          "to": [220, 650],
+          "role": "seam",
+          "semanticRole": "armhole"
+        },
+        {
+          "id": "shoulder",
+          "from": [220, 650],
+          "to": [80, 690],
+          "role": "seam",
+          "semanticRole": "shoulder"
+        },
+        {
+          "id": "neckline",
+          "from": [80, 690],
+          "to": [0, 610],
+          "controls": [
+            [60, 640],
+            [30, 610]
+          ],
+          "role": "opening",
+          "semanticRole": "neckline"
+        },
+        {
+          "id": "center-front",
+          "from": [0, 610],
+          "to": [0, 0],
+          "role": "fold",
+          "semanticRole": "centerFront"
+        }
+      ],
+      "grainline": [
+        [150, 100],
+        [150, 500]
+      ],
+      "quantity": 1,
+      "cutOnFold": true,
+      "notches": [
+        {
+          "edgeId": "armhole",
+          "distanceMm": 90,
+          "count": 1
+        },
+        {
+          "edgeId": "side",
+          "distanceMm": 120,
+          "count": 1
+        }
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "front",
+        "anchor": {
+          "point": [0, 330],
+          "landmark": "waist"
+        }
+      },
+      "material": "main",
+      "marks": [
+        {
+          "kind": "line",
+          "points": [
+            [40, 560],
+            [190, 560]
+          ],
+          "material": "galon",
+          "widthMm": 40,
+          "label": "galon rayé",
+          "copy": "drawn"
+        },
+        {
+          "kind": "outline",
+          "points": [
+            [150, 300],
+            [270, 300],
+            [270, 440],
+            [150, 440]
+          ],
+          "label": "poche",
+          "copy": "mirrored"
+        },
+        {
+          "kind": "button",
+          "points": [[0, 560]],
+          "diameterMm": 13
+        },
+        {
+          "kind": "button",
+          "points": [[0, 500]],
+          "diameterMm": 13
+        },
+        {
+          "kind": "slit",
+          "points": [
+            [0, 610],
+            [0, 470]
+          ],
+          "label": "fente d'encolure"
+        },
+        {
+          "kind": "zone",
+          "points": [
+            [80, 690],
+            [0, 610],
+            [0, 580],
+            [62, 650]
+          ],
+          "label": "zone de broderie"
+        }
+      ]
+    },
+    {
+      "id": "back",
+      "name": "Dos",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [0, 0],
+          "to": [300, 0],
+          "role": "hem",
+          "semanticRole": "hem"
+        },
+        {
+          "id": "side",
+          "from": [300, 0],
+          "to": [300, 450],
+          "role": "seam",
+          "semanticRole": "side"
+        },
+        {
+          "id": "armhole",
+          "from": [300, 450],
+          "to": [220, 650],
+          "role": "seam",
+          "semanticRole": "armhole"
+        },
+        {
+          "id": "shoulder",
+          "from": [220, 650],
+          "to": [80, 690],
+          "role": "seam",
+          "semanticRole": "shoulder"
+        },
+        {
+          "id": "neckline",
+          "from": [80, 690],
+          "to": [0, 670],
+          "controls": [
+            [50, 680],
+            [20, 670]
+          ],
+          "role": "opening",
+          "semanticRole": "neckline"
+        },
+        {
+          "id": "center-back",
+          "from": [0, 670],
+          "to": [0, 0],
+          "role": "fold",
+          "semanticRole": "centerBack"
+        }
+      ],
+      "grainline": [
+        [150, 100],
+        [150, 500]
+      ],
+      "quantity": 1,
+      "cutOnFold": true,
+      "notches": [
+        {
+          "edgeId": "armhole",
+          "distanceMm": 90,
+          "count": 2
+        },
+        {
+          "edgeId": "side",
+          "distanceMm": 120,
+          "count": 1
+        }
+      ],
+      "placement": {
+        "zone": "torso",
+        "bodySide": "center",
+        "facing": "back",
+        "anchor": {
+          "point": [0, 330],
+          "landmark": "waist"
+        }
+      },
+      "material": "main"
+    },
+    {
+      "id": "sleeve",
+      "name": "Manche",
+      "edges": [
+        {
+          "id": "hem",
+          "from": [-120, 0],
+          "to": [120, 0],
+          "role": "hem",
+          "semanticRole": "sleeveHem"
+        },
+        {
+          "id": "underarm-front",
+          "from": [120, 0],
+          "to": [180, 420],
+          "role": "seam",
+          "semanticRole": "underarm"
+        },
+        {
+          "id": "cap-front",
+          "from": [180, 420],
+          "to": [0, 560],
+          "role": "seam",
+          "semanticRole": "sleeveCap"
+        },
+        {
+          "id": "cap-back",
+          "from": [0, 560],
+          "to": [-180, 420],
+          "role": "seam",
+          "semanticRole": "sleeveCap"
+        },
+        {
+          "id": "underarm-back",
+          "from": [-180, 420],
+          "to": [-120, 0],
+          "role": "seam",
+          "semanticRole": "underarm"
+        }
+      ],
+      "grainline": [
+        [0, 50],
+        [0, 450]
+      ],
+      "quantity": 2,
+      "notches": [
+        {
+          "edgeId": "cap-front",
+          "distanceMm": 95.28,
+          "count": 1
+        },
+        {
+          "edgeId": "cap-back",
+          "distanceMm": 0,
+          "count": 1
+        },
+        {
+          "edgeId": "cap-back",
+          "distanceMm": 132.76,
+          "count": 2
+        }
+      ],
+      "placement": {
+        "zone": "arm",
+        "bodySide": "right",
+        "facing": "outer",
+        "anchor": {
+          "point": [0, 560],
+          "landmark": "shoulder"
+        }
+      },
+      "material": "main"
+    },
+    {
+      "id": "pocket",
+      "name": "Poche",
+      "quantity": 1,
+      "material": "main",
+      "grainline": [
+        [60, 20],
+        [60, 140]
+      ],
+      "edges": [
+        {
+          "id": "bottom",
+          "from": [0, 0],
+          "to": [120, 0],
+          "role": "seam"
+        },
+        {
+          "id": "right",
+          "from": [120, 0],
+          "to": [120, 160],
+          "role": "seam"
+        },
+        {
+          "id": "opening",
+          "from": [120, 160],
+          "to": [0, 160],
+          "role": "hem"
+        },
+        {
+          "id": "left",
+          "from": [0, 160],
+          "to": [0, 0],
+          "role": "seam"
+        }
+      ],
+      "marks": [
+        {
+          "kind": "fold",
+          "points": [
+            [0, 130],
+            [120, 130]
+          ],
+          "label": "rabat"
+        }
+      ]
+    },
+    {
+      "id": "cuff",
+      "name": "Poignet",
+      "quantity": 2,
+      "material": "contrast",
+      "interfaced": true,
+      "grainline": [
+        [20, 60],
+        [240, 60]
+      ],
+      "edges": [
+        {
+          "id": "join",
+          "from": [0, 0],
+          "to": [260, 0],
+          "role": "seam",
+          "semanticRole": "sleeveHem"
+        },
+        {
+          "id": "right",
+          "from": [260, 0],
+          "to": [260, 120],
+          "role": "seam"
+        },
+        {
+          "id": "top",
+          "from": [260, 120],
+          "to": [0, 120],
+          "role": "seam"
+        },
+        {
+          "id": "left",
+          "from": [0, 120],
+          "to": [0, 0],
+          "role": "seam"
+        }
+      ],
+      "marks": [
+        {
+          "kind": "fold",
+          "points": [
+            [0, 60],
+            [260, 60]
+          ]
+        }
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "id": "side",
+      "a": {
+        "panelId": "front",
+        "edgeId": "side"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "side"
+      }
+    },
+    {
+      "id": "shoulder",
+      "a": {
+        "panelId": "front",
+        "edgeId": "shoulder"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "shoulder"
+      }
+    },
+    {
+      "id": "armhole-front",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-front"
+      },
+      "b": {
+        "panelId": "front",
+        "edgeId": "armhole"
+      },
+      "easeMm": 12.63
+    },
+    {
+      "id": "armhole-back",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "cap-back"
+      },
+      "b": {
+        "panelId": "back",
+        "edgeId": "armhole"
+      },
+      "easeMm": 12.63
+    },
+    {
+      "id": "sleeve-underarm",
+      "a": {
+        "panelId": "sleeve",
+        "edgeId": "underarm-front"
+      },
+      "b": {
+        "panelId": "sleeve",
+        "edgeId": "underarm-back"
+      }
+    }
+  ],
+  "estimatedMeasurements": ["shoulderSlopeDeg", "waistToArmpitMm"]
+}
