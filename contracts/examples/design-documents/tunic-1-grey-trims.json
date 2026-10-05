@@ -1,0 +1,62 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.28, "chestEase": 0.12, "cuffEase": 0.4 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Gris anthracite", "kind": "plain", "colors": ["#77797d"] },
+    "galon": { "name": "Galon rayé noir et blanc", "kind": "stripedTrim", "colors": ["#141414"] }
+  },
+  "operations": [
+    { "id": "neckline", "op": "neckline", "lowerMm": 10, "widenMm": 6 },
+    {
+      "id": "placket",
+      "op": "placket",
+      "lengthMm": 240,
+      "widthMm": 30,
+      "buttonCount": 4,
+      "material": "main"
+    },
+    { "id": "cuff", "op": "cuff", "heightMm": 65, "style": "french" },
+    {
+      "id": "pocket",
+      "op": "pocket",
+      "side": "left",
+      "position": { "landmark": "armholeBottom", "xFraction": 0.47, "dyMm": -95 },
+      "widthMm": 120,
+      "heightMm": 140
+    },
+    {
+      "id": "trim-right",
+      "op": "trim",
+      "side": "right",
+      "name": "Galon rayé",
+      "material": "galon",
+      "widthMm": 52,
+      "path": {
+        "points": [
+          { "edge": "armhole", "yMm": 172 },
+          { "xMm": 22, "yMm": 172 }
+        ]
+      }
+    },
+    {
+      "id": "trim-left",
+      "op": "trim",
+      "side": "left",
+      "name": "Galon rayé",
+      "material": "galon",
+      "widthMm": 48,
+      "path": {
+        "points": [
+          { "edge": "shoulder", "xMm": 150 },
+          { "xMm": 150, "yMm": 345 }
+        ]
+      }
+    },
+    { "id": "side-slits", "op": "sideSlit", "heightMm": 90 }
+  ]
+}

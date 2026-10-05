@@ -1,0 +1,57 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.42, "chestEase": 0.14, "cuffEase": 0.4 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Bleu marine", "kind": "plain", "colors": ["#1f2b47"] },
+    "light": { "name": "Bleu ciel", "kind": "weave", "colors": ["#dfe7f1"] },
+    "grec": { "name": "Galon grecque", "kind": "greekKeyTrim", "colors": ["#1f2b47"] }
+  },
+  "operations": [
+    { "id": "neckline", "op": "neckline", "lowerMm": 10, "widenMm": 6 },
+    {
+      "id": "yoke",
+      "op": "styleLine",
+      "piece": "front",
+      "line": {
+        "points": [
+          { "xMm": 0, "yMm": 226 },
+          { "xMm": 330, "yMm": 226 }
+        ]
+      },
+      "region": {
+        "name": "Empiècement devant",
+        "material": "light",
+        "insidePoint": { "xMm": 60, "yMm": 120 }
+      }
+    },
+    {
+      "id": "trim",
+      "op": "trim",
+      "side": "both",
+      "name": "Galon grecque",
+      "material": "grec",
+      "widthMm": 24,
+      "path": {
+        "points": [
+          { "xMm": 0, "yMm": 240 },
+          { "edge": "armhole", "yMm": 240 }
+        ]
+      }
+    },
+    {
+      "id": "placket",
+      "op": "placket",
+      "lengthMm": 148,
+      "widthMm": 30,
+      "buttonCount": 2,
+      "material": "main"
+    },
+    { "id": "cuff", "op": "cuff", "heightMm": 60, "style": "barrel" },
+    { "id": "side-slits", "op": "sideSlit", "heightMm": 120 }
+  ]
+}

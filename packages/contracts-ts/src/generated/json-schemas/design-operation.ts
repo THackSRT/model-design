@@ -1,0 +1,900 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « designOperation ». */
+export const designOperationJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/designs/design-operation.schema.json',
+  title: 'DesignOperation',
+  description:
+    "Opération d'un document de modèle (ADR 0020), choisie par op. Une opération est générique : elle ne lit que des rôles de bords (EdgeSemanticRole de GarmentSpec) et des repères de pièce, jamais un nom de vêtement. Champs communs : id (unique dans le document), op et enabled. Longueurs en mm ; coordonnées dans le repère de la pièce (voir PointAnchor : y vers le bas, à l'inverse de GarmentSpec). Un paramètre absent prend sa valeur par défaut (default) : elle fait partie du contrat et ne change pas, sinon les documents enregistrés se rejoueraient autrement. Ces schémas et leurs descriptions sont aussi les outils de l'assistant (ADR 0023). Phases du rejeu, règles que le schéma ne peut pas dire et tracés des préréglages : docs/composants/contrats.md.",
+  discriminator: {
+    propertyName: 'op',
+  },
+  oneOf: [
+    {
+      $ref: '#/$defs/HemShapeOperation',
+    },
+    {
+      $ref: '#/$defs/NecklineOperation',
+    },
+    {
+      $ref: '#/$defs/SleeveLengthOperation',
+    },
+    {
+      $ref: '#/$defs/CuffOperation',
+    },
+    {
+      $ref: '#/$defs/SideSlitOperation',
+    },
+    {
+      $ref: '#/$defs/BandOperation',
+    },
+    {
+      $ref: '#/$defs/StyleLineOperation',
+    },
+    {
+      $ref: '#/$defs/NeckSlitOperation',
+    },
+    {
+      $ref: '#/$defs/PlacketOperation',
+    },
+    {
+      $ref: '#/$defs/PocketOperation',
+    },
+    {
+      $ref: '#/$defs/TrimOperation',
+    },
+    {
+      $ref: '#/$defs/EmbroideryOperation',
+    },
+  ],
+  $defs: {
+    OperationId: {
+      type: 'string',
+      description:
+        "Identifiant de l'opération, unique dans le document : le rejeu du moteur de tracé le vérifie, un schéma JSON ne sait pas le dire. Stable : annuler, masquer, régler et les propositions de l'assistant désignent l'opération par lui. Lettres, chiffres, tirets et soulignés (un UUID convient).",
+      pattern: '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$',
+    },
+    BasePiece: {
+      type: 'string',
+      description:
+        "Pièce de la base, désignée par sa place : front, devant ; back, dos ; sleeve, manche. La fiche de couture de la base dit lesquelles elle a ; une pièce absente rend l'opération inapplicable (erreur du rejeu).",
+      enum: ['front', 'back', 'sleeve'],
+    },
+    PieceLandmark: {
+      type: 'string',
+      description:
+        "Repère d'une pièce, fourni par la fiche de couture de la base : centerNeck, milieu de l'encolure ; neckShoulder, point d'encolure à l'épaule (côté du cou) ; shoulderPoint, point d'épaule ; armholePitch, repère d'emmanchure ; armholeBottom, bas d'emmanchure (haut du côté) ; centerWaist et sideWaist, taille au milieu et au côté ; centerHip et sideHip, hanches au milieu et au côté ; centerHem, ourlet au milieu ; sideHem, coin d'ourlet (bas du côté) ; sleeveTop, sommet de la tête de manche ; bicepsFront et bicepsBack, haut du dessous de bras, devant et dos ; wristFront et wristBack, bas de manche, devant et dos. Position au moment où l'opération se rejoue : une opération d'une phase antérieure peut le déplacer (l'encolure déplace centerNeck et neckShoulder). Un repère que la pièce n'a pas rend l'opération inapplicable (erreur du rejeu).",
+      enum: [
+        'centerNeck',
+        'neckShoulder',
+        'shoulderPoint',
+        'armholePitch',
+        'armholeBottom',
+        'centerWaist',
+        'sideWaist',
+        'centerHip',
+        'sideHip',
+        'centerHem',
+        'sideHem',
+        'sleeveTop',
+        'bicepsFront',
+        'bicepsBack',
+        'wristFront',
+        'wristBack',
+      ],
+    },
+    PieceName: {
+      type: 'string',
+      description:
+        "Nom d'une région ou d'une pièce ajoutée, écrit sur les patrons, le plan de coupe et la liste de coupe (ex. Plastron) : une ligne, jamais de donnée de client.",
+      minLength: 1,
+      maxLength: 80,
+      pattern: '^[^\\x00-\\x1F\\x7F]+$',
+    },
+    AnchorPoint: {
+      description:
+        "Point ancré, dans le repère de la pièce de l'opération, selon ses champs : bord et abscisse (EdgeXAnchor), bord et ordonnée (EdgeYAnchor), bord et fraction de sa longueur (EdgeFractionAnchor), repère et décalage (LandmarkAnchor), ou coordonnées (PointAnchor). Un point ancré à un bord ou à un repère suit la taille et les mesures ; des coordonnées dépendent de la base.",
+      oneOf: [
+        {
+          $ref: '#/$defs/EdgeXAnchor',
+        },
+        {
+          $ref: '#/$defs/EdgeYAnchor',
+        },
+        {
+          $ref: '#/$defs/EdgeFractionAnchor',
+        },
+        {
+          $ref: '#/$defs/LandmarkAnchor',
+        },
+        {
+          $ref: '#/$defs/PointAnchor',
+        },
+      ],
+    },
+    EdgeXAnchor: {
+      type: 'object',
+      description:
+        "Point du bord edge de la pièce à l'abscisse xMm : le premier dans le sens du bord (voir EdgeFractionAnchor). Une abscisse hors de la plage du bord est ramenée à son extrémité la plus proche.",
+      additionalProperties: false,
+      required: ['edge', 'xMm'],
+      properties: {
+        edge: {
+          $ref: '../garment-spec.schema.json#/$defs/EdgeSemanticRole',
+          description:
+            'Rôle du bord (EdgeSemanticRole de GarmentSpec). Une manche a deux dessous de bras (underarm) : celui du devant (x positif) est pris.',
+        },
+        xMm: {
+          type: 'number',
+          description: 'Abscisse du point, en mm, dans le repère de la pièce.',
+          minimum: -3000,
+          maximum: 3000,
+        },
+      },
+    },
+    EdgeYAnchor: {
+      type: 'object',
+      description:
+        "Point du bord edge de la pièce à l'ordonnée yMm : le premier dans le sens du bord (voir EdgeFractionAnchor). Une ordonnée hors de la plage du bord est ramenée à son extrémité la plus proche.",
+      additionalProperties: false,
+      required: ['edge', 'yMm'],
+      properties: {
+        edge: {
+          $ref: '../garment-spec.schema.json#/$defs/EdgeSemanticRole',
+          description:
+            'Rôle du bord (EdgeSemanticRole de GarmentSpec). Une manche a deux dessous de bras (underarm) : celui du devant (x positif) est pris.',
+        },
+        yMm: {
+          type: 'number',
+          description:
+            'Ordonnée du point, en mm, dans le repère de la pièce (positive vers le bas).',
+          minimum: -3000,
+          maximum: 3000,
+        },
+      },
+    },
+    EdgeFractionAnchor: {
+      type: 'object',
+      description:
+        "Point du bord edge à une fraction de sa longueur. Sens des bords, de 0 à 1 : du milieu vers le côté pour neckline, shoulder, hem et waist ; de haut en bas pour armhole, side, centerFront, centerBack, underarm, inseam, outseam, rise et dart ; du dos vers le devant pour sleeveCap et sleeveHem ; du début vers la fin du chemin qui l'a tracé pour styleLine.",
+      additionalProperties: false,
+      required: ['edge', 'fraction'],
+      properties: {
+        edge: {
+          $ref: '../garment-spec.schema.json#/$defs/EdgeSemanticRole',
+          description:
+            'Rôle du bord (EdgeSemanticRole de GarmentSpec). Une manche a deux dessous de bras (underarm) : celui du devant (x positif) est pris.',
+        },
+        fraction: {
+          type: 'number',
+          description:
+            'Fraction de la longueur du bord, sans unité : 0 à son début, 1 à sa fin, dans le sens du bord.',
+          minimum: 0,
+          maximum: 1,
+        },
+      },
+    },
+    LandmarkAnchor: {
+      type: 'object',
+      description:
+        'Repère de la pièce, décalé : abscisse = xFraction × abscisse du repère + dxMm ; ordonnée = ordonnée du repère + dyMm.',
+      additionalProperties: false,
+      required: ['landmark'],
+      properties: {
+        landmark: {
+          $ref: '#/$defs/PieceLandmark',
+        },
+        xFraction: {
+          type: 'number',
+          description:
+            "Fraction de l'abscisse du repère, sans unité, avant le décalage dxMm : 0 sur l'axe de la pièce, 1 à l'aplomb du repère. Absent : 1.",
+          minimum: -1,
+          maximum: 1,
+        },
+        dxMm: {
+          type: 'number',
+          description:
+            'Décalage horizontal, en mm, positif vers le côté (vers le devant sur une manche). Absent : 0.',
+          minimum: -3000,
+          maximum: 3000,
+        },
+        dyMm: {
+          type: 'number',
+          description: 'Décalage vertical, en mm, positif vers le bas. Absent : 0.',
+          minimum: -3000,
+          maximum: 3000,
+        },
+      },
+    },
+    PointAnchor: {
+      type: 'object',
+      description:
+        "Coordonnées dans le repère de la pièce, en mm : x = 0 sur l'axe de la pièce fixé par sa fiche de couture (milieu devant ou dos, axe de la manche), positif vers le côté (vers le devant sur une manche) ; y = 0 au point le plus haut de la pièce de base, avant toute opération, positif vers le bas (à l'inverse de GarmentSpec). Elles ne suivent ni la taille ni les mesures : préférer un bord ou un repère.",
+      additionalProperties: false,
+      required: ['xMm', 'yMm'],
+      properties: {
+        xMm: {
+          type: 'number',
+          description: 'Abscisse, en mm.',
+          minimum: -3000,
+          maximum: 3000,
+        },
+        yMm: {
+          type: 'number',
+          description: 'Ordonnée, en mm, positive vers le bas.',
+          minimum: -3000,
+          maximum: 3000,
+        },
+      },
+    },
+    Path: {
+      type: 'object',
+      description:
+        "Chemin ouvert, par des points ancrés dans l'ordre. Ses points sont des poignées : les déplacer modifie l'opération elle-même.",
+      additionalProperties: false,
+      required: ['points'],
+      properties: {
+        points: {
+          type: 'array',
+          description: "Points du chemin, dans l'ordre (2 à 32).",
+          minItems: 2,
+          maxItems: 32,
+          items: {
+            $ref: '#/$defs/AnchorPoint',
+          },
+        },
+        smooth: {
+          type: 'boolean',
+          description:
+            'Courbe lisse qui passe par tous les points (Catmull-Rom) ; false : segments droits.',
+          default: false,
+        },
+      },
+    },
+    HemShapeOperation: {
+      type: 'object',
+      description:
+        "Déformation d'ourlet du corps, devant et dos (bords hem et side) : évasement et arrondi ; le milieu ne bouge pas. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'hemShape',
+          description: "Déformation d'ourlet.",
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        flareMm: {
+          type: 'number',
+          description:
+            "Évasement, en mm : le coin d'ourlet s'écarte de cette longueur vers l'extérieur, le côté s'évase progressivement depuis sa mi-hauteur et l'ourlet suit.",
+          minimum: 0,
+          maximum: 300,
+          default: 0,
+        },
+        curveMm: {
+          type: 'number',
+          description:
+            "Arrondi, en mm : l'ourlet remonte de cette hauteur au coin, en courbe depuis le milieu (carré de la distance au milieu) ; les points du côté sous le nouveau coin disparaissent.",
+          minimum: 0,
+          maximum: 300,
+          default: 0,
+        },
+      },
+    },
+    NecklineOperation: {
+      type: 'object',
+      description:
+        "Encolure ronde ou en V, devant et dos (bords neckline et shoulder) : le point d'encolure recule le long de l'épaule, le milieu devant et le milieu dos se creusent, et des parementures d'encolure devant et dos s'ajoutent. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'neckline',
+          description: 'Encolure.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        shape: {
+          type: 'string',
+          description: "Forme de l'encolure devant : round, ronde ; v, en V (le dos reste rond).",
+          enum: ['round', 'v'],
+          default: 'round',
+        },
+        lowerMm: {
+          type: 'number',
+          description:
+            "Creusement du milieu devant sous l'encolure de la base, en mm (forme round ; sans effet en v).",
+          minimum: 0,
+          maximum: 250,
+          default: 0,
+        },
+        widenMm: {
+          type: 'number',
+          description:
+            "Élargissement, en mm : le point d'encolure recule de cette longueur le long de l'épaule, devant et dos.",
+          minimum: 0,
+          maximum: 100,
+          default: 0,
+        },
+        vDepthMm: {
+          type: 'number',
+          description:
+            "Profondeur de la pointe du V sous le haut de la pièce (y = 0, niveau du point d'encolure de la base), en mm (forme v ; sans effet en round).",
+          minimum: 80,
+          maximum: 450,
+          default: 160,
+        },
+        backLowerMm: {
+          type: 'number',
+          description: "Creusement du milieu dos sous l'encolure de la base, en mm.",
+          minimum: 0,
+          maximum: 150,
+          default: 0,
+        },
+        facingWidthMm: {
+          type: 'number',
+          description: "Largeur des parementures d'encolure, mesurée depuis l'encolure, en mm.",
+          minimum: 20,
+          maximum: 120,
+          default: 55,
+        },
+      },
+    },
+    SleeveLengthOperation: {
+      type: 'object',
+      description:
+        "Longueur de manche (bords underarm et sleeveHem) : la manche est coupée à cette longueur totale ; une longueur supérieure à celle de la manche de la base la laisse entière (l'allonger passe par les options de la base). Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op', 'lengthMm'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'sleeveLength',
+          description: 'Longueur de manche.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        lengthMm: {
+          type: 'number',
+          description:
+            'Longueur totale de la manche, du sommet de la tête au bas de manche, en mm.',
+          minimum: 100,
+          maximum: 1000,
+        },
+      },
+    },
+    CuffOperation: {
+      type: 'object',
+      description:
+        "Poignet, droit ou mousquetaire (bord sleeveHem ; mesure : tour de poignet) : la manche se raccourcit de la hauteur du poignet moins 12 mm de montage, et s'ajoutent le poignet, une fente de poignet, sa patte et sa sous-patte. Un bas de manche n'a qu'une finition, poignet ou bande ; un seul poignet actif par document.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'cuff',
+          description: 'Poignet.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        heightMm: {
+          type: 'number',
+          description: 'Hauteur du poignet fini, en mm.',
+          minimum: 20,
+          maximum: 150,
+          default: 60,
+        },
+        style: {
+          type: 'string',
+          description:
+            'barrel : poignet droit, boutonné ; french : poignet mousquetaire, replié, pour boutons de manchette.',
+          enum: ['barrel', 'french'],
+          default: 'barrel',
+        },
+        easeMm: {
+          type: 'number',
+          description: 'Aisance du poignet autour du tour de poignet, en mm.',
+          minimum: 0,
+          maximum: 200,
+          default: 60,
+        },
+        overlapMm: {
+          type: 'number',
+          description: 'Croisure du poignet (recouvrement du boutonnage), en mm.',
+          minimum: 0,
+          maximum: 60,
+          default: 20,
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description:
+            'Matière du poignet et des pattes de fente : clé de la table materials du document.',
+          default: 'main',
+        },
+      },
+    },
+    SideSlitOperation: {
+      type: 'object',
+      description:
+        "Fentes de côté depuis l'ourlet, devant et dos (bords side et hem), avec un cran d'arrêt de fente. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'sideSlit',
+          description: 'Fentes de côté.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        heightMm: {
+          type: 'number',
+          description: "Hauteur des fentes au-dessus de l'ourlet, en mm.",
+          minimum: 20,
+          maximum: 500,
+          default: 100,
+        },
+      },
+    },
+    BandOperation: {
+      type: 'object',
+      description:
+        "Bande rapportée parallèle à un bord : une découpe à heightMm du bord crée une bande dans sa propre matière. Bas du corps (hem) : une bande devant et une bande dos ; bas de manche (sleeveHem) : une bande de manche. Une seule bande active par bord ; un bas de manche n'a qu'une finition, poignet ou bande.",
+      additionalProperties: false,
+      required: ['id', 'op', 'edge', 'heightMm', 'material', 'name'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'band',
+          description: 'Bande rapportée.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        edge: {
+          type: 'string',
+          description:
+            'Bord longé (rôle de GarmentSpec) : hem, bas du corps ; sleeveHem, bas de manche.',
+          enum: ['hem', 'sleeveHem'],
+        },
+        heightMm: {
+          type: 'number',
+          description: 'Hauteur de la bande, mesurée depuis le bord, en mm.',
+          minimum: 10,
+          maximum: 300,
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description: 'Matière de la bande : clé de la table materials du document.',
+        },
+        name: {
+          $ref: '#/$defs/PieceName',
+          description:
+            "Nom de la bande sur les patrons (ex. Bande d'ourlet) ; une bande d'ourlet donne une pièce devant et une pièce dos, que le rejeu distingue.",
+        },
+      },
+    },
+    StyleLineOperation: {
+      type: 'object',
+      description:
+        "Découpe : coupe une pièce le long d'une ligne, prédéfinie ou libre (chemin ancré aux bords qu'il croise) ; la partie retenue devient une région avec son nom et sa matière, l'autre garde les siens. Sur une pièce coupée au pli, la découpe est symétrique, et un chemin qui traverse le milieu est ramené à sa plus longue portion d'un côté. La couture créée a le rôle styleLine. Plusieurs découpes se rejouent dans l'ordre du document : chacune coupe la région qu'elle traverse, et une ligne qui ne traverse aucune région est refusée par le rejeu.",
+      additionalProperties: false,
+      required: ['id', 'op', 'line', 'region'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'styleLine',
+          description: 'Découpe.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        piece: {
+          $ref: '#/$defs/BasePiece',
+          description: 'Pièce coupée.',
+          default: 'front',
+        },
+        line: {
+          description:
+            "Tracé de la découpe : préréglage partant de l'épaule (StyleLinePreset), empiècement (YokePreset) ou chemin libre (Path).",
+          oneOf: [
+            {
+              $ref: '#/$defs/StyleLinePreset',
+            },
+            {
+              $ref: '#/$defs/YokePreset',
+            },
+            {
+              $ref: '#/$defs/Path',
+            },
+          ],
+        },
+        extendMm: {
+          type: 'number',
+          description:
+            "Prolongement d'un chemin libre à ses deux bouts, dans le sens de ses extrémités, en mm, pour qu'il croise franchement le contour (un préréglage est prolongé de 15 mm).",
+          minimum: 0,
+          maximum: 100,
+          default: 15,
+        },
+        region: {
+          $ref: '#/$defs/StyleLineRegion',
+        },
+        topstitch: {
+          type: 'boolean',
+          description: 'Surpiqûre le long de la découpe, montrée sur le dessin technique.',
+          default: true,
+        },
+      },
+    },
+    StyleLinePreset: {
+      type: 'object',
+      description:
+        "Découpe prédéfinie qui part de l'épaule et descend au milieu (plastron) : u, en U lissé ; pointed, en pointe ; square, carrée. Points du tracé : docs/composants/contrats.md.",
+      additionalProperties: false,
+      required: ['preset', 'depthMm', 'shoulderXMm'],
+      properties: {
+        preset: {
+          type: 'string',
+          description: 'Forme : u, pointed ou square.',
+          enum: ['u', 'pointed', 'square'],
+        },
+        depthMm: {
+          type: 'number',
+          description: 'Profondeur au milieu, sous le haut de la pièce (y = 0), en mm.',
+          minimum: 30,
+          maximum: 1000,
+        },
+        shoulderXMm: {
+          type: 'number',
+          description:
+            "Départ sur l'épaule : abscisse du point de l'épaule où commence la découpe, en mm (ramenée à la plage de l'épaule).",
+          minimum: 0,
+          maximum: 500,
+        },
+      },
+    },
+    YokePreset: {
+      type: 'object',
+      description: 'Empiècement : découpe horizontale, du milieu au côté, à la profondeur depthMm.',
+      additionalProperties: false,
+      required: ['preset', 'depthMm'],
+      properties: {
+        preset: {
+          type: 'string',
+          const: 'yoke',
+          description: 'Empiècement.',
+        },
+        depthMm: {
+          type: 'number',
+          description: 'Profondeur de la découpe sous le haut de la pièce (y = 0), en mm.',
+          minimum: 30,
+          maximum: 1000,
+        },
+      },
+    },
+    StyleLineRegion: {
+      type: 'object',
+      description: 'Partie retenue de la pièce coupée : elle prend ce nom et cette matière.',
+      additionalProperties: false,
+      required: ['name', 'material'],
+      properties: {
+        name: {
+          $ref: '#/$defs/PieceName',
+          description: 'Nom de la région sur les patrons (ex. Plastron, Empiècement devant).',
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description: 'Matière de la région : clé de la table materials du document.',
+        },
+        insidePoint: {
+          $ref: '#/$defs/AnchorPoint',
+          description:
+            "Point situé dans la partie retenue. Absent : la plus petite des deux parties, par l'aire.",
+        },
+      },
+    },
+    NeckSlitOperation: {
+      type: 'object',
+      description:
+        "Fente d'encolure au milieu devant, depuis l'encolure, avec sa parementure. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'neckSlit',
+          description: "Fente d'encolure.",
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        lengthMm: {
+          type: 'number',
+          description: "Longueur de la fente sous le milieu de l'encolure, en mm.",
+          minimum: 20,
+          maximum: 300,
+          default: 80,
+        },
+        facingWidthMm: {
+          type: 'number',
+          description: 'Largeur de la parementure de fente, en mm.',
+          minimum: 30,
+          maximum: 150,
+          default: 70,
+        },
+      },
+    },
+    PlacketOperation: {
+      type: 'object',
+      description:
+        "Patte de boutonnage au milieu devant, depuis l'encolure : fente, pattes dessus et dessous entoilées, boutons répartis sur la longueur. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op', 'lengthMm'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'placket',
+          description: 'Patte de boutonnage.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        lengthMm: {
+          type: 'number',
+          description: "Longueur de la patte sous le milieu de l'encolure, en mm.",
+          minimum: 40,
+          maximum: 700,
+        },
+        widthMm: {
+          type: 'number',
+          description: 'Largeur de la patte finie, en mm.',
+          minimum: 10,
+          maximum: 80,
+          default: 30,
+        },
+        buttonCount: {
+          type: 'integer',
+          description: 'Nombre de boutons, répartis sur la longueur de la patte.',
+          minimum: 0,
+          maximum: 20,
+          default: 3,
+        },
+        buttonDiameterMm: {
+          type: 'number',
+          description: 'Diamètre des boutons, en mm.',
+          minimum: 6,
+          maximum: 40,
+          default: 13,
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description: 'Matière des pattes : clé de la table materials du document.',
+          default: 'main',
+        },
+      },
+    },
+    PocketOperation: {
+      type: 'object',
+      description:
+        "Poche plaquée sur le devant, posée par un point ancré : une pièce poche et une marque de pose s'ajoutent.",
+      additionalProperties: false,
+      required: ['id', 'op'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'pocket',
+          description: 'Poche plaquée.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        side: {
+          type: 'string',
+          description: 'Côté du porteur où se pose la poche : left, sa gauche ; right, sa droite.',
+          enum: ['left', 'right'],
+          default: 'left',
+        },
+        position: {
+          $ref: '#/$defs/AnchorPoint',
+          description:
+            "Milieu du bord haut de la poche, donné sur la moitié du devant d'abscisses positives ; side choisit le côté du porteur.",
+          default: {
+            landmark: 'armholeBottom',
+            xFraction: 0.55,
+            dyMm: -40,
+          },
+        },
+        widthMm: {
+          type: 'number',
+          description: 'Largeur de la poche finie, en mm.',
+          minimum: 40,
+          maximum: 300,
+          default: 120,
+        },
+        heightMm: {
+          type: 'number',
+          description: 'Hauteur de la poche finie, en mm.',
+          minimum: 40,
+          maximum: 350,
+          default: 135,
+        },
+        shape: {
+          type: 'string',
+          description: 'straight : rectangulaire ; pointed : fond en pointe.',
+          enum: ['straight', 'pointed'],
+          default: 'straight',
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description: 'Matière de la poche : clé de la table materials du document.',
+          default: 'main',
+        },
+      },
+    },
+    TrimOperation: {
+      type: 'object',
+      description:
+        "Galon cousu en surface le long d'un chemin du devant ; son motif vient du genre de sa matière (stripedTrim, greekKeyTrim…). Le chemin est donné sur la moitié du devant d'abscisses positives ; side choisit le côté du porteur, both pose deux galons symétriques. Le rejeu mesure la longueur de galon à acheter.",
+      additionalProperties: false,
+      required: ['id', 'op', 'path', 'material'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'trim',
+          description: 'Galon.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        side: {
+          type: 'string',
+          description:
+            'Côté du porteur : left, sa gauche ; right, sa droite ; both, les deux, symétriques.',
+          enum: ['left', 'right', 'both'],
+          default: 'both',
+        },
+        path: {
+          $ref: '#/$defs/Path',
+          description: 'Axe du galon, sans prolongement.',
+        },
+        widthMm: {
+          type: 'number',
+          description: "Largeur du galon, en mm ; le chemin en est l'axe.",
+          minimum: 3,
+          maximum: 200,
+          default: 40,
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description: 'Matière du galon : clé de la table materials du document.',
+        },
+        name: {
+          $ref: '../garment-spec.schema.json#/$defs/MarkLabel',
+          description:
+            'Nom du galon sur les patrons et dans les fournitures : une ligne, jamais de donnée de client. Absent : le nom de sa matière.',
+        },
+      },
+    },
+    EmbroideryOperation: {
+      type: 'object',
+      description:
+        "Zone de broderie le long de l'encolure devant, et de la patte si demandé : zone décorative posée sur le patron. Une seule active par document.",
+      additionalProperties: false,
+      required: ['id', 'op', 'material'],
+      properties: {
+        id: {
+          $ref: '#/$defs/OperationId',
+        },
+        op: {
+          type: 'string',
+          const: 'embroidery',
+          description: 'Broderie.',
+        },
+        enabled: {
+          type: 'boolean',
+          description:
+            'Opération active ; false : masquée, gardée dans le document mais non rejouée.',
+          default: true,
+        },
+        widthMm: {
+          type: 'number',
+          description: 'Largeur de la zone de broderie, en mm.',
+          minimum: 5,
+          maximum: 150,
+          default: 32,
+        },
+        motif: {
+          type: 'string',
+          description: 'Motif brodé : leaves, feuilles alternées sur une tige.',
+          enum: ['leaves'],
+          default: 'leaves',
+        },
+        withPlacket: {
+          type: 'boolean',
+          description: "La zone longe aussi la patte de boutonnage, s'il y en a une.",
+          default: true,
+        },
+        material: {
+          $ref: '../garment-spec.schema.json#/$defs/MaterialKey',
+          description:
+            'Fil de la broderie : clé de la table materials du document (en général de genre embroidery).',
+        },
+      },
+    },
+  },
+} as const;

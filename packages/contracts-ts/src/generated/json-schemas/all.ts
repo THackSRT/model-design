@@ -3,7 +3,9 @@ import { avatarOptionsJsonSchema } from './avatar-options.js';
 import { createDesignRequestJsonSchema } from './create-design-request.js';
 import { createDesignVersionRequestJsonSchema } from './create-design-version-request.js';
 import { cutPatternOptionsJsonSchema } from './cut-pattern-options.js';
+import { designDocumentJsonSchema } from './design-document.js';
 import { designExportRequestJsonSchema } from './design-export-request.js';
+import { designOperationJsonSchema } from './design-operation.js';
 import { designVersionChangesJsonSchema } from './design-version-changes.js';
 import { designVersionPageJsonSchema } from './design-version-page.js';
 import { designVersionSummaryJsonSchema } from './design-version-summary.js';
@@ -44,7 +46,9 @@ export const jsonSchemas = {
   createDesignRequest: createDesignRequestJsonSchema,
   createDesignVersionRequest: createDesignVersionRequestJsonSchema,
   cutPatternOptions: cutPatternOptionsJsonSchema,
+  designDocument: designDocumentJsonSchema,
   designExportRequest: designExportRequestJsonSchema,
+  designOperation: designOperationJsonSchema,
   designVersionChanges: designVersionChangesJsonSchema,
   designVersionPage: designVersionPageJsonSchema,
   designVersionSummary: designVersionSummaryJsonSchema,

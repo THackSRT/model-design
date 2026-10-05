@@ -1,0 +1,47 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.24, "chestEase": 0.15 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Coton noir", "kind": "plain", "colors": ["#1d1d20"] },
+    "geo": { "name": "Imprimé géométrique orange", "kind": "geometric", "colors": ["#e46f1f"] }
+  },
+  "operations": [
+    { "id": "neckline", "op": "neckline", "lowerMm": 15, "widenMm": 10 },
+    { "id": "neck-slit", "op": "neckSlit", "lengthMm": 70 },
+    { "id": "sleeve-length", "op": "sleeveLength", "lengthMm": 265 },
+    {
+      "id": "bib",
+      "op": "styleLine",
+      "piece": "front",
+      "line": {
+        "points": [
+          { "edge": "shoulder", "xMm": 186 },
+          { "xMm": 180, "yMm": 105 },
+          { "xMm": 0, "yMm": 292 }
+        ]
+      },
+      "region": { "name": "Plastron", "material": "geo", "insidePoint": { "xMm": 50, "yMm": 150 } }
+    },
+    {
+      "id": "hem-band",
+      "op": "band",
+      "edge": "hem",
+      "heightMm": 45,
+      "material": "geo",
+      "name": "Bande d'ourlet"
+    },
+    {
+      "id": "sleeve-band",
+      "op": "band",
+      "edge": "sleeveHem",
+      "heightMm": 40,
+      "material": "geo",
+      "name": "Bande de manche"
+    }
+  ]
+}

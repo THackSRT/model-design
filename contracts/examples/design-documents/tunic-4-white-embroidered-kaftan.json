@@ -1,0 +1,34 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.34, "chestEase": 0.24, "bicepsEase": 0.3 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Lin blanc cassé", "kind": "plain", "colors": ["#efece3"] },
+    "brod": { "name": "Broderie gris perle", "kind": "embroidery", "colors": ["#8f908d"] }
+  },
+  "operations": [
+    { "id": "neckline", "op": "neckline", "shape": "v", "widenMm": 14, "vDepthMm": 185 },
+    {
+      "id": "placket",
+      "op": "placket",
+      "lengthMm": 140,
+      "widthMm": 22,
+      "buttonCount": 6,
+      "buttonDiameterMm": 9,
+      "material": "main"
+    },
+    {
+      "id": "embroidery",
+      "op": "embroidery",
+      "widthMm": 30,
+      "withPlacket": true,
+      "material": "brod"
+    },
+    { "id": "sleeve-length", "op": "sleeveLength", "lengthMm": 300 },
+    { "id": "side-slits", "op": "sideSlit", "heightMm": 140 }
+  ]
+}

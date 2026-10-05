@@ -1,0 +1,54 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.24, "chestEase": 0.18 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Coton blanc", "kind": "plain", "colors": ["#f4f2ec"] },
+    "bogolan": { "name": "Bogolan noir et blanc", "kind": "bogolan", "colors": ["#1d1a17"] }
+  },
+  "operations": [
+    { "id": "neckline", "op": "neckline", "lowerMm": 18, "widenMm": 12 },
+    { "id": "neck-slit", "op": "neckSlit", "lengthMm": 85 },
+    { "id": "sleeve-length", "op": "sleeveLength", "lengthMm": 270 },
+    {
+      "id": "bib",
+      "op": "styleLine",
+      "piece": "front",
+      "line": {
+        "smooth": true,
+        "points": [
+          { "edge": "shoulder", "xMm": 196 },
+          { "xMm": 194, "yMm": 120 },
+          { "xMm": 178, "yMm": 212 },
+          { "xMm": 110, "yMm": 250 },
+          { "xMm": 0, "yMm": 258 }
+        ]
+      },
+      "region": {
+        "name": "Plastron",
+        "material": "bogolan",
+        "insidePoint": { "xMm": 60, "yMm": 150 }
+      }
+    },
+    {
+      "id": "hem-band",
+      "op": "band",
+      "edge": "hem",
+      "heightMm": 50,
+      "material": "bogolan",
+      "name": "Bande d'ourlet"
+    },
+    {
+      "id": "sleeve-band",
+      "op": "band",
+      "edge": "sleeveHem",
+      "heightMm": 45,
+      "material": "bogolan",
+      "name": "Bande de manche"
+    }
+  ]
+}

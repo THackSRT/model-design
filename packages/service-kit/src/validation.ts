@@ -10,7 +10,9 @@ type SchemaName = keyof typeof jsonSchemas;
 const addFormats = ((addFormatsModule as unknown as { default?: unknown }).default ??
   addFormatsModule) as (ajv: Ajv2020) => void;
 
-const ajv = new Ajv2020({ allErrors: true, strict: false });
+// discriminator : une union marquée par ce mot-clé (DesignOperation, par op) ne valide que la branche que désigne
+// sa propriété ; une entrée refusée ne reçoit que les messages de cette branche, pas ceux de toutes les autres.
+const ajv = new Ajv2020({ allErrors: true, strict: false, discriminator: true });
 addFormats(ajv);
 for (const schema of Object.values(jsonSchemas)) ajv.addSchema(schema);
 

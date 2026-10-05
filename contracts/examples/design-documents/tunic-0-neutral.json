@@ -1,0 +1,13 @@
+{
+  "documentVersion": "1.0",
+  "base": {
+    "key": "brian",
+    "freesewingVersion": "4.10.2",
+    "options": { "lengthBonus": 0.3, "chestEase": 0.15 }
+  },
+  "measurements": { "size": "cisMaleAdult42" },
+  "materials": {
+    "main": { "name": "Toile écrue", "kind": "plain", "colors": ["#e8e1cf"] }
+  },
+  "operations": []
+}

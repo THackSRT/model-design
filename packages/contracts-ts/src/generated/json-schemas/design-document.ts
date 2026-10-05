@@ -1,0 +1,181 @@
+// Généré par tools/contracts/generate.mjs depuis contracts/ — ne pas modifier à la main.
+/** Schéma JSON brut « designDocument ». */
+export const designDocumentJsonSchema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://atelier.example/schemas/designs/design-document.schema.json',
+  title: 'DesignDocument',
+  description:
+    "Document de modèle (ADR 0020) : une base du catalogue et ses options, les mesures du porteur, une table de matières et une liste ordonnée d'opérations. Le rejouer est déterministe, à l'identique dans le navigateur et sous Node (moteur de tracé drafting, ADR 0024) : il donne la GarmentSpec et tout ce qui en découle. Entrée non sûre : le schéma borne sa taille (64 opérations, 32 points par chemin, 20 matières, textes d'une ligne de 80 caractères) et le rejeu vérifie ce qu'un schéma ne sait pas dire (docs/composants/contrats.md). Un document qui porte un jeu de mesures contient une donnée personnelle : il n'est jamais journalisé, ni envoyé à l'assistant sans consentement (ADR 0023).",
+  type: 'object',
+  additionalProperties: false,
+  required: ['documentVersion', 'base', 'measurements', 'materials', 'operations'],
+  properties: {
+    documentVersion: {
+      type: 'string',
+      description:
+        "Version du format. Il s'élargit en version mineure (1.1, 1.2…) quand s'ajoute une opération, une base, un repère, un paramètre ou une valeur permise ; un lecteur accepte toutes les versions mineures qu'il connaît, un producteur n'écrit la nouvelle que s'il en emploie un apport.",
+      enum: ['1.0'],
+    },
+    base: { $ref: '#/$defs/DesignBase' },
+    measurements: { $ref: '#/$defs/DesignMeasurements' },
+    materials: { $ref: '#/$defs/DesignMaterials' },
+    operations: {
+      type: 'array',
+      description:
+        "Opérations, dans l'ordre (64 au plus ; vide : le vêtement neutre de la base). Le rejeu applique les opérations actives par phase, puis dans l'ordre de la liste ; annuler retire ou rétablit une opération et rejoue. Chaque id est unique dans la liste : le rejeu le vérifie, le schéma ne refuse que deux opérations identiques.",
+      maxItems: 64,
+      uniqueItems: true,
+      items: { $ref: './design-operation.schema.json' },
+    },
+  },
+  $defs: {
+    DesignBase: {
+      type: 'object',
+      description:
+        'Base du modèle : une entrée du catalogue, tracée par FreeSewing à la version donnée, avec ses options. Seule, elle donne le vêtement neutre : la matière main, sans découpe, bande ni motif.',
+      additionalProperties: false,
+      required: ['key', 'freesewingVersion'],
+      properties: {
+        key: { $ref: '#/$defs/BaseKey' },
+        freesewingVersion: {
+          type: 'string',
+          description:
+            "Version de FreeSewing qui trace la base (ex. 4.10.2). Le rejeu refuse une version que le moteur de tracé n'embarque pas : une montée de version de FreeSewing (ADR 0019) dit comment les documents enregistrés passent à la nouvelle.",
+          pattern: '^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$',
+        },
+        options: { $ref: '#/$defs/BaseOptions' },
+      },
+    },
+    BaseKey: {
+      type: 'string',
+      description:
+        "Entrée du catalogue 1 (ADR 0019) : brian, bloc homme (tunique, chemise) ; teagan, tee-shirt ; titan, pantalon ; sandy, jupe cercle ; bella, corsage ; straight-skirt, jupe droite écrite sur l'API de FreeSewing. Le rejeu refuse une entrée que son catalogue n'a pas encore. Une entrée nouvelle élargit le format (version mineure).",
+      enum: ['brian', 'teagan', 'titan', 'sandy', 'bella', 'straight-skirt'],
+    },
+    BaseOptions: {
+      type: 'object',
+      description:
+        "Options FreeSewing de la base, par nom (ex. lengthBonus, chestEase) : pourcentage en fraction comme dans FreeSewing (0.28 pour 28 %), angle en degrés, nombre entier, booléen ou valeur d'une liste. La longueur et l'aisance générales du vêtement sont des options de la base, pas des opérations. Le rejeu refuse une option que la base n'a pas, d'un autre type ou hors de ses bornes. Absentes : options par défaut de la base.",
+      maxProperties: 64,
+      propertyNames: { pattern: '^[a-z][A-Za-z0-9]{0,63}$' },
+      additionalProperties: {
+        anyOf: [
+          { type: 'number', minimum: -1000, maximum: 1000 },
+          { type: 'boolean' },
+          { type: 'string', pattern: '^[A-Za-z0-9_-]{1,64}$' },
+        ],
+      },
+    },
+    DesignMeasurements: {
+      description:
+        "Mesures du porteur, complètes pour la base : une taille d'un tableau (SizeMeasurements) ou un jeu de mesures (CustomMeasurements). Le moteur de tracé ne déduit rien et n'appelle aucun autre moteur (ADR 0024) : le même document se rejoue à l'identique partout.",
+      oneOf: [{ $ref: '#/$defs/SizeMeasurements' }, { $ref: '#/$defs/CustomMeasurements' }],
+    },
+    SizeMeasurements: {
+      type: 'object',
+      description:
+        "Taille d'un tableau de tailles : ses mesures sont complètes pour toutes les bases et ne sont celles de personne. Un document à partager ou à donner en exemple part d'une taille.",
+      additionalProperties: false,
+      required: ['size'],
+      properties: {
+        size: { $ref: '#/$defs/ChartSize' },
+      },
+    },
+    ChartSize: {
+      type: 'string',
+      description:
+        'Taille du tableau de FreeSewing (paquet @freesewing/models, même version que la base), adulte : cisFemaleAdult, femme ; cisMaleAdult, homme ; suivi du tour de cou en cm.',
+      enum: [
+        'cisFemaleAdult28',
+        'cisFemaleAdult30',
+        'cisFemaleAdult32',
+        'cisFemaleAdult34',
+        'cisFemaleAdult36',
+        'cisFemaleAdult38',
+        'cisFemaleAdult40',
+        'cisFemaleAdult42',
+        'cisFemaleAdult44',
+        'cisFemaleAdult46',
+        'cisMaleAdult32',
+        'cisMaleAdult34',
+        'cisMaleAdult36',
+        'cisMaleAdult38',
+        'cisMaleAdult40',
+        'cisMaleAdult42',
+        'cisMaleAdult44',
+        'cisMaleAdult46',
+        'cisMaleAdult48',
+        'cisMaleAdult50',
+      ],
+    },
+    CustomMeasurements: {
+      type: 'object',
+      description:
+        "Mesures d'une personne, complétées par le mannequin dans le studio avant l'enregistrement : le rejeu refuse un jeu auquel manque une mesure de la base (erreur typée, sans valeur de mesure). Donnée personnelle sensible.",
+      additionalProperties: false,
+      required: ['measurementSet'],
+      properties: {
+        measurementSet: { $ref: '../measurement-set.schema.json' },
+      },
+    },
+    DesignMaterials: {
+      type: 'object',
+      description:
+        'Table des matières du document, par clé (MaterialKey de GarmentSpec, 20 au plus). main, obligatoire, est la matière principale : celle de la base et de toute pièce sans autre matière (parementures comprises). Les opérations renvoient à la table par clé, et toute clé citée y figure (vérifié par le rejeu). Le rejeu recopie la table dans GarmentSpec.materials.',
+      required: ['main'],
+      maxProperties: 20,
+      propertyNames: { $ref: '../garment-spec.schema.json#/$defs/MaterialKey' },
+      properties: {
+        main: { $ref: '#/$defs/DesignMaterial' },
+      },
+      additionalProperties: { $ref: '#/$defs/DesignMaterial' },
+    },
+    DesignMaterial: {
+      type: 'object',
+      description:
+        'Matière du document : nom, genre et couleurs. Le dessin technique et la planche lisent son genre et ses couleurs ; le plan de coupe et les fournitures, son nom.',
+      additionalProperties: false,
+      required: ['name', 'kind', 'colors'],
+      properties: {
+        name: {
+          type: 'string',
+          description:
+            'Nom affiché (ex. Coton blanc), recopié dans GarmentSpec.materials : mêmes règles que Material.name de GarmentSpec, une ligne de 80 caractères au plus, jamais de donnée de client.',
+          minLength: 1,
+          maxLength: 80,
+          pattern: '^[^\\x00-\\x1F\\x7F]+$',
+        },
+        kind: { $ref: '#/$defs/MaterialKind' },
+        colors: {
+          type: 'array',
+          description:
+            "Couleurs de la matière, de la plus visible à la moins visible (1 à 4) : fond d'un uni, teinte dominante d'un imprimé, motif d'un galon, fil d'une broderie ; les suivantes sont les couleurs secondaires du motif, que le dessin complète au besoin d'après le genre.",
+          minItems: 1,
+          maxItems: 4,
+          items: { $ref: '#/$defs/Color' },
+        },
+      },
+    },
+    MaterialKind: {
+      type: 'string',
+      description:
+        'Genre de la matière, qui choisit son motif au dessin : plain, uni ; bogolan ; geometric, imprimé géométrique ; weave, tissage (armure visible) ; stripes, rayure ; gingham, vichy ; stripedTrim, galon rayé ; greekKeyTrim, galon à la grecque ; embroidery, broderie (fil).',
+      enum: [
+        'plain',
+        'bogolan',
+        'geometric',
+        'weave',
+        'stripes',
+        'gingham',
+        'stripedTrim',
+        'greekKeyTrim',
+        'embroidery',
+      ],
+    },
+    Color: {
+      type: 'string',
+      description: 'Couleur sRGB #rrggbb, en minuscules.',
+      pattern: '^#[0-9a-f]{6}$',
+    },
+  },
+} as const;
