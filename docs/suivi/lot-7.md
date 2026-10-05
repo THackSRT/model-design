@@ -247,7 +247,8 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
   `contracts/schemas/garment-spec.schema.json` (1.1) ;
   `engines/patterning/tests/golden/bodice-with-sleeves-reference.json` (GarmentSpec de référence) ;
   `docs/adr/0019-trace-freesewing.md` (contrôles, embu).
-- **Décisions déjà prises** : l'embu se déclare dans la fiche, il ne se suppose jamais (taille 42 : tête de manche 616,2
+- **Décisions déjà prises** : repère des pièces y vers le bas, y = 0 en haut de la pièce de base, la manche de
+  FreeSewing translatée (`docs/composants/contrats.md`, 1.54b) ; l'embu se déclare dans la fiche, il ne se suppose jamais (taille 42 : tête de manche 616,2
   mm pour 617,8 mm d'emmanchures d'après l'essai) ; même conventions de placement que le corsage à manches de référence.
 - **Critères d'acceptation** : GarmentSpec de Brian valide contre le schéma (test ajv) sur les tailles et les six jeux
   d'options de 1.55a ; écarts de longueur des coutures dans la tolérance ou embu déclaré ; tests.
@@ -398,8 +399,17 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
   - Ordre de rejeu par phase, puis ordre du document : déformation d'ourlet 0, encolure 1, longueur de manche 2, poignet
     3, fentes et bandes 4, découpes 5, fente d'encolure et patte 6, poches 7, galons 8, broderie 9.
   - Une opération masquée (`enabled: false`) n'est pas rejouée ; rien n'est figé par une opération suivante.
+  - La validation du moteur complète le schéma (1.54b, `docs/composants/contrats.md`) : identifiants uniques, matières
+    citées présentes dans la table, base, version et options FreeSewing connues, mesures complètes pour la base, une
+    seule opération active par genre pour `hemShape`, `neckline`, `sleeveLength`, `cuff`, `sideSlit`, `neckSlit`,
+    `placket` et `embroidery`, une bande par bord, au bas de manche un poignet ou une bande ; chaque refus est une
+    erreur de validation typée qui nomme l'opération et la règle. Les types d'une opération se lisent par
+    `Extract<DesignOperation, { op: … }>`.
+  - Repère des pièces : y vers le bas, y = 0 en haut de la pièce de base (la manche de FreeSewing est translatée),
+    comme le décrit `docs/composants/contrats.md`.
 - **Critères d'acceptation** : chaque opération testée sur Brian avec les valeurs de l'essai ; masquage testé ; l'ordre
   du document entre deux phases différentes ne change pas le résultat ; erreur claire pour une opération inapplicable ;
+  chaque règle de validation du moteur testée par un document fautif ;
   rejeu de la tunique neutre en moins de 10 ms (médiane sur 20).
 - **Hors périmètre** : découpes et bandes (1.57c), ornements (1.57d).
 - **Vérification** : `pnpm nx run-many -t lint typecheck test -p @atelier/drafting`.
@@ -458,8 +468,9 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
   - Découpes prédéfinies (profondeur au milieu D, départ sur l'épaule W, en mm) : U = épaule à x = W, (W − 2 ; 0,465 D),
     (W − 18 ; 0,82 D), (0,56 W ; 0,97 D), (0 ; D), lissée ; pointe = épaule à x = W, (W − 6 ; 0,36 D), (0 ; D) ; carré =
     épaule à x = W, (W ; 0,86 D), (W − 14 ; D), (0 ; D) ; empiècement = (0 ; D) à (420 ; D).
-  - Un point ancré à un bord par x ou y est borné à la plage du bord. Un chemin est prolongé à ses deux bouts (15 mm, ou
-    `extendMm`, 40 mm pour une découpe libre) pour croiser franchement le contour.
+  - Un point ancré à un bord par x ou y est borné à la plage du bord. Un chemin est prolongé à ses deux bouts (`extendMm`, 15 mm par
+    défaut comme dans l'essai, 100 mm au plus ; le studio pourra demander davantage pour un tracé libre) pour croiser
+    franchement le contour.
   - Partie retenue : celle qui contient le repère donné, ou la plus petite par l'aire.
   - Découpe libre sur une pièce coupée au pli : symétrique ; un chemin qui traverse le milieu est ramené à sa plus
     longue portion d'un côté.
@@ -599,6 +610,9 @@ qu'exige 1.58a, et `CuttingPlan` ne connaît qu'une laize, alors que les tunique
   `docs/composants/designs.md`.
 - **Décisions déjà prises** : le domaine ne dépend que d'un port (« moteur de tracé ») ; l'adaptateur appelle
   `@atelier/drafting` dans le processus ; migration additive (colonnes facultatives), aucune donnée existante modifiée.
+  - Le plus grand document permis par le schéma fait environ 100 Ko : la limite de corps de NestJS (100 Ko par défaut)
+    est relevée pour cette route, avec une borne écrite. Un document avec `measurementSet` porte une donnée personnelle :
+    ni document ni mesure dans les journaux ni dans les erreurs relayées (ADR 0024).
 - **Critères d'acceptation** : tests unitaires, d'intégration et HTTP ; un document invalide donne une erreur 422 du
   contrat ; les routes existantes restent vertes.
 - **Hors périmètre** : exports (1.60c), studio.
