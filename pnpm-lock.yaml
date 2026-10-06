@@ -4,6 +4,8 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-xt2R7UNpZ97DLOJmLIlu+gAh6X3O6K3zOlZMgLZLv9k=
+
 importers:
 
   .:
@@ -117,6 +119,25 @@ importers:
       vite:
         specifier: ^8.3.1
         version: 8.3.1(@types/node@22.20.4)(yaml@2.9.1)
+
+  engines/drafting:
+    dependencies:
+      '@atelier/contracts-ts':
+        specifier: workspace:*
+        version: link:../../packages/contracts-ts
+      '@freesewing/brian':
+        specifier: 4.10.2
+        version: 4.10.2(@freesewing/core@4.10.2)(@freesewing/library@4.10.2(@freesewing/core@4.10.2))(@freesewing/plugin-bust@4.10.2(@freesewing/core@4.10.2))
+      '@freesewing/core':
+        specifier: 4.10.2
+        version: 4.10.2
+      '@freesewing/models':
+        specifier: 4.10.2
+        version: 4.10.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.4
+        version: 22.20.4
 
   engines/drape:
     dependencies:
@@ -1073,6 +1094,86 @@ packages:
   '@formatjs/icu-skeleton-parser@2.1.12':
     resolution: {integrity: sha512-ca7tZMLpfHX3sUD7hP6gE/qr6Iq89EDd3ZLeRhbsB7r0UD55DGJq+tmFLzrGrnx5StahUevQmQQVtbDRHsfDHA==}
 
+  '@freesewing/brian@4.10.2':
+    resolution: {integrity: sha512-X2Q4Q2faxjeRpniU/dfVCgKWgzkyYL0s/8kHYgEX2BiFYezQBlLcl39orAzcrxejILUQjd5j5PG8x4yfBOpGrQ==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+      '@freesewing/library': 4.10.2
+      '@freesewing/plugin-bust': 4.10.2
+
+  '@freesewing/config@4.10.2':
+    resolution: {integrity: sha512-pjJQzRNQPHaUr2I/0bLJeW8MbODe66GZ7mf7YRxTsK+rOuK6veSWrkg8OWVDBUlD4EZyj14P3+tIb3xRcrpxvw==}
+    engines: {node: '>= 20'}
+
+  '@freesewing/core-plugins@4.10.2':
+    resolution: {integrity: sha512-iZe6v/JV4JlH4+aifMuGFDhH5PV/Ou1KO5SXfq5fD90WqjtCZhmQWrwjEe9AU9PCSAcCswEZsltuKkl1edT4cQ==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/core@4.10.2':
+    resolution: {integrity: sha512-sq1uNV7jAx0ox3YHvlhPQvYviWq9SToF88ckSNBDBHoPRO+a2xRo5lgkIAatNzu6zk5j3D0lMZr35trUgJ8ajw==}
+    engines: {node: '>= 20'}
+
+  '@freesewing/library@4.10.2':
+    resolution: {integrity: sha512-8NG6l6YP8HTrltGHXuSE4MoY2x9ICPgTT56CHh4Gs01K/HFRnecQLZpuZbU29UGLVnRUlcxRER8EBEIGxL3FDA==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/models@4.10.2':
+    resolution: {integrity: sha512-mTQ4iGcDR8M/q0Nd/nTnCJy0Cur4g9Ky5X4ZeBYGdvRqYGWrMiIX/UosowfMaup02BLwqPwx4WPYRSZM5lmsSw==}
+    engines: {node: '>= 20'}
+
+  '@freesewing/plugin-annotations@4.10.2':
+    resolution: {integrity: sha512-VURDT//f5EvGA9F2ABhyQMyCDzHLJCfot/dJhYkDHljYDLm1QZWqlHyVgCWPI8gwAW2AIDSnwVeGUpRwfvxxJg==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-bin-pack@4.10.2':
+    resolution: {integrity: sha512-Xmul4wK4hcmhFht9BVWfrnzKEOjnaXgPuLuAuAHzJwy+5xGcPPAMfZRrSAmSZFNOFsFSglutc/3fz7un+RjvHA==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-bust@4.10.2':
+    resolution: {integrity: sha512-IdH2Uab8IjgrLdywe71SeL8wMZrOGOrmCBpd4Qb30YbObQPAa4smDopJAD8UVVrb18mIa0uwMIA4vjY7I5xSdg==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-measurements@4.10.2':
+    resolution: {integrity: sha512-0aPYQ4/zIZ+jA1frABSafeK/a7oODupJCUu954qphqbrn9XD2y657lZEdX29DgbS+vlZjLPcqeW9Zr5qVcG/cQ==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-mirror@4.10.2':
+    resolution: {integrity: sha512-KxPezYV7ms4wFLWZktxcq5T8C8C/pUYxpIRBsCcADPUt9LjOZsJ/DzD5/syQtKLgMUl0B7Md8pbIO/hEhPET3Q==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-round@4.10.2':
+    resolution: {integrity: sha512-AmJuAWMr2pqmpQy/wUd8I7dVJluU74eLcN8fIysqSc1p4ll0ecARJMp2uVe+xzPBtv8tqnmtPG6mJDuTS8C3NA==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-sprinkle@4.10.2':
+    resolution: {integrity: sha512-eZhlZjbtIftW6Wh8yfaiEu1/ZEIfx5t4Q67W+Wno5AHtPXV4d8m3QZqW3uCPuNseKBfko7MS2eZ2zZuYzwFEpQ==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-transform@4.10.2':
+    resolution: {integrity: sha512-yRLp7iYDNkb1WdSJWhLltfNFUrj4F90YgnKpGrosz808CsVOh+ye+PpC8dnFG+j5BM5aXH3rJHAnChS9jVZOuA==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@freesewing/core': 4.10.2
+
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -1881,6 +1982,9 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  bezier-js@6.1.4:
+    resolution: {integrity: sha512-PA0FW9ZpcHbojUCMu28z9Vg/fNkwTj5YhusSAjHHDfHDGLxJ6YUKrAN2vk1fP2MMOxVw4Oko16FMlRGVBGqLKg==}
+
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
@@ -2551,6 +2655,10 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  hooks@0.3.2:
+    resolution: {integrity: sha512-TqeFzUf12rSzcbm5lUls81jimUC8TmXZ4ANPxxeeMou09hrjBcHYhAQ0WgyN5YqNCXOzz7L6xVNl/+ctFuSeOw==}
+    engines: {node: '>=0.4.0'}
+
   html-encoding-sniffer@7.0.0:
     resolution: {integrity: sha512-UikN5yr7xsCDAq87Or5or0PAlD3HJJOKVzM05az588WnpDJ4Ux7a2A53Qi6gofGg2/EtvF/H4hCi/TXfCW4Y6w==}
     engines: {node: ^22.13.0 || >=24.0.0}
@@ -2857,11 +2965,24 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash.clonedeep@4.5.0:
+    resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
+
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
+
+  lodash.set@4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
+
+  lodash.unset@4.5.2:
+    resolution: {integrity: sha512-bwKX88k2JhCV9D1vtE8+naDKlLiGrSmf8zi/Y9ivFHwbmRfA8RxS/aVJ+sIht2XOwqoNr4xUPUkGZpc1sHFEKg==}
 
   lodash@4.18.1:
     resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
@@ -4696,6 +4817,76 @@ snapshots:
 
   '@formatjs/icu-skeleton-parser@2.1.12': {}
 
+  '@freesewing/brian@4.10.2(@freesewing/core@4.10.2)(@freesewing/library@4.10.2(@freesewing/core@4.10.2))(@freesewing/plugin-bust@4.10.2(@freesewing/core@4.10.2))':
+    dependencies:
+      '@freesewing/core': 4.10.2
+      '@freesewing/library': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-bust': 4.10.2(@freesewing/core@4.10.2)
+
+  '@freesewing/config@4.10.2': {}
+
+  '@freesewing/core-plugins@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+      '@freesewing/plugin-annotations': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-bin-pack': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-measurements': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-mirror': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-round': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-sprinkle': 4.10.2(@freesewing/core@4.10.2)
+      '@freesewing/plugin-transform': 4.10.2(@freesewing/core@4.10.2)
+
+  '@freesewing/core@4.10.2':
+    dependencies:
+      '@freesewing/core-plugins': 4.10.2(@freesewing/core@4.10.2)
+      bezier-js: 6.1.4
+      hooks: 0.3.2
+      lodash.clonedeep: 4.5.0
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
+      lodash.unset: 4.5.2
+
+  '@freesewing/library@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/models@4.10.2':
+    dependencies:
+      '@freesewing/config': 4.10.2
+
+  '@freesewing/plugin-annotations@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/config': 4.10.2
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-bin-pack@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-bust@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-measurements@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-mirror@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-round@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-sprinkle@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
+  '@freesewing/plugin-transform@4.10.2(@freesewing/core@4.10.2)':
+    dependencies:
+      '@freesewing/core': 4.10.2
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -5548,6 +5739,8 @@ snapshots:
 
   baseline-browser-mapping@2.11.26: {}
 
+  bezier-js@6.1.4: {}
+
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
@@ -6154,6 +6347,8 @@ snapshots:
     dependencies:
       hermes-estree: 0.25.1
 
+  hooks@0.3.2: {}
+
   html-encoding-sniffer@7.0.0:
     dependencies:
       '@exodus/bytes': 1.16.0
@@ -6426,9 +6621,17 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.clonedeep@4.5.0: {}
+
   lodash.debounce@4.0.8: {}
 
+  lodash.get@4.4.2: {}
+
   lodash.merge@4.6.2: {}
+
+  lodash.set@4.3.2: {}
+
+  lodash.unset@4.5.2: {}
 
   lodash@4.18.1: {}
 

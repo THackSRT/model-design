@@ -3,6 +3,7 @@ packages:
   - services/*
   - engines/mannequin
   - engines/drape
+  - engines/drafting
   - packages/*
   - tools/*
 
@@ -10,3 +11,22 @@ onlyBuiltDependencies:
   - nx
   - esbuild
   - '@nestjs/core'
+
+# FreeSewing 4.10.2 (ADR 0019) : imports que ses paquets ne déclarent pas, sans quoi une installation neuve échoue
+# (essai de FreeSewing, défaut P1). Une extension par import ; elles suivent la version épinglée du moteur drafting.
+packageExtensions:
+  '@freesewing/core-plugins':
+    dependencies:
+      '@freesewing/plugin-transform': 4.10.2
+  '@freesewing/plugin-annotations':
+    dependencies:
+      '@freesewing/config': 4.10.2
+  '@freesewing/models':
+    dependencies:
+      '@freesewing/config': 4.10.2
+  '@freesewing/bella':
+    dependencies:
+      '@freesewing/library': 4.10.2
+  '@freesewing/teagan':
+    dependencies:
+      '@freesewing/library': 4.10.2
