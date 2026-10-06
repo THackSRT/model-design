@@ -12,11 +12,24 @@ REQUIRED = {"sex", "statureMm", "chestGirthMm", "waistGirthMm", "hipGirthMm"}
 OPTIONAL = sorted(name for name in MeasurementSet.model_fields if name not in REQUIRED)
 CORE_FIELDS = {f.name for f in fields(RawMeasurements)}
 # Mesures du contrat qu'aucun tracé n'exploite encore (ni manche ni corsage) : ignorées exprès.
+# Les onze dernières servent FreeSewing dans drafting (1.54a) ;
+# le patronage Python, gelé (ADR 0021), ne les lit pas.
 UNUSED_BY_CORE = {
     "neckGirthMm",
     "upperArmGirthMm",
     "calfGirthMm",
     "ankleGirthMm",
+    "upperHipGirthMm",
+    "waistGirthBackMm",
+    "hipGirthBackMm",
+    "shoulderSlopeDeg",
+    "waistToArmpitMm",
+    "waistToUpperHipMm",
+    "crotchLengthMm",
+    "frontCrotchLengthMm",
+    "waistToThighMm",
+    "highBustGirthMm",
+    "kneeHeightMm",
 }
 
 

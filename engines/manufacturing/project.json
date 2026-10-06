@@ -2,6 +2,7 @@
   "name": "manufacturing",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
+  "implicitDependencies": ["py-contracts", "py-engine-kit"],
   "tags": ["type:engine", "lang:python"],
   "targets": {
     "lint": {
