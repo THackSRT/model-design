@@ -14,6 +14,13 @@ Tourne à l'identique dans le navigateur et dans Node.
   est plus bas que l'acromion : longueur épaule-poignet d'environ 0,26 de la stature. `landmarksMm.shoulder` =
   hauteur du pivot, `landmarksMm.wrist` = hauteur moyenne des poignets. Les bras posés (9°) restent proches du
   torse : une coupe horizontale peut les confondre avec lui, utiliser ces axes plutôt qu'une coupe.
+  Lecture à la demande (1.61a), hors de `fit` (environ 85 ms, que `fit` ne paie pas) : `sideLandmarks(fitted)`
+  (`left`/`right` : `neckShoulderPoint`, `acromion`, `armpit`, `iliacCrest`, points 3D en mm) et
+  `deriveMeasurements(fitted)` (les onze mesures de `MeasurementSet` ajoutées pour FreeSewing, entiers dans les bornes
+  du contrat), lues sur le corps au repos (bras à 47° environ de la verticale) : indépendantes de `armAngleDeg`,
+  calculées une fois par corps, objets neufs à chaque appel. `fitted` doit venir de `fit` dans le même contexte
+  d'exécution : une copie structurée ou une doublure est une erreur (dans le studio, lire dans le Worker).
+  `completeMeasurements(fournies, fitted)` : une mesure fournie prime toujours ; le corps n'est lu que s'il en manque une.
 - `src/core/makehuman.ts` : façade `createMakeHuman` (API : `load`, `fit`, `measure`, `pose`, `renderGeometry`,
   `baseTriangles`, `ringPoints`, `FIT_KEYS`). Reprise du prototype (ADR 0004), découpée en modules purs de
   moins de 300 lignes ; toute modification passe par une relecture humaine.
@@ -26,6 +33,10 @@ Tourne à l'identique dans le navigateur et dans Node.
   - `fit-macro.ts` / `fit.ts` : ajustement (corpulence et musculature, puis sécante par mensuration et par
     entrejambe, échelle) ;
   - `pose.ts` : bras abaissés ; `render.ts` : géométrie de rendu (normales lissées, sommets aux coutures UV).
+- `src/reading.ts` (corps au repos gardé par `fit` sans calcul, lectures ci-dessus) ; `src/derived.ts` (types, bornes
+  du contrat, conversion cm → mm entiers) ; dans `src/core/` : `derive.ts` (définitions des repères et des onze
+  mesures), `slice.ts` (coupes planes), `shoulder.ts`, `armpit.ts`, `crotch.ts`. Distances `waistTo*` et fourche : depuis l'anneau de taille du moteur. Écarts connus
+  avec la table FreeSewing : `test/derived-measures.test.ts`.
 - `src/core/plain-face.ts` : visage sans traits et aplati (yeux, sourcils, nez, bouche effacés, crâne gardé) ;
   `src/core/thin-plate.ts` : spline de plaque mince qui porte la surface de remplacement.
 - `assets/makehuman.mhz` : données gzip, construites par `tools/build_makehuman.py` depuis le dépôt MakeHuman.
@@ -34,7 +45,9 @@ Tourne à l'identique dans le navigateur et dans Node.
   changement de calcul ; ne l'actualiser que si le changement est voulu, avec `ENGINE_VERSION`/relecture) ;
   un test par module de `src/core` (`geometry`, `morph`, `mhz-data`, `regions`, `measure`, `render-pose`) ;
   `test/arm-t-pose.test.ts` (bras à 90°, pose en T : `armAngleDeg` 0 à 90, aucune borne dans le moteur) ;
-  `test/landmarks.test.ts` (entrejambe et repères de hauteur) ; `test/arms.test.ts` (épaules, poignets, axes des bras).
+  `test/landmarks.test.ts` (entrejambe et repères de hauteur) ; `test/arms.test.ts` (épaules, poignets, axes des bras) ;
+  `test/slice.test.ts`, `test/landmark-geometry.test.ts` (solides de synthèse), `test/derived-measures.test.ts`
+  (tailles FreeSewing), `test/side-landmarks.test.ts`, `test/reading.test.ts` (lecture à la demande), `test/derived-units.test.ts`.
 - `src/garment/` : habillage rapide (`dressMannequin(fitted, spec, { type }, { rings?, segments? })`, tâche
   1.34a). Approximation géométrique, sans simulation physique (le drapé est 1.19), par anneaux horizontaux comme
   le prototype. Rend `GarmentMesh` (positions et normales en cm, index, `tightZones` en mm depuis le sol ; tableaux

@@ -8,6 +8,7 @@ import {
 } from './core/makehuman.js';
 import type { ArmJoints } from './core/pose.js';
 import { plainFace } from './core/plain-face.js';
+import { keepRestBody } from './reading.js';
 
 export type Morphotype = { african: number; asian: number; caucasian: number };
 
@@ -149,10 +150,26 @@ export async function loadMannequinEngine(
       );
       const armsMm = { left: armOf(posed.joints.L), right: armOf(posed.joints.R) };
       const landmarksMm = landmarksOf(fit.measured, armsMm);
-      return { body, measuredMm, landmarksMm, armsMm };
+      const fitted: FittedMannequin = { body, measuredMm, landmarksMm, armsMm };
+      // le corps au repos est gardé pour les lectures à la demande ; les pivots d'épaule ne bougent pas avec la pose
+      keepRestBody(fitted, {
+        pos: fit.pos,
+        tris: mh.baseTriangles(),
+        measured: fit.measured,
+        pivots: { left: posed.joints.L.shoulder, right: posed.joints.R.shoulder },
+      });
+      return fitted;
     },
   };
 }
 
+export { DERIVED_BOUNDS, DERIVED_KEYS } from './derived.js';
+export { completeMeasurements, deriveMeasurements, sideLandmarks } from './reading.js';
+export type {
+  BodyLandmarksMm,
+  DerivedKey,
+  DerivedMeasurements,
+  SideLandmarksMm,
+} from './derived.js';
 export { dressMannequin } from './garment/dress.js';
 export type { DressOptions, GarmentMesh, TightZone } from './garment/types.js';
