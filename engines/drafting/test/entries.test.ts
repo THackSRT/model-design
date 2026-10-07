@@ -14,6 +14,7 @@ describe('entrées du moteur', () => {
     expect(Object.keys(browserEntry)).toEqual(
       expect.arrayContaining([
         'draftModel',
+        'toGarmentSpec',
         'describeModel',
         'MODEL_KEYS',
         'SIZE_NAMES',
@@ -24,6 +25,8 @@ describe('entrées du moteur', () => {
         'EdgeNotFoundError',
         'FreeSewingError',
         'MissingMeasurementError',
+        'SeamError',
+        'SheetError',
       ]),
     );
   });

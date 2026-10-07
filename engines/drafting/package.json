@@ -1,6 +1,6 @@
 {
   "name": "@atelier/drafting",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Moteur drafting : tracé 2D des patrons par FreeSewing (ADR 0019), fiches de couture et contrôles ; cœur pur et déterministe, identique dans le navigateur, un Worker et Node ; adaptateur : @freesewing/*.",
   "type": "module",
@@ -43,6 +43,8 @@
     "@freesewing/models": "4.10.2"
   },
   "devDependencies": {
-    "@types/node": "^22.20.4"
+    "@types/node": "^22.20.4",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
   }
 }

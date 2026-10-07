@@ -9,6 +9,7 @@ import { InvalidRequestError } from './core/errors.js';
 import type { DraftOptions } from './core/options.js';
 import { validateOptions } from './core/options.js';
 import { draftPart } from './core/part.js';
+import { storeKeysOf } from './core/sheet.js';
 import type { DraftedPart } from './core/types.js';
 import type { FreeSewingMeasurements } from './spec/measurements.js';
 import { toFreeSewingMeasurements } from './spec/measurements.js';
@@ -29,8 +30,13 @@ export interface DraftResult {
   readonly engineVersion: string;
   readonly freesewingVersion: string;
   readonly model: ModelKey;
-  /** Pièces dans l'ordre de la fiche. */
+  /** Pièces dans l'ordre de la fiche, chacune dans son repère (x = 0 sur son axe, y = 0 en haut, y vers le bas). */
   readonly parts: readonly DraftedPart[];
+  /**
+   * Valeurs que la fiche déclare dans le magasin de FreeSewing, par clé du magasin, arrondies à 0,001 mm : la longueur
+   * visée pour la tête de manche (`library.sleeve.sleevecapTarget`). Elles fixent l'embu des coutures (`toGarmentSpec`).
+   */
+  readonly values: Readonly<Record<string, number>>;
   /** Avertissements de FreeSewing et des modèles ; le tracé reste valable. */
   readonly warnings: readonly string[];
 }
@@ -72,12 +78,14 @@ export function draftEntry(key: ModelKey, entry: ModelEntry, request: DraftReque
     measurements,
     options,
     parts: entry.sheet.parts.map((sheet) => sheet.part),
+    values: storeKeysOf(entry.sheet),
   });
   return {
     engineVersion: ENGINE_VERSION,
     freesewingVersion: FREESEWING_VERSION,
     model: key,
     parts: entry.sheet.parts.map((sheet) => draftPart(sheet, run.parts.get(sheet.part))),
+    values: run.values,
     warnings: run.warnings,
   };
 }

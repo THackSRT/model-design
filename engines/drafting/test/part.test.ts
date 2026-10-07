@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ContourError } from '../src/core/errors.js';
+import { ContourError, SheetError } from '../src/core/errors.js';
 import { draftPart } from '../src/core/part.js';
 import { roundMm } from '../src/core/round.js';
 import type { PartSheet } from '../src/core/sheet.js';
@@ -36,6 +36,19 @@ const TRACED: TracedPart = {
 const SHEET: PartSheet = {
   part: 'demo.piece',
   id: 'piece',
+  panel: {
+    name: 'Pièce',
+    quantity: 1,
+    cutOnFold: false,
+    placement: {
+      zone: 'torso',
+      bodySide: 'center',
+      facing: 'front',
+      landmark: 'waist',
+      offsetMm: 0,
+      clearanceMm: 30,
+    },
+  },
   edges: [
     { id: 'top', semanticRole: 'shoulder', from: 'corner', to: 'right' },
     { id: 'round', semanticRole: 'side', from: 'right', to: 'bottomRight' },
@@ -121,5 +134,51 @@ describe('draftPart', () => {
 
   it('refuse une pièce sans chemin de couture', () => {
     expect(() => draftPart(SHEET, { ...TRACED, seam: undefined })).toThrow('no seam path');
+  });
+});
+
+describe('repère de la pièce (FrameSheet)', () => {
+  const framed: PartSheet = { ...SHEET, frame: { axis: 'inside', top: 'bottomLeft' } };
+
+  it('met l’axe à x = 0 et le haut à y = 0 : sommets, points de contrôle et points publics', () => {
+    const plain = draftPart(SHEET, TRACED);
+    const part = draftPart(framed, TRACED);
+    // `inside` est en (50, 50) et `bottomLeft` en (0, 100) : tout recule de 50 en x et de 100 en y.
+    expect(part.points.inside).toEqual(p(0, -50));
+    expect(part.points.bottomLeft).toEqual(p(-50, 0));
+    expect(part.contour.vertices.map((v) => [v.xMm, v.yMm])).toEqual(
+      plain.contour.vertices.map((v) => [roundMm(v.xMm - 50), roundMm(v.yMm - 100)]),
+    );
+    const round = part.contour.segments[1];
+    const plainRound = plain.contour.segments[1];
+    expect(round?.cp1).toEqual(
+      p(roundMm((plainRound?.cp1?.xMm ?? 0) - 50), roundMm((plainRound?.cp1?.yMm ?? 0) - 100)),
+    );
+  });
+
+  it('ne change ni les longueurs, ni les bords, ni les noms de sommets', () => {
+    const plain = draftPart(SHEET, TRACED);
+    const part = draftPart(framed, TRACED);
+    expect(part.edges).toEqual(plain.edges);
+    expect(part.contour.segments.map((s) => s.lengthMm)).toEqual(
+      plain.contour.segments.map((s) => s.lengthMm),
+    );
+    expect(part.contour.vertices.map((v) => v.names)).toEqual(
+      plain.contour.vertices.map((v) => v.names),
+    );
+    expect(part.points).toBeDefined();
+    for (const value of numbersIn(part)) expect(Object.is(value, -0)).toBe(false);
+  });
+
+  it('sans repère dans la fiche, garde les coordonnées de FreeSewing', () => {
+    expect(draftPart(SHEET, TRACED).points.inside).toEqual(p(50, 50));
+  });
+
+  it('refuse un repère dont un point n’existe pas, en le nommant', () => {
+    const wrong: PartSheet = { ...SHEET, frame: { axis: 'inside', top: 'nowhere' } };
+    expect(() => draftPart(wrong, TRACED)).toThrow(SheetError);
+    expect(() => draftPart(wrong, TRACED)).toThrow(
+      'sheet part piece: frame point "nowhere" does not exist in the part',
+    );
   });
 });

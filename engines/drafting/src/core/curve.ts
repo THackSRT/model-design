@@ -26,7 +26,7 @@ export function distanceMm(a: PointMm, b: PointMm): number {
 }
 
 /** Courbe de Bézier cubique : points de départ et d'arrivée, points de contrôle. */
-interface Cubic {
+export interface Cubic {
   readonly p0: PointMm;
   readonly c1: PointMm;
   readonly c2: PointMm;
@@ -55,4 +55,44 @@ export function cubicLengthMm(p0: PointMm, c1: PointMm, c2: PointMm, p3: PointMm
     sum += weight * (speed(curve, 0.5 - half) + speed(curve, 0.5 + half));
   }
   return 0.5 * sum;
+}
+
+/** Point à la fraction `t` du segment de `a` à `b`. */
+export const lerp = (a: PointMm, b: PointMm, t: number): PointMm => ({
+  xMm: a.xMm + (b.xMm - a.xMm) * t,
+  yMm: a.yMm + (b.yMm - a.yMm) * t,
+});
+
+/** Coupe une courbe de Bézier cubique au paramètre `t` (de Casteljau) : la partie avant `t`, puis la partie après. */
+export function splitCubic(curve: Cubic, t: number): readonly [Cubic, Cubic] {
+  const { p0, c1, c2, p3 } = curve;
+  const a = lerp(p0, c1, t);
+  const b = lerp(c1, c2, t);
+  const c = lerp(c2, p3, t);
+  const d = lerp(a, b, t);
+  const e = lerp(b, c, t);
+  const middle = lerp(d, e, t);
+  return [
+    { p0, c1: a, c2: d, p3: middle },
+    { p0: middle, c1: e, c2: c, p3 },
+  ];
+}
+
+/** Point de la courbe au paramètre `t`. */
+export const cubicPointAt = (curve: Cubic, t: number): PointMm => splitCubic(curve, t)[0].p3;
+
+/** Pas de la dichotomie de `parameterAtLength` : 2⁻⁶⁴ de l'intervalle, au-delà de la précision d'un nombre à virgule. */
+const BISECTION_STEPS = 64;
+
+/** Paramètre `t` où l'arc de 0 à `t` mesure `lengthMm` ; la longueur de l'arc croît avec `t`. */
+export function parameterAtLength(curve: Cubic, lengthMm: number): number {
+  let low = 0;
+  let high = 1;
+  for (let step = 0; step < BISECTION_STEPS; step++) {
+    const middle = (low + high) / 2;
+    const [arc] = splitCubic(curve, middle);
+    if (cubicLengthMm(arc.p0, arc.c1, arc.c2, arc.p3) < lengthMm) low = middle;
+    else high = middle;
+  }
+  return (low + high) / 2;
 }

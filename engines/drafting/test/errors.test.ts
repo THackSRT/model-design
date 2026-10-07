@@ -13,6 +13,8 @@ import {
   InvalidMeasurementError,
   InvalidRequestError,
   MissingMeasurementError,
+  SeamError,
+  SheetError,
   UnknownModelError,
   UnknownSizeError,
   draftModel,
@@ -236,6 +238,7 @@ describe('fiche de couture en défaut', () => {
       edge.id === 'shoulder' ? { ...edge, to: 'noSuchPoint' } : edge,
     );
     const sheet = {
+      ...MODELS.brian.sheet,
       parts: [{ ...(front as NonNullable<typeof front>), edges }, back, sleeve],
     } as ModelSheet;
     const error = failure(() => draftEntry('brian', withSheet(sheet), request));
@@ -252,6 +255,7 @@ describe('fiche de couture en défaut', () => {
       edge.id === 'hem' ? { ...edge, from: 'cfWaist' } : edge,
     );
     const sheet = {
+      ...MODELS.brian.sheet,
       parts: [{ ...(front as NonNullable<typeof front>), edges }, back, sleeve],
     } as ModelSheet;
     const error = failure(() => draftEntry('brian', withSheet(sheet), request));
@@ -262,6 +266,7 @@ describe('fiche de couture en défaut', () => {
   it('rejette un contour que la fiche ne couvre pas entièrement', () => {
     const edges = frontEdges.filter((edge) => edge.id !== 'neckline');
     const sheet = {
+      ...MODELS.brian.sheet,
       parts: [{ ...(front as NonNullable<typeof front>), edges }, back, sleeve],
     } as ModelSheet;
     const error = failure(() => draftEntry('brian', withSheet(sheet), request));
@@ -271,8 +276,9 @@ describe('fiche de couture en défaut', () => {
   });
 
   it('rejette une pièce masquée de la fiche (le squelette brian.base)', () => {
-    const base = { part: 'brian.base', id: 'base', edges: frontEdges };
-    const error = failure(() => draftEntry('brian', withSheet({ parts: [base] }), request));
+    const base = { ...(front as NonNullable<typeof front>), part: 'brian.base', id: 'base' };
+    const sheet = { ...MODELS.brian.sheet, parts: [base] };
+    const error = failure(() => draftEntry('brian', withSheet(sheet), request));
     expect(error).toBeInstanceOf(ContourError);
     expect(error.message).toContain('part brian.base: the part was not drafted');
   });
@@ -290,6 +296,8 @@ describe('erreurs typées', () => {
       new ContourError('brian.front', 'x'),
       new EdgeNotFoundError('brian.front', 'side', 'x'),
       new CoverageError('brian.front', [1], []),
+      new SheetError('part front', 'x'),
+      new SeamError('armhole', 'x'),
     ];
     for (const error of errors) {
       expect(error).toBeInstanceOf(DraftingError);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftModel } from '../src/index.js';
+import { draftModel, toGarmentSpec } from '../src/index.js';
 import { BASE_OPTION_SETS, VALIDATION_SIZES, sizeRequest } from './helpers.js';
 
 /** Budget de la fiche 1.55a (ADR 0021) : un tracé de Brian, contrôles compris, en moins de 10 ms à chaud. */
@@ -65,5 +65,29 @@ describe('budget de temps', () => {
       .map((s) => `processeur ${s.cpuMs.toFixed(2)} ms (mur ${s.wallMs.toFixed(2)} ms)`)
       .join(' ; ');
     expect(Math.min(...series.map((s) => s.cpuMs)), details).toBeLessThan(BUDGET_MS);
+  });
+});
+
+describe('budget de la conversion en GarmentSpec', () => {
+  /** Une conversion tient dans une fraction de l'image : la boucle d'édition la refait à chaque geste, après le tracé. */
+  const SPEC_BUDGET_MS = 5;
+
+  it(`convertit un tracé de Brian en moins de ${SPEC_BUDGET_MS} ms (médiane de 100 conversions après échauffement, temps mural)`, () => {
+    const drafts = Array.from({ length: 100 + WARM_UP }, (_, i) =>
+      draftModel(
+        sizeRequest(
+          VALIDATION_SIZES[i % VALIDATION_SIZES.length] as (typeof VALIDATION_SIZES)[number],
+          BASE_OPTION_SETS[i % BASE_OPTION_SETS.length] ?? {},
+        ),
+      ),
+    );
+    for (const draft of drafts.slice(0, WARM_UP)) toGarmentSpec(draft);
+    const times = drafts.slice(WARM_UP).map((draft) => {
+      const start = performance.now();
+      toGarmentSpec(draft);
+      return performance.now() - start;
+    });
+    // Mesuré : 0,5 ms à la médiane, 2 ms au plus ; le budget laisse la marge d'une machine chargée.
+    expect(median(times)).toBeLessThan(SPEC_BUDGET_MS);
   });
 });

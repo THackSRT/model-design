@@ -9,7 +9,9 @@ export type DraftingErrorCode =
   | 'freesewing'
   | 'invalid-contour'
   | 'edge-not-found'
-  | 'coverage';
+  | 'coverage'
+  | 'invalid-sheet'
+  | 'seam';
 
 /**
  * Erreur du moteur de tracé : rien n'est rendu. Le message est destiné aux développeurs et aux journaux ; il ne
@@ -148,5 +150,29 @@ export class CoverageError extends DraftingError {
       `part ${part}: ${gaps}, segments in several edges [${overlapping.join(', ')}]`,
     );
     this.name = 'CoverageError';
+  }
+}
+
+/** La fiche de couture est en défaut : elle cite une pièce, un bord, un point ou une valeur qui n'existe pas, ou se contredit. */
+export class SheetError extends DraftingError {
+  constructor(
+    /** Ce que la fiche décrit à cet endroit : le modèle, une pièce (`front`), une couture (`seam armhole`). */
+    readonly subject: string,
+    readonly reason: string,
+  ) {
+    super('invalid-sheet', `sheet ${subject}: ${reason}`);
+    this.name = 'SheetError';
+  }
+}
+
+/** Une couture ne s'apparie pas, ou ses deux côtés diffèrent de l'embu déclaré de plus que la fiche ne le tolère. */
+export class SeamError extends DraftingError {
+  constructor(
+    /** Identifiant de la couture dans la fiche. */
+    readonly seam: string,
+    readonly reason: string,
+  ) {
+    super('seam', `seam ${seam}: ${reason}`);
+    this.name = 'SeamError';
   }
 }

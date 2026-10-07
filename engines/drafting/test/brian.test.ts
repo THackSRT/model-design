@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { sizeMeasurements } from '../src/adapters/freesewing/sizes.js';
 import { MODELS } from '../src/adapters/freesewing/models.js';
 import { draftModel, describeModel } from '../src/index.js';
-import type { DraftOptions, DraftResult, SizeName } from '../src/index.js';
+import type { DraftOptions, DraftResult, PointMm, SizeName } from '../src/index.js';
 import {
   BASE_OPTION_SETS,
   VALIDATION_SIZES,
@@ -161,5 +161,57 @@ describe('Brian : fiche de couture', () => {
     const cited = MODELS.brian.sheet.parts.map((part) => part.part);
     for (const part of cited) expect(drawn).toContain(part);
     expect(describeModel('brian').parts).toEqual(cited);
+  });
+});
+
+/** Point public d'une pièce tracée (0 devant, 1 dos, 2 manche) ; erreur si la pièce ne l'a pas. */
+function pointOf(result: DraftResult, part: number, name: string): PointMm {
+  const point = result.parts[part]?.points[name];
+  if (point === undefined) throw new Error(`point ${name} absent de la pièce ${part}`);
+  return point;
+}
+
+describe('Brian : repère des pièces (y vers le bas, origine en haut de la pièce de base)', () => {
+  it.each(VALIDATION_SIZES)(
+    'met le devant et le dos à x = 0 sur leur milieu et y = 0 au point d’encolure, taille %s',
+    (size) => {
+      const result = draftModel(sizeRequest(size));
+      for (const [part, center] of [
+        [0, 'cfNeck'],
+        [1, 'cbNeck'],
+      ] as const) {
+        expect(pointOf(result, part, 'hps').yMm).toBe(0);
+        expect(pointOf(result, part, center).xMm).toBe(0);
+        expect(pointOf(result, part, 'hips').xMm).toBeGreaterThan(0);
+      }
+      expect(pointOf(result, 0, 'cfNeck').yMm).toBeGreaterThan(0);
+    },
+  );
+
+  it.each(VALIDATION_SIZES)(
+    'translate la manche de FreeSewing : le sommet de la tête est l’origine, le poignet pend à la longueur de bras, taille %s',
+    (size) => {
+      const result = draftModel(sizeRequest(size));
+      expect(pointOf(result, 2, 'sleeveTop')).toEqual({ xMm: 0, yMm: 0 });
+      expect(pointOf(result, 2, 'sleeveTip').yMm).toBe(0);
+      expect(pointOf(result, 2, 'wristLeft').yMm).toBeCloseTo(
+        sizeMeasurements(size).shoulderToWrist as number,
+        3,
+      );
+      expect(pointOf(result, 2, 'bicepsLeft').xMm).toBeLessThan(0);
+      expect(pointOf(result, 2, 'bicepsRight').xMm).toBeGreaterThan(0);
+      expect(pointOf(result, 2, 'bicepsLeft').yMm).toBeGreaterThan(100);
+    },
+  );
+
+  it('ne change que le repère : les longueurs de bords sont celles de FreeSewing (emmanchures, tête de manche)', () => {
+    const result = draftModel(sizeRequest('cisMaleAdult42'));
+    const expected = freesewingLengths('cisMaleAdult42', {});
+    expect(
+      Math.abs(edgeLength(result, 'sleeve', 'sleeveCap') - (expected.cap as number)),
+    ).toBeLessThan(0.0006);
+    expect(
+      Math.abs(edgeLength(result, 'front', 'armhole') - (expected.front as number)),
+    ).toBeLessThan(0.0006);
   });
 });

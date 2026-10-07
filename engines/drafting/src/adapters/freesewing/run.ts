@@ -1,5 +1,6 @@
-import { ContourError, FreeSewingError } from '../../core/errors.js';
+import { ContourError, FreeSewingError, SheetError } from '../../core/errors.js';
 import type { DraftOptions } from '../../core/options.js';
+import { roundMm } from '../../core/round.js';
 import type { PathOp, PointMm, TracedPart } from '../../core/types.js';
 import type { FreeSewingMeasurements } from '../../spec/measurements.js';
 import type { FsDesign, FsOp, FsPart, FsPattern, FsPoint, FsSettings } from './types.js';
@@ -10,6 +11,8 @@ export interface RunInput {
   readonly options: DraftOptions;
   /** Pièces à rapporter, par nom FreeSewing (`brian.front`) ; les autres sont tracées mais ignorées. */
   readonly parts: readonly string[];
+  /** Clés du magasin de FreeSewing à lire après le tracé : les valeurs que la fiche déclare (`storeKeysOf`). */
+  readonly values: readonly string[];
 }
 
 /** Résultat d'un tracé FreeSewing sans erreur journalisée. */
@@ -17,6 +20,8 @@ export interface FreeSewingRun {
   readonly parts: ReadonlyMap<string, TracedPart>;
   /** Avertissements du journal et drapeaux `warn` des modèles, sans doublon. */
   readonly warnings: readonly string[];
+  /** Valeurs lues dans le magasin, par clé, arrondies à 0,001. */
+  readonly values: Readonly<Record<string, number>>;
 }
 
 /** Longueur maximale d'un message de FreeSewing repris dans une erreur : elle ne grossit pas avec un message verbeux. */
@@ -66,6 +71,27 @@ function toOp(part: string, op: FsOp): PathOp | undefined {
   throw new ContourError(part, `unsupported path operation "${op.type}"`);
 }
 
+/** Les valeurs du magasin que la fiche déclare : un nombre fini chacune, sinon la fiche et FreeSewing divergent. */
+function readValues(
+  model: string,
+  pattern: FsPattern,
+  keys: readonly string[],
+): Record<string, number> {
+  const store = pattern.setStores[0];
+  const values: Record<string, number> = {};
+  for (const key of keys) {
+    const value = store?.get(key);
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new SheetError(
+        `model ${model}`,
+        `FreeSewing store value "${key}" is absent or not a number`,
+      );
+    }
+    values[key] = roundMm(value);
+  }
+  return values;
+}
+
 function toTracedPart(name: string, part: FsPart): TracedPart {
   const seam = part.paths.seam?.ops.flatMap((op) => toOp(name, op) ?? []);
   return {
@@ -106,5 +132,5 @@ export function runDesign(model: string, Design: FsDesign, input: RunInput): Fre
     const part = drawn[name];
     if (part !== undefined) parts.set(name, toTracedPart(name, part));
   }
-  return { parts, warnings: logs.warnings };
+  return { parts, warnings: logs.warnings, values: readValues(model, pattern, input.values) };
 }

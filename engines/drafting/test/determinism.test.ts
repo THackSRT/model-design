@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sizeMeasurements } from '../src/adapters/freesewing/sizes.js';
-import { draftModel } from '../src/index.js';
+import { draftModel, toGarmentSpec } from '../src/index.js';
 import type { DraftRequest, PointMm } from '../src/index.js';
 import * as nodeEntry from '../src/node.js';
 import {
@@ -78,5 +78,48 @@ describe('déterminisme', () => {
         draftModel(sizeRequest(size)),
       );
     }
+  });
+});
+
+describe('déterminisme de la GarmentSpec', () => {
+  it('deux conversions du même tracé donnent la même spécification, octet pour octet', () => {
+    for (const size of VALIDATION_SIZES) {
+      for (const options of BASE_OPTION_SETS) {
+        const first = toGarmentSpec(draftModel(sizeRequest(size, options)));
+        const second = toGarmentSpec(draftModel(sizeRequest(size, options)));
+        expect(JSON.stringify(second)).toBe(JSON.stringify(first));
+      }
+    }
+  });
+
+  it('ne modifie pas le tracé qu’elle convertit : un tracé gelé est accepté et reste le même', () => {
+    const draft = deepFreeze(draftModel(sizeRequest('cisMaleAdult42', { chestEase: 0.12 })));
+    const copy = JSON.stringify(draft);
+    const spec = toGarmentSpec(draft);
+    expect(JSON.stringify(draft)).toBe(copy);
+    expect(JSON.stringify(toGarmentSpec(draft))).toBe(JSON.stringify(spec));
+  });
+
+  it('ne garde aucun état d’une conversion à l’autre : A, B puis A rend deux fois A', () => {
+    const a = draftModel(
+      sizeRequest('cisFemaleAdult34', { lengthBonus: 0.3, sleevecapEase: 0.05 }),
+    );
+    const b = draftModel(sizeRequest('cisMaleAdult42', { bicepsEase: 0.4 }));
+    const before = JSON.stringify(toGarmentSpec(a));
+    toGarmentSpec(b);
+    expect(JSON.stringify(toGarmentSpec(a))).toBe(before);
+  });
+
+  it('rend la même spécification par l’entrée node et par l’entrée .', () => {
+    const draft = draftModel(sizeRequest('cisMaleAdult42'));
+    expect(JSON.stringify(nodeEntry.toGarmentSpec(draft))).toBe(
+      JSON.stringify(toGarmentSpec(draft)),
+    );
+  });
+
+  it('un jeu de mesures équivalent à la taille rend la même spécification', () => {
+    const set = measurementSetOf('male', sizeMeasurements('cisMaleAdult42'));
+    const fromSet = toGarmentSpec(draftModel({ model: 'brian', measurements: { set } }));
+    expect(fromSet).toEqual(toGarmentSpec(draftModel(sizeRequest('cisMaleAdult42'))));
   });
 });

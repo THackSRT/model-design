@@ -2,6 +2,7 @@
 // (test/browser-entry.test.ts le vérifie). Ce qui touche à Node passe par src/node.ts.
 export { ENGINE_VERSION, FREESEWING_VERSION } from './version.js';
 export { draftModel } from './draft.js';
+export { toGarmentSpec } from './spec/garment-spec.js';
 export type { DraftRequest, DraftResult, MeasurementSource } from './draft.js';
 export { MODEL_KEYS, describeModel } from './adapters/freesewing/models.js';
 export type { ModelInfo, ModelKey } from './adapters/freesewing/models.js';
@@ -25,6 +26,8 @@ export {
   InvalidOptionError,
   InvalidRequestError,
   MissingMeasurementError,
+  SeamError,
+  SheetError,
   UnknownModelError,
   UnknownSizeError,
 } from './core/errors.js';
@@ -39,5 +42,19 @@ export type {
   SemanticRole,
   Segment,
 } from './core/types.js';
-export type { EdgeSheet, ModelSheet, PartSheet } from './core/sheet.js';
+export { EDGE_ROLES } from './core/sheet.js';
+export type {
+  EaseSheet,
+  EdgeRole,
+  EdgeSheet,
+  FrameSheet,
+  GrainSheet,
+  ModelSheet,
+  NotchSheet,
+  PanelSheet,
+  PartSheet,
+  PlacementSheet,
+  SeamEndSheet,
+  SeamSheet,
+} from './core/sheet.js';
 export type { DraftOptions, OptionSpec, OptionValue } from './core/options.js';

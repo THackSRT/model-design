@@ -1,5 +1,5 @@
 /** Version du moteur : à changer avec tout changement de calcul (elle entre dans l'empreinte des résultats). */
-export const ENGINE_VERSION = '0.1.0';
+export const ENGINE_VERSION = '0.2.0';
 
 /**
  * Version de FreeSewing épinglée (ADR 0019), sans `^` dans `package.json` : un test vérifie qu'elle est celle des
