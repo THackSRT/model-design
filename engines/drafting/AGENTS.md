@@ -12,7 +12,7 @@ Modèle à suivre : `engines/drape`.
 
 - `src/index.ts` : entrée `.`, compatible navigateur et Worker (aucun `node:*`, aucun DOM ; `test/browser-entry.test.ts`
   et `test/structure.test.ts` le vérifient). `src/node.ts` : `./node`, réexporte `.` (rien de propre à Node pour
-  l'instant).
+  l'instant). `src/geometry.ts` : `./geometry`, la géométrie plane (voir « Géométrie plane »).
 - `draftModel({ model, measurements: { size } | { set }, options? })` rend un `DraftResult` ou lève une `DraftingError`.
   `describeModel(clé)` rend mesures, options réglables (bornes) et pièces ; `MODEL_KEYS`, `SIZE_NAMES` (`cisMaleAdult42` :
   le nombre est le tour de cou en cm), `toFreeSewingMeasurements`, les erreurs typées, `ENGINE_VERSION`,
@@ -26,8 +26,7 @@ Modèle à suivre : `engines/drape`.
 - `src/core/` : calcul pur et déterministe, sur des données simples ; ni E/S, ni `node:*`, ni FreeSewing, ni contrats
   (lint). Contour (`contour.ts`), longueur de Bézier (`curve.ts`, Gauss-Legendre 24 points comme FreeSewing), bords et
   couverture (`edges.ts`), points et noms (`points.ts`), pièce (`part.ts`), options (`options.ts`), erreurs (`errors.ts`),
-  fiche (`sheet.ts`), types. **Rien dans `src/core/geometry/` ni `src/geometry.ts`** : l'entrée `./geometry` est la
-  tâche 1.57a (ADR 0024).
+  fiche (`sheet.ts`), types. Géométrie plane : `src/core/geometry/` (voir « Géométrie plane »).
 - `src/sheets/` : une fiche de couture par modèle, **en données** (`brian.ts`).
 - `src/spec/` : `MeasurementSet` → mesures FreeSewing (`measurements.ts`, tableau de `docs/composants/contrats.md`).
 - `src/adapters/freesewing/` : **seul endroit qui importe FreeSewing** (lint et test). `run.ts` (tracé, journaux),
@@ -40,6 +39,14 @@ Modèle à suivre : `engines/drape`.
 Une entrée dans `MODELS` (`adapters/freesewing/models.ts`), sa fiche dans `src/sheets/`, ses types dans `freesewing-*.d.ts`
 et un `packageExtensions` si ses paquets importent sans déclarer (`pnpm-workspace.yaml`). Un modèle n'entre au catalogue
 que si son banc passe : 5 tailles (femme 28, 34, 40, 46, homme 42) et les bornes de chaque option.
+
+## Géométrie plane (`./geometry`, 1.57a)
+
+`@atelier/drafting/geometry` (`src/geometry.ts`, code dans `src/core/geometry/`) : polylignes et polygones en mm, y vers le
+bas, pour `cutting` et `flats` (ADR 0024). **Feuille** : aucun paquet, aucun fichier de `drafting` hors de son dossier
+(`test/geometry/entry.test.ts`). Fonctions pures qui ne modifient pas leurs entrées ; `PointMm` (`xMm`, `yMm`) y est redéfini,
+identique à celui de `.` ; entrée vide ou argument invalide : `GeometryError`. Noms de l'essai et écarts voulus : en-tête de
+`core/geometry/index.ts`. Changer un résultat est un changement transverse (`ENGINE_VERSION` de chaque moteur touché).
 
 ## Contrôles de chaque tracé (rejet par une erreur typée)
 

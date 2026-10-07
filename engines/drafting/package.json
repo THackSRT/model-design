@@ -14,6 +14,11 @@
       "source": "./src/node.ts",
       "types": "./dist/node.d.ts",
       "default": "./dist/node.js"
+    },
+    "./geometry": {
+      "source": "./src/geometry.ts",
+      "types": "./dist/geometry.d.ts",
+      "default": "./dist/geometry.js"
     }
   },
   "files": [
